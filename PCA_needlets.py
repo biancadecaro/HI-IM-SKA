@@ -30,7 +30,7 @@ nu_ch= file['freq']
 del file
 
 need_dir = 'Maps_needlets/'
-need_tot_maps_filename = need_dir+'bjk_maps_obs_200freq_901.0_1299.0MHz_jmax4_lmax256_B4.00_nside128.npy'
+need_tot_maps_filename = need_dir+'bjk_maps_obs_200freq_901.0_1299.0MHz_jmax12_lmax256_B1.59_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
 jmax=need_tot_maps.shape[1]-1
@@ -142,9 +142,8 @@ for j in range(jmax+1):
 np.save(out_dir_output_PCA+f'leak_PCA_fg_sync_ff_ps_jmax{jmax}_lmax{lmax}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}.npy',leak_fg_maps)
 
 fig = plt.figure()
-plt.suptitle(f'Frequency channel: {nu_ch[ich]} MHz, Nfg:{num_sources}, jmax:{jmax} ')
-fig.add_subplot(211)
-hp.mollview(leak_fg_maps.sum(axis=0)[ich], title='Foregroud leakage', cmap = 'viridis', min=0, max=1, hold=True)
+plt.suptitle(f'Frequency channel: {nu_ch[ich]} MHz, Nfg:{num_sources}, jmax:{jmax}, lmax:{lmax} ')
+hp.mollview(leak_fg_maps.sum(axis=0)[ich], title='Foregroud leakage', cmap = 'viridis', min=0, max=0.5, hold=True)
 plt.savefig(out_dir_plot+f'betajk_leak_fg_jmax{jmax}_lmax{lmax}_nside_{nside}_Nfg{num_sources}.png')
 plt.show()
 del leak_fg_maps
@@ -161,18 +160,17 @@ del eigenvec_fg_Nfg;
 np.save(out_dir_output_PCA+f'leak_PCA_HI_jmax{jmax}_lmax{lmax}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}.npy',leak_HI_maps)
 
 fig = plt.figure()
-plt.suptitle(f'Frequency channel: {nu_ch[ich]} MHz, Nfg:{num_sources}, jmax:{jmax} ')
-fig.add_subplot(212)
-hp.mollview(leak_HI_maps.sum(axis=0)[ich], title='HI leakage', cmap = 'viridis', min=0, max=1, hold=True)
+plt.suptitle(f'Frequency channel: {nu_ch[ich]} MHz, Nfg:{num_sources}, jmax:{jmax}, lmax:{lmax} ')
+hp.mollview(leak_HI_maps.sum(axis=0)[ich], title='HI leakage', cmap = 'viridis', min=0, max=0.5, hold=True)
 plt.savefig(out_dir_plot+f'betajk_leak_HI_jmax{jmax}_{lmax}_nside_{nside}_Nfg{num_sources}.png')
 plt.show()
 #
 #fig = plt.figure()
-#plt.suptitle(f'Frequency channel: {nu_ch[ich]} MHz, Nfg:{num_sources}, jmax:{jmax} ')
+#plt.suptitle(f'Frequency channel: {nu_ch[ich]} MHz, Nfg:{num_sources}, jmax:{jmax}, lmax:{lmax} ')
 #fig.add_subplot(211)
-#hp.mollview(leak_fg_maps.sum(axis=0)[ich], title='Foregroud leakage', cmap = 'viridis', min=0, max=1, hold=True)
+#hp.mollview(leak_fg_maps.sum(axis=0)[ich], title='Foregroud leakage', cmap = 'viridis', min=0, max=0.5, hold=True)
 #fig.add_subplot(212)
-#hp.mollview(leak_HI_maps.sum(axis=0)[ich], title='HI leakage', cmap = 'viridis', min=0, max=1, hold=True)
+#hp.mollview(leak_HI_maps.sum(axis=0)[ich], title='HI leakage', cmap = 'viridis', min=0, max=0.5, hold=True)
 #plt.savefig(out_dir_plot+f'betajk_leak_fg_HI_jmax{jmax}_lmax{lmax}_nside_{nside}_Nfg{num_sources}.png')
 #plt.show()
 
@@ -188,13 +186,13 @@ need_fg_maps_jtot = need_fg_maps.sum(axis=1)
 del need_HI_maps;del need_fg_maps
 
 fig = plt.figure(figsize=(10, 7))
-fig.suptitle(f'channel {ich}: {nu_ch[ich]} MHz',fontsize=20)
+fig.suptitle(f'channel {ich}: {nu_ch[ich]} MHz, jmax:{jmax}, lmax:{lmax}',fontsize=20)
 fig.add_subplot(222) 
 hp.mollview(need_HI_maps_totj[ich], cmap='viridis', title=f'HI signal',min=0, max =1,hold=True)
 fig.add_subplot(223)
 hp.mollview(res_HI_maps_totj[ich], title=f'PCA HI',min=0, max =1,cmap='viridis', hold=True)
 fig.add_subplot(221)
-hp.mollview(np.abs(res_fg_maps_totj[ich]/need_fg_maps_jtot[ich]-1)*100,cmap='viridis',min=0, max=1, title=f'%(Res fg/Fg)-1',unit='%' ,hold=True)
+hp.mollview(np.abs(res_fg_maps_totj[ich]/need_fg_maps_jtot[ich]-1)*100, min=0, max=0.1,cmap='viridis', title=f'%(Res fg/Fg)-1',unit='%' ,hold=True)
 plt.savefig(out_dir_plot+f'betajk_res_need_PCA_sumj_Nfg{num_sources}_jmax{jmax}_lmax{lmax}_nside{nside}.png')
 plt.show()
 

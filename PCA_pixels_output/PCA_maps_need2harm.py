@@ -33,8 +33,8 @@ HI_lkg = np.load('HI_leak_200_901.0_1299.0MHz_Nfg3.npy')
 Nfg=3
 nside=128
 npix=hp.nside2npix(nside)
-lmax=256#3*nside-1
-lmax_cl=256
+lmax=3*nside-1#256#
+lmax_cl=256#3*nside-1#
 betajk_dir = './Need_betajk_PCA/'
 out_dir = './Maps_betajk2harm/'
 ######################################################################################################
@@ -82,12 +82,12 @@ hp.mollview(fg_lkg.mean(axis=0)-map_leak_fg_need2harm.mean(axis=0), title= 'Fg H
 plt.savefig(f'Plots_need_est/maps_need2harm_leak_mean_ch_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.png')
 plt.show()
 
-cl_leak_HI_need2harm_jmax15 = np.zeros((len(nu_ch), lmax+1))
-cl_leak_fg_need2harm_jmax15 = np.zeros((len(nu_ch), lmax+1))
+cl_leak_HI_need2harm_jmax15 = np.zeros((len(nu_ch), lmax_cl+1))
+cl_leak_fg_need2harm_jmax15 = np.zeros((len(nu_ch), lmax_cl+1))
 
 for n in range(len(nu_ch)):
-    cl_leak_HI_need2harm_jmax15[n] = hp.anafast(map_leak_HI_need2harm[n], lmax=lmax)
-    cl_leak_fg_need2harm_jmax15[n] = hp.anafast(map_leak_fg_need2harm[n], lmax=lmax)
+    cl_leak_HI_need2harm_jmax15[n] = hp.anafast(map_leak_HI_need2harm[n], lmax=lmax_cl)
+    cl_leak_fg_need2harm_jmax15[n] = hp.anafast(map_leak_fg_need2harm[n], lmax=lmax_cl)
 
 del map_leak_HI_need2harm; del map_leak_fg_need2harm
 ######################################################################################################
@@ -135,12 +135,12 @@ hp.mollview(fg_lkg.mean(axis=0)-map_leak_fg_need2harm.mean(axis=0), title= 'Fg H
 plt.savefig(f'Plots_need_est/maps_need2harm_leak_mean_ch_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.png')
 plt.show()
 
-cl_leak_HI_need2harm_jmax12 = np.zeros((len(nu_ch), lmax+1))
-cl_leak_fg_need2harm_jmax12 = np.zeros((len(nu_ch), lmax+1))
+cl_leak_HI_need2harm_jmax12 = np.zeros((len(nu_ch), lmax_cl+1))
+cl_leak_fg_need2harm_jmax12 = np.zeros((len(nu_ch), lmax_cl+1))
 
 for n in range(len(nu_ch)):
-    cl_leak_HI_need2harm_jmax12[n] = hp.anafast(map_leak_HI_need2harm[n], lmax=lmax)
-    cl_leak_fg_need2harm_jmax12[n] = hp.anafast(map_leak_fg_need2harm[n], lmax=lmax)
+    cl_leak_HI_need2harm_jmax12[n] = hp.anafast(map_leak_HI_need2harm[n], lmax=lmax_cl)
+    cl_leak_fg_need2harm_jmax12[n] = hp.anafast(map_leak_fg_need2harm[n], lmax=lmax_cl)
 
 del map_leak_HI_need2harm; del map_leak_fg_need2harm
 
@@ -188,12 +188,12 @@ hp.mollview(fg_lkg.mean(axis=0)-map_leak_fg_need2harm.mean(axis=0), title= 'Fg H
 plt.savefig(f'Plots_need_est/maps_need2harm_leak_mean_ch_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.png')
 plt.show()
 
-cl_leak_HI_need2harm_jmax8 = np.zeros((len(nu_ch), lmax+1))
-cl_leak_fg_need2harm_jmax8 = np.zeros((len(nu_ch), lmax+1))
+cl_leak_HI_need2harm_jmax8 = np.zeros((len(nu_ch), lmax_cl+1))
+cl_leak_fg_need2harm_jmax8 = np.zeros((len(nu_ch), lmax_cl+1))
 
 for n in range(len(nu_ch)):
-    cl_leak_HI_need2harm_jmax8[n] = hp.anafast(map_leak_HI_need2harm[n], lmax=lmax)
-    cl_leak_fg_need2harm_jmax8[n] = hp.anafast(map_leak_fg_need2harm[n], lmax=lmax)
+    cl_leak_HI_need2harm_jmax8[n] = hp.anafast(map_leak_HI_need2harm[n], lmax=lmax_cl)
+    cl_leak_fg_need2harm_jmax8[n] = hp.anafast(map_leak_fg_need2harm[n], lmax=lmax_cl)
 
 del map_leak_HI_need2harm; del map_leak_fg_need2harm
 #####################################################################################################
@@ -238,25 +238,25 @@ hp.mollview(fg_lkg.mean(axis=0)-map_leak_fg_need2harm.mean(axis=0), title= 'Fg H
 plt.savefig(f'Plots_need_est/maps_need2harm_leak_mean_ch_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.png')
 plt.show()
 
-cl_leak_HI_need2harm_jmax4 = np.zeros((len(nu_ch), lmax+1))
-cl_leak_fg_need2harm_jmax4 = np.zeros((len(nu_ch), lmax+1))
+cl_leak_HI_need2harm_jmax4 = np.zeros((len(nu_ch), lmax_cl+1))
+cl_leak_fg_need2harm_jmax4 = np.zeros((len(nu_ch), lmax_cl+1))
 
 for n in range(len(nu_ch)):
-    cl_leak_HI_need2harm_jmax4[n] = hp.anafast(map_leak_HI_need2harm[n], lmax=lmax)
-    cl_leak_fg_need2harm_jmax4[n] = hp.anafast(map_leak_fg_need2harm[n], lmax=lmax)
+    cl_leak_HI_need2harm_jmax4[n] = hp.anafast(map_leak_HI_need2harm[n], lmax=lmax_cl)
+    cl_leak_fg_need2harm_jmax4[n] = hp.anafast(map_leak_fg_need2harm[n], lmax=lmax_cl)
 
 del map_leak_HI_need2harm; del map_leak_fg_need2harm
 
 ################################################################################################################################
 ################################################## COMPARISON CLS ##############################################################
-cl_fg_leak_Nfg=np.zeros((num_freq, lmax+1))
-cl_HI_leak_Nfg=np.zeros((num_freq, lmax+1))
+cl_fg_leak_Nfg=np.zeros((num_freq, lmax_cl+1))
+cl_HI_leak_Nfg=np.zeros((num_freq, lmax_cl+1))
 
 for i in range(num_freq):
-    cl_fg_leak_Nfg[i]=hp.anafast(fg_lkg[i], lmax=lmax)
-    cl_HI_leak_Nfg[i]=hp.anafast(HI_lkg[i], lmax=lmax)
+    cl_fg_leak_Nfg[i]=hp.anafast(fg_lkg[i], lmax=lmax_cl)
+    cl_HI_leak_Nfg[i]=hp.anafast(HI_lkg[i], lmax=lmax_cl)
 
-ell = np.arange(0, lmax+1)
+ell = np.arange(0, lmax_cl+1)
 factor = ell*(ell+1)/(2*np.pi)
 fig = plt.figure()
 plt.suptitle(r'$C_{\ell}$ Leak$_{HI}$, mean over frequency channels')
