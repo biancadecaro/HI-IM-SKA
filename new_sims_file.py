@@ -60,17 +60,24 @@ file_new['frequencies'] = nu_ch_f(nu_ch,delta_nu_out)#np.array([nu_ch[i*delta_nu
 file_ud['frequencies'] = file_new['frequencies']
 
 components = list(file.keys())
+print(components)
 components.remove('frequencies')
 components.remove('pol_leakage')
+
+components.remove('gal_synch')
+#components.remove('gal_ff')
+components.remove('point_sources')
+
 
 for c in components:
   print(c)
   file_new[c]=merging_maps(nu_ch,file_new['frequencies'],file[c], delta_nu_out )
   file_ud[c] = hp.pixelfunc.ud_grade(map_in=file_new[c], nside_out=128)
 
-print(len(file_ud['frequencies']), hp.get_nside(file_ud['gal_synch'][1]))
+print(len(file_ud['frequencies']), hp.get_nside(file_ud['cosmological_signal'][1]))
 
 del file, file_new
+
 nu_ch_new = np.array(file_ud['frequencies'])
 num_freq_new=len(nu_ch_new)
 npix = np.shape(file_ud['cosmological_signal'])[1]
@@ -87,96 +94,125 @@ for cc in components:
       continue
     print(cc)
     fg_maps += np.array(file_ud[cc])
+    
+ich =100
 
 obs_maps_no_mean = np.array([obs_maps[i] -np.mean(obs_maps[i],axis=0)  for i in range(num_freq_new)])
 HI_maps_no_mean = np.array([file_ud['cosmological_signal'][i] -np.mean(file_ud['cosmological_signal'][i],axis=0) for i in range(num_freq_new)])
 fg_maps_no_mean = np.array([fg_maps[i] -np.mean(fg_maps[i],axis=0) for i in range(num_freq_new)]) 
 #
 
-ich =100
-fig = plt.figure(figsize=(10, 7))
-fig.suptitle(f'channel {ich}: {nu_ch_new[ich]} MHz',fontsize=20)
-fig.add_subplot(221) 
-hp.mollview(obs_maps[ich], cmap='viridis',title=f'Observations, freq={nu_ch_new[ich]}', hold=True)
-fig.add_subplot(222) 
-hp.mollview(file_ud['cosmological_signal'][ich], cmap='viridis',title=f'HI signal, freq={nu_ch_new[ich]}',min=0, max=1,hold=True)
-fig.add_subplot(223)
-hp.mollview(fg_maps[ich],title=f'Foregrounds, freq={nu_ch_new[ich]}',cmap='viridis', hold=True)
-plt.savefig('plots_PCA/maps_fg_HI_obs_input.png')
-plt.show()
-
 file_sims = {}
 file_sims['freq'] = nu_ch_new
 file_sims['maps_sims_tot'] =  obs_maps #obs_maps_no_mean
 file_sims['maps_sims_fg'] = fg_maps#fg_maps_no_mean
 file_sims['maps_sims_HI'] = file_ud['cosmological_signal']#HI_maps_no_mean
+
+del obs_maps; del fg_maps; del file_ud['cosmological_signal']
+
+fig = plt.figure(figsize=(10, 7))
+fig.suptitle(f'channel {ich}: {nu_ch_new[ich]} MHz',fontsize=20)
+fig.add_subplot(221) 
+hp.mollview(file_sims['maps_sims_tot'][ich], cmap='viridis',title=f'Observations, freq={nu_ch_new[ich]}', hold=True)
+fig.add_subplot(222) 
+hp.mollview(file_sims['maps_sims_HI'][ich], cmap='viridis',title=f'HI signal, freq={nu_ch_new[ich]}',min=0, max=1,hold=True)
+fig.add_subplot(223)
+hp.mollview(file_sims['maps_sims_fg'][ich],title=f'Foregrounds, freq={nu_ch_new[ich]}',cmap='viridis',hold=True)
+plt.savefig('plots_PCA/maps_fg_HI_obs_input.png')
+#plt.show()
+
 import pickle
 filename = f'sims_{len(file_sims['freq'])}freq_{min(file_sims['freq'])}_{max(file_sims['freq'])}MHz_nside{nside_out}'
 with open(filename+'.pkl', 'wb') as f:
     pickle.dump(file_sims, f)
     f.close()
+del file_sims
 
-print(obs_maps[ich].mean())
+file_sims_no_mean = {}
+file_sims_no_mean['freq'] = nu_ch_new
+file_sims_no_mean['maps_sims_tot'] = obs_maps_no_mean
+file_sims_no_mean['maps_sims_fg'] = fg_maps_no_mean
+file_sims_no_mean['maps_sims_HI'] = HI_maps_no_mean
 
+del obs_maps_no_mean; del fg_maps_no_mean; del HI_maps_no_mean
 
+ich =100
+fig = plt.figure(figsize=(10, 7))
+fig.suptitle(f'No mean, channel {ich}: {nu_ch_new[ich]} MHz',fontsize=20)
+fig.add_subplot(221) 
+hp.mollview(file_sims_no_mean['maps_sims_tot'][ich], cmap='viridis',title=f'Observations, freq={nu_ch_new[ich]}',hold=True)
+fig.add_subplot(222) 
+hp.mollview(file_sims_no_mean['maps_sims_HI'][ich], cmap='viridis',title=f'HI signal, freq={nu_ch_new[ich]}',min=0, max=1,hold=True)
+fig.add_subplot(223)
+hp.mollview(file_sims_no_mean['maps_sims_fg'][ich],title=f'Foregrounds, freq={nu_ch_new[ich]}',cmap='viridis', hold=True)
+plt.savefig('plots_PCA/maps_no_mean_fg_HI_obs_input.png')
+plt.show()
 
-
-### DIVIDERE FREQUENZE ####
-
-print(len(nu_ch_new))
-num_freq_new=len(nu_ch_new)
-
-nu_ch_1=np.array([nu_ch_new[i] for i in range(int(num_freq_new/2))])
-nu_ch_2=np.array([nu_ch_new[i] for i in range(int(num_freq_new/2), num_freq_new)])
-
-npix = np.shape(file_ud['cosmological_signal'])[1]
-nside = hp.get_nside(file_ud['cosmological_signal'][0])
-print(nside)
-obs_maps = np.zeros((num_freq_new,npix))
-fg_maps = np.zeros((num_freq_new,npix))
-
-for c in components:
-    print(c)
-    obs_maps += np.array(file_ud[c])
-
-for cc in components:
-    if cc=='cosmological_signal':
-      continue
-    print(cc)
-    fg_maps += np.array(file_ud[cc])
-    
-
-## remove mean from maps
-obs_maps_1_no_mean = np.array([obs_maps[i] -np.mean(obs_maps[i],axis=0) for i in range(len(nu_ch_1))])
-obs_maps_2_no_mean = np.array([obs_maps[i] -np.mean(obs_maps[i],axis=0) for i in range(len(nu_ch_2), num_freq_new)])
-
-HI_maps_1_no_mean = np.array([file_ud['cosmological_signal'][i] -np.mean(file_ud['cosmological_signal'][i],axis=0) for i in range(len(nu_ch_1))])
-HI_maps_2_no_mean = np.array([file_ud['cosmological_signal'][i] -np.mean(file_ud['cosmological_signal'][i],axis=0) for i in range(len(nu_ch_2), num_freq_new)])
-
-fg_maps_1_no_mean = np.array([fg_maps[i] -np.mean(fg_maps[i],axis=0) for i in range(len(nu_ch_1))])
-fg_maps_2_no_mean = np.array([fg_maps[i] -np.mean(fg_maps[i],axis=0) for i in range(len(nu_ch_2), num_freq_new)])
-
-del file_ud
-
-
-file_sims_1 = {}
-file_sims_1['freq'] = nu_ch_1
-file_sims_1['maps_sims_tot'] = obs_maps_1_no_mean
-file_sims_1['maps_sims_fg'] = fg_maps_1_no_mean
-file_sims_1['maps_sims_HI'] = HI_maps_1_no_mean
-
-file_sims_2 = {}
-file_sims_2['freq'] = nu_ch_2
-file_sims_2['maps_sims_tot'] = obs_maps_2_no_mean
-file_sims_2['maps_sims_fg'] = fg_maps_2_no_mean
-file_sims_2['maps_sims_HI'] = HI_maps_2_no_mean
-
-filename_sims_tot_1 = f'foregrounds+HI_sims_{len(nu_ch_1)}freq_{min(nu_ch_1)}_{max(nu_ch_1)}MHz_nside{nside}'
-with open(filename_sims_tot_1+'.pkl', 'wb') as f:
-    pickle.dump(file_sims_1, f)
+filename = f'no_mean_sims_{len(file_sims_no_mean['freq'])}freq_{min(file_sims_no_mean['freq'])}_{max(file_sims_no_mean['freq'])}MHz_nside{nside_out}'
+with open(filename+'.pkl', 'wb') as f:
+    pickle.dump(file_sims_no_mean, f)
     f.close()
 
-filename_sims_tot_2 = f'foregrounds+HI_sims_{len(nu_ch_2)}freq_{min(nu_ch_2)}_{max(nu_ch_2)}MHz_nside{nside}'
-with open(filename_sims_tot_2+'.pkl', 'wb') as ff:
-    pickle.dump(file_sims_2, ff)
-    ff.close()
+
+
+
+#
+#### DIVIDERE FREQUENZE ####
+#
+#print(len(nu_ch_new))
+#num_freq_new=len(nu_ch_new)
+#
+#nu_ch_1=np.array([nu_ch_new[i] for i in range(int(num_freq_new/2))])
+#nu_ch_2=np.array([nu_ch_new[i] for i in range(int(num_freq_new/2), num_freq_new)])
+#
+#npix = np.shape(file_ud['cosmological_signal'])[1]
+#nside = hp.get_nside(file_ud['cosmological_signal'][0])
+#print(nside)
+#obs_maps = np.zeros((num_freq_new,npix))
+#fg_maps = np.zeros((num_freq_new,npix))
+#
+#for c in components:
+#    print(c)
+#    obs_maps += np.array(file_ud[c])
+#
+#for cc in components:
+#    if cc=='cosmological_signal':
+#      continue
+#    print(cc)
+#    fg_maps += np.array(file_ud[cc])
+#    
+#
+### remove mean from maps
+#obs_maps_1_no_mean = np.array([obs_maps[i] -np.mean(obs_maps[i],axis=0) for i in range(len(nu_ch_1))])
+#obs_maps_2_no_mean = np.array([obs_maps[i] -np.mean(obs_maps[i],axis=0) for i in range(len(nu_ch_2), num_freq_new)])
+#
+#HI_maps_1_no_mean = np.array([file_ud['cosmological_signal'][i] -np.mean(file_ud['cosmological_signal'][i],axis=0) for i in range(len(nu_ch_1))])
+#HI_maps_2_no_mean = np.array([file_ud['cosmological_signal'][i] -np.mean(file_ud['cosmological_signal'][i],axis=0) for i in range(len(nu_ch_2), num_freq_new)])
+#
+#fg_maps_1_no_mean = np.array([fg_maps[i] -np.mean(fg_maps[i],axis=0) for i in range(len(nu_ch_1))])
+#fg_maps_2_no_mean = np.array([fg_maps[i] -np.mean(fg_maps[i],axis=0) for i in range(len(nu_ch_2), num_freq_new)])
+#
+#del file_ud
+#
+#
+#file_sims_1 = {}
+#file_sims_1['freq'] = nu_ch_1
+#file_sims_1['maps_sims_tot'] = obs_maps_1_no_mean
+#file_sims_1['maps_sims_fg'] = fg_maps_1_no_mean
+#file_sims_1['maps_sims_HI'] = HI_maps_1_no_mean
+#
+#file_sims_2 = {}
+#file_sims_2['freq'] = nu_ch_2
+#file_sims_2['maps_sims_tot'] = obs_maps_2_no_mean
+#file_sims_2['maps_sims_fg'] = fg_maps_2_no_mean
+#file_sims_2['maps_sims_HI'] = HI_maps_2_no_mean
+#
+#filename_sims_tot_1 = f'foregrounds+HI_sims_{len(nu_ch_1)}freq_{min(nu_ch_1)}_{max(nu_ch_1)}MHz_nside{nside}'
+#with open(filename_sims_tot_1+'.pkl', 'wb') as f:
+#    pickle.dump(file_sims_1, f)
+#    f.close()
+#
+#filename_sims_tot_2 = f'foregrounds+HI_sims_{len(nu_ch_2)}freq_{min(nu_ch_2)}_{max(nu_ch_2)}MHz_nside{nside}'
+#with open(filename_sims_tot_2+'.pkl', 'wb') as ff:
+#    pickle.dump(file_sims_2, ff)
+#    ff.close()
