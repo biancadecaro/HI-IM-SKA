@@ -21,21 +21,23 @@ nside=128
 npix= hp.nside2npix(nside)
 
 out_dir_plot = 'Plots_PCA_needlets/'
-dir_PCA = 'PCA_maps/'
-out_dir_maps_recon = 'maps_reconstructed/'
-out_dir_cls = 'cls_need2harm/'
+dir_PCA = 'PCA_maps/No_mean/'
+out_dir_maps_recon = 'maps_reconstructed/No_mean/'
+out_dir_cls = 'cls_need2harm/No_mean/'
 
 jmax=4
 lmax=256
 B=pippo.mylibpy_jmax_lmax2B(jmax, lmax)
-Nfg=1
+Nfg=3
 
-path_PCA_HI=dir_PCA+f'res_no_mean_PCA_HI_jmax{jmax}_lmax{lmax}_200_901_1299MHz_Nfg{Nfg}'
-path_PCA_fg=dir_PCA+f'res_no_mean_PCA_fg_sync_ff_ps_jmax{jmax}_lmax{lmax}_901_1299MHz_Nfg{Nfg}'
-path_cosmo_HI = f'../PCA_pixels_output/cosmo_HI_no_mean_200_901.0_1299.0MHz'
-path_fg = f'../PCA_pixels_output/fg_input_no_mean_200_901.0_1299.0MHz'
-path_leak_Fg = dir_PCA+f'leak_no_mean_PCA_fg_sync_ff_ps_jmax{jmax}_lmax{lmax}_901_1299MHz_Nfg{Nfg}'
-path_leak_HI = dir_PCA+f'leak_no_mean_PCA_HI_jmax{jmax}_lmax{lmax}_901_1299MHz_Nfg{Nfg}'
+fg_comp = 'synch_ff_ps'
+
+path_PCA_HI=dir_PCA+f'res_no_mean_PCA_HI_sync_ff_ps_jmax{jmax}_lmax{lmax}_200_901_1299MHz_Nfg{Nfg}_nside128'
+path_PCA_fg=dir_PCA+f'res_no_mean_PCA_fg_sync_ff_ps_jmax{jmax}_lmax{lmax}_901_1299MHz_Nfg{Nfg}_nside128'
+path_cosmo_HI = f'../PCA_pixels_output/Map_PCA_no_mean/cosmo_HI_no_mean_200_901.0_1299.0MHz'
+path_fg = f'../PCA_pixels_output/Map_PCA_no_mean/fg_input_no_mean_200_901.0_1299.0MHz'
+path_leak_Fg = dir_PCA+f'leak_no_mean_PCA_fg_sync_ff_ps_jmax{jmax}_lmax{lmax}_901_1299MHz_Nfg{Nfg}_nside128'
+path_leak_HI = dir_PCA+f'leak_no_mean_PCA_HI_sync_ff_ps_jmax{jmax}_lmax{lmax}_901_1299MHz_Nfg{Nfg}_nside128'
 path_cosmo_HI_bjk = f'../Maps_needlets/Maps_no_mean/bjk_maps_no_mean_HI_200freq_901.0_1299.0MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside128'
 path_input_fg_bjk = f'../Maps_needlets/Maps_no_mean/bjk_maps_no_mean_fg_200freq_901.0_1299.0MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside128'
 

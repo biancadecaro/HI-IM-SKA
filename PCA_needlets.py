@@ -18,19 +18,21 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 #print(sns.color_palette("husl", 15).as_hex())
 sns.palettes.color_palette()
 
-path_data_sims_tot = 'no_mean_sims_200freq_901.0_1299.0MHz_nside128'
+path_data_sims_tot = 'Sims/no_mean_sims_synch_ff_ps_200freq_901.0_1299.0MHz_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
 
 out_dir_output = 'PCA_needlets_output/'
-out_dir_output_PCA = out_dir_output+'PCA_maps/'
+out_dir_output_PCA = out_dir_output+'PCA_maps/No_mean/'
 
 nu_ch= file['freq']
 del file
 
+fg_comp = 'synch_ff_ps'
+
 need_dir = 'Maps_needlets/Maps_no_mean/'
-need_tot_maps_filename = need_dir+'bjk_maps_no_mean_obs_200freq_901.0_1299.0MHz_jmax4_lmax256_B4.00_nside128.npy'
+need_tot_maps_filename = need_dir+f'bjk_maps_no_mean_obs_{fg_comp}_200freq_901.0_1299.0MHz_jmax4_lmax256_B4.00_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
 jmax=need_tot_maps.shape[1]-1
@@ -82,7 +84,7 @@ plt.show()
 
 #num_sources = np.array([3,3,3,2,2])
 
-num_sources=1
+num_sources=3
 
 Nfg = num_freq - num_sources
 print(f'Nfg:{num_sources}')
@@ -99,30 +101,21 @@ for j in range(eigenvec_fg_Nfg.shape[0]):
     res_fg_maps[j] = eigenvec_fg_Nfg[j]@eigenvec_fg_Nfg[j].T@need_tot_maps[:,j,:]
 
 
-#fig=plt.figure()
-#plt.title(f'j={5}')
-#plt.imshow(eigenvec_fg_Nfg[5]@eigenvec_fg_Nfg[5].T, cmap='crest')
-##plt.yticks(ticks=np.arange(num_freq),labels=nu_ch)
-##plt.xticks(ticks=np.arange(num_freq-Nfg),labels=nu_ch[Nfg:num_freq], rotation=45)
-#plt.xlabel('[MHz]')
-#plt.ylabel('[MHz]')
-#plt.colorbar()
-#plt.show()
+np.save(out_dir_output_PCA+f'res_no_mean_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',res_fg_maps)
 
-np.save(out_dir_output_PCA+f'res_no_mean_PCA_fg_sync_ff_ps_jmax{jmax}_lmax{lmax}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}.npy',res_fg_maps)
-
-
+print('.. ho calcolato res fg .. ')
 
 ich=100
 j_test=7
-
 
 res_HI_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
 for j in range(eigenvec_fg_Nfg.shape[0]):
      res_HI_maps[j] = need_tot_maps[:,j,:] - res_fg_maps[j]
 del need_tot_maps
 
-np.save(out_dir_output_PCA+f'res_no_mean_PCA_HI_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}.npy',res_HI_maps)
+np.save(out_dir_output_PCA+f'res_no_mean_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',res_HI_maps)
+
+print('.. ho calcolato res HI .. ')
 
 res_fg_maps_totj=res_fg_maps.sum(axis=0)
 res_HI_maps_totj = res_HI_maps.sum(axis=0)
@@ -132,7 +125,8 @@ print('fin qui ci sono')
 
 ############### leakage ###########################
 #Foreground's maps
-need_fg_maps_filename = need_dir+f'bjk_maps_no_mean_fg_{num_freq}freq_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}.npy'
+
+need_fg_maps_filename = need_dir+f'bjk_maps_no_mean_fg_{fg_comp}_{num_freq}freq_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}.npy'
 need_fg_maps = np.load(need_fg_maps_filename)
 
 leak_fg_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
@@ -140,7 +134,7 @@ leak_HI_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
 
 for j in range(eigenvec_fg_Nfg.shape[0]):
     leak_fg_maps[j] = need_fg_maps[:,j,:]-eigenvec_fg_Nfg[j]@eigenvec_fg_Nfg[j].T@need_fg_maps[:,j,:]
-np.save(out_dir_output_PCA+f'leak_no_mean_PCA_fg_sync_ff_ps_jmax{jmax}_lmax{lmax}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}.npy',leak_fg_maps)
+np.save(out_dir_output_PCA+f'leak_no_mean_PCA_fg_sync_ff_ps_jmax{jmax}_lmax{lmax}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',leak_fg_maps)
 
 fig = plt.figure()
 plt.suptitle(f'Frequency channel: {nu_ch[ich]} MHz, Nfg:{num_sources}, jmax:{jmax}, lmax:{lmax} ')
@@ -158,7 +152,7 @@ for j in range(eigenvec_fg_Nfg.shape[0]):
     leak_HI_maps[j] = eigenvec_fg_Nfg[j]@eigenvec_fg_Nfg[j].T@need_HI_maps[:,j,:]
 
 del eigenvec_fg_Nfg; 
-np.save(out_dir_output_PCA+f'leak_no_mean_PCA_HI_jmax{jmax}_lmax{lmax}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}.npy',leak_HI_maps)
+np.save(out_dir_output_PCA+f'leak_no_mean_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',leak_HI_maps)
 
 fig = plt.figure()
 plt.suptitle(f'Frequency channel: {nu_ch[ich]} MHz, Nfg:{num_sources}, jmax:{jmax}, lmax:{lmax} ')

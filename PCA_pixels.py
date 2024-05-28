@@ -18,8 +18,9 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 
 #print(sns.color_palette("husl", 15).as_hex())
 #sns.palettes.color_palette()
+fg_components='synch_ff_ps'
+path_data_sims_tot = f'Sims/no_mean_sims_{fg_components}_200freq_901.0_1299.0MHz_nside256'
 
-path_data_sims_tot = 'no_mean_sims_200freq_901.0_1299.0MHz_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
@@ -37,6 +38,13 @@ HI_maps_freq = file['maps_sims_HI']
 fg_maps_freq = file['maps_sims_fg']
 full_maps_freq = file['maps_sims_tot']
 
+out_dir= 'PCA_pixels_output/Maps_PCA_no_mean/'
+out_dir_plot = 'PCA_pixels_output/Plots_PCA/No_Mean/'
+
+if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+if not os.path.exists(out_dir_plot):
+        os.makedirs(out_dir_plot)
 
 fig=plt.figure()
 hp.mollview(fg_maps_freq[100], cmap='viridis', title=f'Input foreground, channel:{nu_ch[100]} MHz', hold=True)
@@ -48,6 +56,7 @@ del file
 npix = np.shape(HI_maps_freq)[1]
 nside = hp.get_nside(HI_maps_freq[0])
 lmax=3*nside-1
+num_sources = 3
 
 ## PCA
 
@@ -72,10 +81,9 @@ x_ticks = np.arange(-10, num_freq+1, 10 )
 ax = plt.gca()
 ax.set(xlim=[-10,num_freq+2],xticks=x_ticks,xlabel="eigenvalue number",ylabel="$\\lambda$",title='Eigenvalues')
 plt.tight_layout()
-#plt.savefig(f'plots_PCA/eigenvalues_Nfg.png')
+plt.savefig(out_dir_plot+f'eigenvalues_Nfg_{fg_components}.png')
 plt.show()
 
-num_sources = 1
 
 Nfg = num_freq - num_sources
 
@@ -83,8 +91,8 @@ eigenvec_fg_Nfg = eigenvec[:, 0:num_sources]#eigenvec[:num_freq, Nfg:num_freq]
 
 del eigenvec
 
-for r in range(0,num_sources):
-    eigenvec_fg_Nfg[:,r] = eigenvec_fg_Nfg[:,r]/lng.norm(eigenvec_fg_Nfg[:,r])
+#for r in range(0,num_sources):
+#    eigenvec_fg_Nfg[:,r] = eigenvec_fg_Nfg[:,r]/lng.norm(eigenvec_fg_Nfg[:,r])
 
 
 #Foreground's maps from PCA
@@ -100,14 +108,15 @@ del eigenvec_fg_Nfg
 res_HI=np.zeros((num_freq,npix))
 res_HI = full_maps_freq - res_fg_maps
 
-out_dir= 'PCA_pixels_output/'
-np.save(out_dir+f'res_no_mean_PCA_HI_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy',res_HI)
-np.save(out_dir+f'cosmo_HI_no_mean_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz.npy',HI_maps_freq)
-#np.save(out_dir+f'diff_cosmo_PCA_HI_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy',HI_maps_freq-res_HI )
-np.save(out_dir+f'fg_leak_no_mean_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy',fg_leakage)
-np.save(out_dir+f'HI_leak_no_mean_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy',HI_leakage)
-np.save(out_dir+f'fg_input_no_mean_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz.npy',fg_maps_freq)
-#np.save(out_dir+f'diff_HI_fg_leak_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy', HI_leakage-fg_leakage)
+
+
+#np.save(out_dir+f'cosmo_HI_no_mean_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz.npy',HI_maps_freq)
+#np.save(out_dir+f'res_PCA_HI_no_mean_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy',res_HI)
+##np.save(out_dir+f'diff_cosmo_PCA_HI_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy',HI_maps_freq-res_HI )
+#np.save(out_dir+f'fg_leak_no_mean_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy',fg_leakage)
+#np.save(out_dir+f'HI_leak_no_mean_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy',HI_leakage)
+#np.save(out_dir+f'fg_input_no_mean_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz.npy',fg_maps_freq)
+##np.save(out_dir+f'diff_HI_fg_leak_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy', HI_leakage-fg_leakage)
 
 
 ich=100
@@ -115,7 +124,7 @@ fig = plt.figure(figsize=(10, 7))
 fig.suptitle(f'channel {ich}: {nu_ch[ich]} MHz',fontsize=20)
 fig.add_subplot(221) 
 #hp.mollview(res_fg_maps[ich],cmap='viridis', title=f'%(Res_fg/x_fg - 1), channel:{nu_ch[ich]}',unit='%' ,hold=True)
-hp.mollview(np.abs(res_fg_maps[ich]/fg_maps_freq[ich]-1)*100,cmap='viridis', min=0, max=0.1, title=f'%(Res_fg/x_fg - 1), channel:{nu_ch[ich]}',unit='%' ,hold=True)
+hp.mollview(np.abs(res_fg_maps[ich]/fg_maps_freq[ich]-1)*100,cmap='viridis', min=0, max=0.3, title=f'%(Res_fg/x_fg - 1), channel:{nu_ch[ich]}',unit='%' ,hold=True)
 fig.add_subplot(222) 
 hp.mollview(HI_maps_freq[ich], cmap='viridis', title=f'HI signal freq={nu_ch[ich]}',min=0, max =1,hold=True)
 fig.add_subplot(223)
@@ -123,29 +132,19 @@ hp.mollview(res_HI[ich], title=f'PCA HI freq={nu_ch[ich]}',min=0, max =1,cmap='v
 #fig.add_subplot(224)
 #hp.mollview(np.abs(res_HI[ich]/HI_maps_freq[ich]-1)*100, title=f'%(Res_HI/x_HI - 1), channel:{nu_ch[ich]}', min=0, max=100,cmap='viridis', hold=True)
 #hp.mollview(fg_leakage[ich], title=f'Foreground leakage freq={nu_ch[ich]}', min=0, max=0.1,cmap='viridis', hold=True)
-#plt.savefig(f'plots_PCA/maps_ch{nu_ch[ich]}_results_PCA.png')
+#plt.savefig(out_dir_plot+f'maps_ch{nu_ch[ich]}_results_PCA_{fg_components}_Nfg{num_sources}.png')
 plt.show()
 
 
 fig = plt.figure(figsize=(10, 7))
 fig.suptitle(f'channel {ich}: {nu_ch[ich]} MHz',fontsize=20)
 fig.add_subplot(221)
-hp.mollview(HI_maps_freq[ich]-res_HI[ich], title=f'Cosmo HI - PCA Res HI freq={nu_ch[ich]}', min=0, max=0.1,cmap='viridis', hold=True)
+hp.mollview(HI_maps_freq[ich]-res_HI[ich], title=f'Cosmo HI - PCA Res HI freq={nu_ch[ich]}', min=0, max=0.5,cmap='viridis', hold=True)
 fig.add_subplot(222)
-hp.mollview(fg_leakage[ich], title=f'Foreground leakage freq={nu_ch[ich]}', min=0, max=0.1,cmap='viridis', hold=True)
+hp.mollview(fg_leakage[ich], title=f'Foreground leakage freq={nu_ch[ich]}', min=0, max=0.5,cmap='viridis', hold=True)
 fig.add_subplot(223)
-hp.mollview(HI_leakage[ich], title=f'HI leakage freq={nu_ch[ich]}', min=0, max=0.1,cmap='viridis', hold=True)
-#plt.savefig(f'plots_PCA/maps_ch{nu_ch[ich]}_cosmo_leak_fg_HI.png')
-plt.show()
-
-
-fig = plt.figure(figsize=(10, 7))
-fig.suptitle(f'channel {ich}: {nu_ch[ich]} MHz',fontsize=20)
-fig.add_subplot(121)
-hp.mollview(HI_leakage[ich], title=f'HI leakage freq={nu_ch[ich]}', min=0, max=0.1,cmap='viridis', hold=True)
-fig.add_subplot(122)
-hp.mollview(fg_leakage[ich], title=f'Foreground leakage freq={nu_ch[ich]}', min=0, max=0.1,cmap='viridis', hold=True)
-#plt.savefig(f'plots_PCA/maps_ch{nu_ch[ich]}_leak_fg_HI.png')
+hp.mollview(HI_leakage[ich], title=f'HI leakage freq={nu_ch[ich]}', min=0, max=0.5,cmap='viridis', hold=True)
+#plt.savefig(out_dir_plot+f'maps_ch{nu_ch[ich]}_cosmo_leak_fg_HI_{fg_components}_Nfg{num_sources}.png')
 plt.show()
 
 
@@ -174,11 +173,11 @@ for i in range(num_freq):
 #
 #np.savetxt(out_dir_cl+f'cl_input_HI_lmax{lmax}_nside{nside}.dat', cl_Hi)
 #np.savetxt(out_dir_cl+f'cl_input_fg_lmax{lmax}_nside{nside}.dat', cl_fg)
-#np.savetxt(out_dir_cl+f'cl_PCA_HI_Nfg{Nfg}_lmax{lmax}_nside{nside}.dat', cl_Hi_recons_Nfg)
-#np.savetxt(out_dir_cl+f'cl_leak_HI_Nfg{Nfg}_lmax{lmax}_nside{nside}.dat', cl_HI_leak_Nfg)
-#np.savetxt(out_dir_cl+f'cl_leak_fg_Nfg{Nfg}_lmax{lmax}_nside{nside}.dat', cl_fg_leak_Nfg)
-#np.savetxt(out_dir_cl+f'cl_diff_HI_cosmo_PCA_Nfg{Nfg}_lmax{lmax}_nside{nside}.dat', cl_diff_HI_cosmo_PCA_Nfg)
-#np.savetxt(out_dir_cl+f'cl_diff_HI_fg_leak_Nfg{Nfg}_lmax{lmax}_nside{nside}.dat', cl_diff_HI_fg_leak_Nfg)
+#np.savetxt(out_dir_cl+f'cl_PCA_HI_Nfg{num_sources}_lmax{lmax}_nside{nside}.dat', cl_Hi_recons_Nfg)
+#np.savetxt(out_dir_cl+f'cl_leak_HI_Nfg{num_sources}_lmax{lmax}_nside{nside}.dat', cl_HI_leak_Nfg)
+#np.savetxt(out_dir_cl+f'cl_leak_fg_Nfg{num_sources}_lmax{lmax}_nside{nside}.dat', cl_fg_leak_Nfg)
+##np.savetxt(out_dir_cl+f'cl_diff_HI_cosmo_PCA_Nfg{Nfg}_lmax{lmax}_nside{nside}.dat', cl_diff_HI_cosmo_PCA_Nfg)
+##np.savetxt(out_dir_cl+f'cl_diff_HI_fg_leak_Nfg{Nfg}_lmax{lmax}_nside{nside}.dat', cl_diff_HI_fg_leak_Nfg)
 
 #cl_Hi=np.loadtxt(out_dir_cl+f'cl_input_HI_lmax{lmax}_nside{nside}.dat')
 #cl_fg=np.loadtxt(out_dir_cl+f'cl_input_fg_lmax{lmax}_nside{nside}.dat')
@@ -202,38 +201,7 @@ plt.xlabel(r'$\ell$')
 plt.ylabel(r'$ \frac{\ell*(\ell+1)}{2\pi} \langle C_{\ell} \rangle$')
 #plt.xlim([0,200])
 plt.legend()
-#plt.savefig('plots_PCA/cls_leakage_HI_FG.png')
-plt.show()
-
-fig = plt.figure()
-plt.title('Cls input HI, mean over channels')
-plt.plot(ell[1:21],np.mean(cl_Hi, axis=0)[1:21],mfc='none')#, label='Input HI')
-#plt.semilogy(np.mean(cl_fg, axis=0)[1:],mfc='none', label='Input Fg')
-#plt.plot(factor*np.mean(cl_fg_leak_Nfg, axis=0),mfc='none', label='Fg leakage')
-plt.xlabel(r'$\ell$')
-plt.ylabel(r'$ \langle C_{\ell} \rangle_{\rm ch}$')
-#plt.xlim([-1,20])
-plt.xticks(np.arange(1,21), labels=np.arange(1,21))
-#plt.xticklabels(np.arange(1,21))
-#plt.ylim(bottom=2e-5)
-#plt.legend()
-#plt.savefig('plots_PCA/cls_HI_input.png')
-plt.show()
-
-
-fig = plt.figure()
-plt.title('Cls input Fg, mean over channels')
-plt.plot(ell[1:21],np.mean(cl_fg, axis=0)[1:21],mfc='none')#, label='Input ')
-#plt.semilogy(np.mean(cl_fg, axis=0)[1:],mfc='none', label='Input Fg')
-#plt.plot(factor*np.mean(cl_fg_leak_Nfg, axis=0),mfc='none', label='Fg leakage')
-plt.xlabel(r'$\ell$')
-plt.ylabel(r'$ \langle C_{\ell} \rangle_{\rm ch}$')
-#plt.xlim([-1,20])
-plt.xticks(np.arange(1,21), labels=np.arange(1,21))
-#plt.xticklabels(np.arange(1,21))
-#plt.ylim(bottom=2e-5)
-#plt.legend()
-#plt.savefig('plots_PCA/cls_fg_input.png')
+#plt.savefig(out_dir_plot+f'cls_leakage_HI_fg_{fg_components}_Nfg{num_sources}.png')
 plt.show()
 
 fig=plt.figure()
@@ -244,7 +212,7 @@ plt.xlabel(r'$\ell$')
 plt.ylabel(r'$ \frac{\ell*(\ell+1)}{2\pi} \langle C_{\ell} \rangle$')
 #plt.xlim([0,200])
 plt.legend()
-#plt.savefig('plots_PCA/cls_HI_cls_PCA.png')
+#plt.savefig(out_dir_plot+f'cls_HI_cls_PCA_{fg_components}_Nfg{num_sources}.png')
 plt.show()
 
 fig=plt.figure()
@@ -281,5 +249,5 @@ plt.ylabel(r'$\langle C_{\ell}^{\rm rec}/C_{\ell}^{\rm cosmo}-1 \rangle$')
 plt.ylim([-0.2,0.2])
 plt.axhline(y=0,c='k',ls='--',alpha=0.5)
 plt.legend()
-#plt.savefig('plots_PCA/relative_diff_cls_PCA_cosmo_HI.png')
+#plt.savefig(out_dir_plot+f'relative_diff_cls_PCA_cosmo_HI_{fg_components}_Nfg{num_sources}.png')
 plt.show()
