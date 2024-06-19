@@ -19,7 +19,7 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 #print(sns.color_palette("husl", 15).as_hex())
 #sns.palettes.color_palette()
 fg_components='synch_ff_ps'
-path_data_sims_tot = f'Sims/no_mean_sims_{fg_components}_200freq_901.0_1299.0MHz_nside256'
+path_data_sims_tot = f'Sims/no_mean_sims_{fg_components}_200freq_901.0_1299.0MHz_nside128'
 
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -46,8 +46,10 @@ if not os.path.exists(out_dir):
 if not os.path.exists(out_dir_plot):
         os.makedirs(out_dir_plot)
 
+ich = int(num_freq/2)
+
 fig=plt.figure()
-hp.mollview(fg_maps_freq[100], cmap='viridis', title=f'Input foreground, channel:{nu_ch[100]} MHz', hold=True)
+hp.mollview(fg_maps_freq[ich], cmap='viridis', title=f'Input foreground, channel:{nu_ch[ich]} MHz', hold=True)
 plt.show()
 
 
@@ -55,7 +57,7 @@ del file
 
 npix = np.shape(HI_maps_freq)[1]
 nside = hp.get_nside(HI_maps_freq[0])
-lmax=3*nside-1
+lmax=3*nside
 num_sources = 3
 
 ## PCA
@@ -63,14 +65,14 @@ num_sources = 3
 Cov_channels=np.cov(full_maps_freq)
 #Corr_channels=np.corrcoef(full_maps_freq)
 
-#fig=plt.figure()
-#plt.imshow(Cov_channels@Cov_channels.T, cmap='crest')
-##plt.yticks(ticks=np.arange(nu_ch.shape[0]),labels=nu_ch)
-##plt.xticks(ticks=np.arange(nu_ch.shape[0]),labels=nu_ch, rotation=45)
-#plt.xlabel('[MHz]')
-#plt.ylabel('[MHz]')
-#plt.colorbar()
-#plt.show()
+fig=plt.figure()
+plt.imshow(Cov_channels, cmap='crest')
+#plt.yticks(ticks=np.arange(nu_ch.shape[0]),labels=nu_ch)
+#plt.xticks(ticks=np.arange(nu_ch.shape[0]),labels=nu_ch, rotation=45)
+plt.xlabel('[MHz]')
+plt.ylabel('[MHz]')
+plt.colorbar()
+plt.show()
 
 eigenval, eigenvec= np.linalg.eig(Cov_channels)
 
@@ -89,11 +91,43 @@ Nfg = num_freq - num_sources
 
 eigenvec_fg_Nfg = eigenvec[:, 0:num_sources]#eigenvec[:num_freq, Nfg:num_freq]
 
+fig=plt.figure()
+plt.imshow(eigenvec_fg_Nfg, cmap='crest')
+#plt.yticks(ticks=np.arange(nu_ch.shape[0]),labels=nu_ch)
+#plt.xticks(ticks=np.arange(nu_ch.shape[0]),labels=nu_ch, rotation=45)
+plt.xlabel('[MHz]')
+plt.ylabel('[MHz]')
+plt.colorbar()
+plt.show()
+
 del eigenvec
 
 #for r in range(0,num_sources):
 #    eigenvec_fg_Nfg[:,r] = eigenvec_fg_Nfg[:,r]/lng.norm(eigenvec_fg_Nfg[:,r])
 
+
+# gal freefree spectral index for reference
+FF_col = np.array([nu_ch**(-2.13)]).T 
+
+# gal synchrotron spectral index region for reference
+sync_A = np.array([nu_ch**(-3.2)]).T; y1 = sync_A/np.linalg.norm(sync_A)
+sync_B = np.array([nu_ch**(-2.6)]).T; y2 = sync_B/np.linalg.norm(sync_B)
+
+### actual plotting
+fig=plt.figure()
+plt.rcParams["figure.figsize"] = (10,6)
+plt.rcParams["axes.labelsize"] = 12
+
+x = np.arange(0,len(nu_ch))
+
+plt.fill_between(x,y1.T[0],y2.T[0],alpha=0.3,label='gal synch')
+plt.plot(abs(eigenvec_fg_Nfg/np.linalg.norm(eigenvec_fg_Nfg,axis=0)),label='mix mat column')
+plt.plot(FF_col/np.linalg.norm(FF_col),'m:',label='gal ff')
+
+ax = plt.gca()
+ax.set(ylim=[0.0,0.4],xlabel="frequency channel",title='mixing matrix columns')
+plt.legend(fontsize=12)
+plt.show()
 
 #Foreground's maps from PCA
 
@@ -110,21 +144,20 @@ res_HI = full_maps_freq - res_fg_maps
 
 
 
-#np.save(out_dir+f'cosmo_HI_no_mean_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz.npy',HI_maps_freq)
-#np.save(out_dir+f'res_PCA_HI_no_mean_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy',res_HI)
-##np.save(out_dir+f'diff_cosmo_PCA_HI_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy',HI_maps_freq-res_HI )
-#np.save(out_dir+f'fg_leak_no_mean_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy',fg_leakage)
-#np.save(out_dir+f'HI_leak_no_mean_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy',HI_leakage)
-#np.save(out_dir+f'fg_input_no_mean_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz.npy',fg_maps_freq)
-##np.save(out_dir+f'diff_HI_fg_leak_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy', HI_leakage-fg_leakage)
+np.save(out_dir+f'cosmo_HI_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz.npy',HI_maps_freq)
+np.save(out_dir+f'res_PCA_HI_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy',res_HI)
+#np.save(out_dir+f'diff_cosmo_PCA_HI_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy',HI_maps_freq-res_HI )
+np.save(out_dir+f'fg_leak_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy',fg_leakage)
+np.save(out_dir+f'HI_leak_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy',HI_leakage)
+np.save(out_dir+f'fg_input_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz.npy',fg_maps_freq)
+#np.save(out_dir+f'diff_HI_fg_leak_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}.npy', HI_leakage-fg_leakage)
 
 
-ich=100
 fig = plt.figure(figsize=(10, 7))
 fig.suptitle(f'channel {ich}: {nu_ch[ich]} MHz',fontsize=20)
 fig.add_subplot(221) 
 #hp.mollview(res_fg_maps[ich],cmap='viridis', title=f'%(Res_fg/x_fg - 1), channel:{nu_ch[ich]}',unit='%' ,hold=True)
-hp.mollview(np.abs(res_fg_maps[ich]/fg_maps_freq[ich]-1)*100,cmap='viridis', min=0, max=0.3, title=f'%(Res_fg/x_fg - 1), channel:{nu_ch[ich]}',unit='%' ,hold=True)
+hp.mollview(np.abs(res_fg_maps[ich]/fg_maps_freq[ich]-1)*100,cmap='viridis', min=0, max=0.1, title=f'%(Res_fg/x_fg - 1), channel:{nu_ch[ich]}',unit='%' ,hold=True)
 fig.add_subplot(222) 
 hp.mollview(HI_maps_freq[ich], cmap='viridis', title=f'HI signal freq={nu_ch[ich]}',min=0, max =1,hold=True)
 fig.add_subplot(223)
@@ -210,7 +243,7 @@ plt.plot(ell, factor*np.mean(cl_Hi_recons_Nfg, axis=0),'+',mfc='none', label='Re
 #plt.plot(factor*np.mean(cl_fg_leak_Nfg, axis=0),mfc='none', label='Fg leakage')
 plt.xlabel(r'$\ell$')
 plt.ylabel(r'$ \frac{\ell*(\ell+1)}{2\pi} \langle C_{\ell} \rangle$')
-#plt.xlim([0,200])
+plt.xlim([15,200])
 plt.legend()
 #plt.savefig(out_dir_plot+f'cls_HI_cls_PCA_{fg_components}_Nfg{num_sources}.png')
 plt.show()

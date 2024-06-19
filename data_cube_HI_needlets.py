@@ -25,7 +25,9 @@ fg_maps_freq = file['maps_sims_fg']
 full_maps_freq = file['maps_sims_tot']
 print(HI_maps_freq.shape)
 
-ich=100
+
+ich=int(num_freq/2)
+print(ich)
 fig = plt.figure(figsize=(10, 7))
 fig.suptitle(f'channel {ich}: {nu_ch[ich]} MHz',fontsize=20)
 fig.add_subplot(221) 
@@ -42,11 +44,23 @@ del file
 
 npix = np.shape(HI_maps_freq)[1]
 nside = hp.get_nside(HI_maps_freq[0])
-lmax=256#2*nside#3*nside-1#
-jmax=4
+lmax=2*nside#3*nside-1#
+jmax=12
 out_dir = './Maps_needlets/Maps_no_mean/'
 if not os.path.exists(out_dir):
         os.makedirs(out_dir)
+
+for nu in range(num_freq):
+        alm_HI = hp.map2alm(HI_maps_freq[nu], lmax=lmax)
+        HI_maps_freq[nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside)
+        del alm_HI
+        alm_fg = hp.map2alm(fg_maps_freq[nu], lmax=lmax)
+        fg_maps_freq[nu] = hp.alm2map(alm_fg, lmax=lmax, nside = nside)
+        del alm_fg
+        alm_obs = hp.map2alm(full_maps_freq[nu], lmax=lmax)
+        full_maps_freq[nu] = hp.alm2map(alm_obs, lmax=lmax, nside = nside)
+        del alm_obs
+
 
 need_analysis = analysis.NeedAnalysis(jmax, lmax, out_dir, full_maps_freq)
 need_analysis_HI = analysis.NeedAnalysis(jmax, lmax, out_dir, HI_maps_freq)
@@ -54,9 +68,9 @@ need_analysis_fg = analysis.NeedAnalysis(jmax, lmax, out_dir, fg_maps_freq)
 
 B=need_analysis.B
 
-fname_obs_tot=f'bjk_maps_no_mean_obs_synch_ff_ps_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}'
-fname_HI=f'bjk_maps_no_mean_HI_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}'
-fname_fg=f'bjk_maps_no_mean_fg_synch_ff_ps_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}'
+fname_obs_tot=f'bjk_maps_obs_synch_ff_ps_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}'
+fname_HI=f'bjk_maps_HI_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}'
+fname_fg=f'bjk_maps_fg_synch_ff_ps_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}'
 
 
 #try:
@@ -75,7 +89,7 @@ fname_fg=f'bjk_maps_no_mean_fg_synch_ff_ps_{num_freq}freq_{min(nu_ch)}_{max(nu_c
 map_need_output = np.zeros((num_freq, jmax+1, npix))
 map_HI_need_output = np.zeros((num_freq, jmax+1, npix))
 map_fg_need_output = np.zeros((num_freq, jmax+1, npix))
-ich=100
+
 j_test=4#7
 
 for nu in range(num_freq):
@@ -89,6 +103,7 @@ del map_need_output; del full_maps_freq; del need_analysis
 for nu in range(num_freq):        
         map_HI_need_output[nu] = pippo.mylibpy_needlets_f2betajk_healpix_harmonic(HI_maps_freq[nu], B, jmax,lmax )
 np.save(out_dir+fname_HI,map_HI_need_output)
+
 fig = plt.figure(figsize=(10, 7))
 hp.mollview(map_HI_need_output[ich,j_test], cmap='viridis', title=f'HI, j={j_test}, freq={nu_ch[ich]}', hold=True)
 
@@ -101,8 +116,6 @@ fig = plt.figure(figsize=(10, 7))
 hp.mollview(map_fg_need_output[ich,j_test], cmap='viridis', title=f'Fg, j={j_test}, freq={nu_ch[ich]}', hold=True)
 
 del map_fg_need_output; del fg_maps_freq; del need_analysis_fg
-
-
 
 
 

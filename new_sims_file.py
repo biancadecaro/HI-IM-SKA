@@ -1,11 +1,6 @@
 """"
-Questo script prende le mappe simulate di Isabella Carucci,
-le degrada da Nside=256 a Nside=128, fas il merging tra le mappe per
-ridurre il numero di canali (fa na semplice media tra le mappe in uno stesso canale)
-e le stora in in tre file: 
-uno con frequenze 900-1299 MHz con Delta_nu=2;
-uno con frequenze 900-1099MHz con Delta-nu=2 MHz e l'altro con 
-1100-1280 MHz con Delta-nu=2 MHz.
+Questo script prende le mappe simulate di Isabella Carucci a nside=256, fa il merging tra le mappe per
+ridurre il numero di canali (fa na semplice media tra le mappe in uno stesso canale) con Dnu =10
 Le mappe finali saranno così composte:
 'maps_sims_tot' = HI+gal_sync+gal_ff+ps
 'maps_sims_HI' = HI
@@ -17,6 +12,7 @@ import numpy as np
 import healpy as hp
 import matplotlib.pyplot as plt
 
+c_light = 3.0*1e8  # m/s
 
 def merging_maps(nu_ch_in,nu_ch_out,maps_in,deltanu_out):
 	
@@ -45,6 +41,77 @@ def nu_ch_f(nu_ch_in,dnu_out):
 
 	return nu_ch_out
 
+## from vector to matrix and viceversa
+def alm2tab(alm,lmax):
+
+	size = np.size(alm)
+	tab  = np.zeros((lmax+1,lmax+1,2))
+
+	for r in range(0,size):
+		l,m = hp.sphtfunc.Alm.getlm(lmax,r)
+		tab[l,m,0] = np.real(alm[r])
+		tab[l,m,1] = np.imag(alm[r])
+
+	return tab
+
+def tab2alm(tab):
+
+	lmax = int(np.shape(tab)[0])-1
+	taille = int(lmax*(lmax+3)/2)+1
+	alm = np.zeros((taille,),dtype=complex)
+
+	for r in range(0,taille):
+		l,m = hp.sphtfunc.Alm.getlm(lmax,r)
+		alm[r] = complex(tab[l,m,0],tab[l,m,1])
+
+	return alm
+
+
+## getting the spherical harmonic coefficients
+## from a map
+def almtrans(map_in,lmax=None):
+
+	if lmax==None:
+		lmax = 3.*hp.get_nside(map_in)
+		print("lmax = ",lmax)
+
+	alm = hp.sphtfunc.map2alm(map_in,lmax=lmax)
+
+	tab = alm2tab(alm,lmax)
+
+	return tab
+
+
+## convolution:
+## multiplying the spherical harmonic coefficients
+def alm_product(tab,beam_l):
+	length=np.size(beam_l)
+	lmax = np.shape(tab)[0]
+
+	if lmax > length:
+		print("Filter length is too small")
+
+	for r in range(lmax):
+		tab[r,:,:] = beam_l[r]*tab[r,:,:]
+
+	return tab
+
+
+## from a_lm back to map
+def almrec(tab,nside):
+
+	alm = tab2alm(tab)
+	map_out = hp.alm2map(alm,nside,verbose=False)
+
+	return map_out
+
+def convolve(map_in,beam_l,lmax):
+	alm = almtrans(map_in,lmax=lmax)
+	tab = alm_product(alm,beam_l)
+	m = almrec(tab,nside=hp.get_nside(map_in))
+	return m
+######################################################
+
 path_data = 'sim_PL05_from191030.hd5'
 file = h5py.File(path_data,'r')
 nu_ch = np.array(file['frequencies'])
@@ -52,7 +119,7 @@ nu_ch = np.array(file['frequencies'])
 
 file_new={}
 
-delta_nu_out = 2
+delta_nu_out = 10
 file_new['frequencies'] = nu_ch_f(nu_ch,delta_nu_out)#np.array([nu_ch[i*delta_nu] for i in range(0,int(len(nu_ch)/delta_nu))])
 
 components = list(file.keys())
@@ -92,7 +159,7 @@ for cc in components:
     print(cc)
     fg_maps += np.array(file_new[cc])
     
-ich =100
+ich = int(num_freq_new/2)
 
 obs_maps_no_mean = np.array([obs_maps[i] -np.mean(obs_maps[i],axis=0)  for i in range(num_freq_new)])
 HI_maps_no_mean = np.array([file_new['cosmological_signal'][i] -np.mean(file_new['cosmological_signal'][i],axis=0) for i in range(num_freq_new)])
@@ -116,11 +183,70 @@ hp.mollview(file_sims['maps_sims_HI'][ich], cmap='viridis',title=f'HI signal, fr
 fig.add_subplot(223)
 hp.mollview(file_sims['maps_sims_fg'][ich],title=f'Foregrounds, freq={nu_ch_new[ich]}',cmap='viridis',hold=True)
 #plt.savefig('plots_PCA/maps_fg_HI_obs_input.png')
-#plt.show()
+
 
 import pickle
-filename = f'Sims/no_mean_sims_synch_ff_ps_{len(file_sims['freq'])}freq_{min(file_sims['freq'])}_{max(file_sims['freq'])}MHz_nside{nside}'
+filename = f'Sims/no_mean_sims_synch_ff_ps_{len(nu_ch_new)}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_nside{nside}'
 with open(filename+'.pkl', 'wb') as f:
     pickle.dump(file_sims, f)
     f.close()
 del file_sims
+
+##########################################################################
+####### Computing beam size using given survey specifics: ################
+## initialise a dictionary with the instrument specifications
+## for noise and beam calculation
+dish_diam = 13.5  # m
+T_inst    = 20.0  # K
+f_sky     = 0.1   # Survey area (sky fraction)
+t_obs     = 4000. # hrs, observing time
+Ndishes   = 64.   # number of dishes
+specs_dict = {'dish_diam': dish_diam, 'T_inst': T_inst,
+              'f_sky': f_sky, 't_obs': t_obs, 'Ndishes' : Ndishes}
+
+theta_FWMH_max = c_light*1e-6/np.min(nu_ch_new)/float(dish_diam) #radians
+theta_FWMH = c_light*1e-6/nu_ch_new/float(dish_diam) #radians
+
+print()
+
+#beam_worst = hp.gauss_beam(theta_FWMH_max, lmax=3*nside)
+
+beam =np.array( [hp.gauss_beam(theta_FWMH[i], lmax=3*nside) for i in range(num_freq_new)])
+beam_to_worst = [hp.gauss_beam(np.sqrt(theta_FWMH_max**2-theta_FWMH[i]**2),lmax=3*nside) for i in range(num_freq_new)]
+
+print(f'theta_F at {nu_ch_new[ich]} MHz:{np.sqrt(theta_FWMH_max**2-theta_FWMH[ich]**2)}')
+
+temp_obs =  np.array([convolve(obs_maps_no_mean[i],beam[i], lmax=3*nside) for i in range(num_freq_new)])
+temp_fg =  np.array([convolve(fg_maps_no_mean[i],beam[i], lmax=3*nside) for i in range(num_freq_new)])
+temp_HI =  np.array([convolve(HI_maps_no_mean[i],beam[i], lmax=3*nside) for i in range(num_freq_new)])
+
+file_sims_beam = {}
+file_sims_beam['freq'] = nu_ch_new
+file_sims_beam['maps_sims_tot'] =  np.array([convolve(temp_obs[i],beam_to_worst[i], lmax=3*nside) for i in range(num_freq_new)])
+del temp_obs
+file_sims_beam['maps_sims_fg'] = np.array([convolve(temp_fg[i],beam_to_worst[i], lmax=3*nside) for i in range(num_freq_new)])
+del temp_fg
+file_sims_beam['maps_sims_HI'] = np.array([convolve(temp_HI[i],beam_to_worst[i], lmax=3*nside) for i in range(num_freq_new)])
+del temp_HI
+
+
+
+import pickle
+filename = f'Sims/beam_no_mean_sims_synch_ff_ps_{len(nu_ch_new)}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_nside{nside}'
+with open(filename+'.pkl', 'wb') as ff:
+    pickle.dump(file_sims_beam, ff)
+    ff.close()
+
+
+fig = plt.figure(figsize=(10, 7))
+fig.suptitle(f'BEAM, channel {ich}: {nu_ch_new[ich]} MHz',fontsize=20)
+fig.add_subplot(221) 
+hp.mollview(file_sims_beam['maps_sims_tot'][ich], cmap='viridis',title=f'Observations, freq={nu_ch_new[ich]}', hold=True)
+fig.add_subplot(222) 
+hp.mollview(file_sims_beam['maps_sims_HI'][ich], cmap='viridis',title=f'HI signal, freq={nu_ch_new[ich]}',min=0, max=1,hold=True)
+fig.add_subplot(223)
+hp.mollview(file_sims_beam['maps_sims_fg'][ich],title=f'Foregrounds, freq={nu_ch_new[ich]}',cmap='viridis',hold=True)
+
+del file_sims_beam
+
+plt.show()
