@@ -4,7 +4,7 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from needlets_analysis import analysis
-import re
+import os
 
 import seaborn as sns
 sns.set()
@@ -18,19 +18,26 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 #print(sns.color_palette("husl", 15).as_hex())
 sns.palettes.color_palette()
 
-path_data_sims_tot = 'sims_200freq_901.0_1299.0MHz_nside128'
+path_data_sims_tot = 'Sims/sims_synch_ff_ps_40freq_905.0_1295.0MHz_nside256'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
 
 out_dir_output = 'PCA_needlets_output/'
-out_dir_output_PCA = out_dir_output+'PCA_maps/'
+out_dir_output_PCA = out_dir_output+'PCA_maps/No_mean/'
+out_dir_plot = out_dir_output+'Plots_PCA_needlets/No_mean/'
+if not os.path.exists(out_dir_output):
+        os.makedirs(out_dir_output)
+if not os.path.exists(out_dir_output_PCA):
+        os.makedirs(out_dir_output_PCA)
 
 nu_ch= file['freq']
 del file
 
-need_dir = 'Maps_needlets/'
-need_tot_maps_filename = need_dir+'bjk_maps_obs_200freq_901.0_1299.0MHz_jmax4_lmax383_B4.42_nside128.npy'
+fg_comp = 'synch_ff_ps'
+
+need_dir = 'Maps_needlets/Maps_no_mean/'
+need_tot_maps_filename = need_dir+f'bjk_maps_obs_{fg_comp}_200freq_901.0_1299.0MHz_jmax12_lmax256_B1.59_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
 jmax=need_tot_maps.shape[1]-1
@@ -41,12 +48,11 @@ min_ch = min(nu_ch)
 max_ch = max(nu_ch)
 npix = need_tot_maps.shape[2]
 nside = hp.npix2nside(npix)
-lmax=3*nside-1#2*nside#
+lmax=256
 B=pow(lmax,(1./jmax))
 
 
 print(f'jmax:{jmax}, lmax:{lmax}, B:{B:1.2f}, num_freq:{num_freq}, min_ch:{min_ch}, max_ch:{max_ch}, nside:{nside}')
-
 
 out_dir_plot = out_dir_output+'Plots_PCA_needlets/'
 
@@ -123,6 +129,8 @@ fig.add_subplot(234)
 hp.mollview(res_fg_maps[3][ich], title=f'Res fg j=3', cmap='viridis', hold=True)
 fig.add_subplot(235)
 hp.mollview(res_fg_maps[4][ich], title=f'Res fg j=4', cmap='viridis', hold=True)
+fig.add_subplot(235)
+hp.mollview(res_fg_maps[5][ich], title=f'Res fg j=4', cmap='viridis', hold=True)
 plt.show()
 
 

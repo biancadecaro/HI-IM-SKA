@@ -5,8 +5,8 @@ import re
 import os
 
 import seaborn as sns
-sns.set()
-sns.set(style = 'white')
+
+sns.set_theme(style = 'white')
 #sns.set_palette('husl',15)
 
 import matplotlib as mpl
@@ -16,11 +16,61 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 #print(sns.color_palette("husl", 15).as_hex())
 sns.palettes.color_palette()
 import cython_mylibc as pippo
+
+######################################################################################
+def mexicanneedlet(B,j,lmax,p=1,normalised=True):
+    '''Return the needlet filter b(l) for a Mexican needlet with parameters ``B`` and ``j``.
+    
+    Parameters
+    ----------
+    B : float
+        The parameter B of the needlet, should be larger that 1.
+    j : int or np.ndarray
+        The frequency j of the needlet. Can be an array with the values of ``j`` to be calculated.
+    lmax : int
+        The maximum value of the multipole l for which the filter will be calculated (included).
+    p : int
+        Order of the Mexican needlet.
+    normalised : bool, optional
+        If ``True``, the sum (in frequencies ``j``) of the squares of the filters will be 1 for all multipole ell.
+
+    Returns
+    -------
+    np.ndarray
+        A numpy array containing the values of a needlet filter b(l), starting with l=0. If ``j`` is
+        an array, it returns an array containing the filters for each frequency.
+    '''
+    ls=np.arange(lmax+1)
+    j=np.array(j,ndmin=1)
+    print(j)
+    needs=[]
+    if normalised != True:
+        for jj in j:
+#            u=(ls/B**jj)
+#            bl=u**(2.*p)*np.exp(-u**2.)
+            u=((ls*(ls+1)/B**(2.*jj)))
+            bl=(u**p)*np.exp(-u)
+            needs.append(bl)
+    else:
+        K=np.zeros(lmax+1)
+        #jmax=np.max((np.log(5.*lmax)/np.log(B),np.max(j)))
+        jmax = np.max(j)+1
+        print(jmax)
+        for jj in np.arange(0,jmax+1):#np.arange(1,jmax+1)
+#            u=(ls/B**jj)                   This is an almost identical definition
+#            bl=u**2.*np.exp(-u**2.)
+            u=((ls*(ls+1)/B**(2.*jj)))
+            bl=(u**p)*np.exp(-u)
+            K=K+bl**2.
+            if np.isin(jj,j):
+                needs.append(bl)
+        needs=needs/np.sqrt(np.mean(K[int(lmax/3):int(2*lmax/3)]))
+    return(np.squeeze(needs))
 ##########################################################################################
 
 out_dir_plot = 'Plots_PCA_needlets/'
-dir_PCA = 'PCA_maps/No_mean/'
-out_dir_maps_recon = 'maps_reconstructed/No_mean/'
+dir_PCA = 'PCA_maps/No_mean/p3/Beam_40arcmin/'
+out_dir_maps_recon = 'maps_reconstructed/No_mean/p3/Beam_40arcmin/'
 if not os.path.exists(out_dir_maps_recon):
         os.makedirs(out_dir_maps_recon)
 
@@ -34,18 +84,18 @@ max_ch = 1295
 nside=256
 npix= hp.nside2npix(nside)
 jmax=12
-lmax= 3*nside#2*nside#
+lmax= 3*nside
 Nfg=3
 B = pippo.mylibpy_jmax_lmax2B(jmax, lmax)
 
 path_PCA_HI=dir_PCA+f'res_PCA_HI_synch_ff_ps_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 path_PCA_fg=dir_PCA+f'res_PCA_fg_synch_ff_ps_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
-path_cosmo_HI = f'../PCA_pixels_output/Maps_PCA/No_mean/cosmo_HI_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_{lmax}'
-path_fg = f'../PCA_pixels_output/Maps_PCA/No_mean/fg_input_synch_ff_ps_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_{lmax}'
+path_cosmo_HI = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_40arcmin/cosmo_HI_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_{lmax}'
+path_fg = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_40arcmin/fg_input_synch_ff_ps_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_{lmax}'
 path_leak_Fg = dir_PCA+f'leak_PCA_synch_ff_ps_jmax{jmax}_lmax{lmax}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 path_leak_HI = dir_PCA+f'leak_PCA_HI_synch_ff_ps_jmax{jmax}_lmax{lmax}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
-path_cosmo_HI_bjk = f'../Maps_needlets/No_mean/bjk_maps_HI_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
-path_input_fg_bjk = f'../Maps_needlets/No_mean/bjk_maps_fg_synch_ff_ps_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
+path_cosmo_HI_bjk = f'../Maps_needlets_mexican/No_mean/p3/Beam_40arcmin/bjk_maps_HI_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
+path_input_fg_bjk = f'../Maps_needlets_mexican/No_mean/p3/Beam_40arcmin/bjk_maps_fg_synch_ff_ps_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
 
 
 print(f'jmax:{jmax}, lmax:{lmax}, num_ch:{num_ch}, min_ch:{min_ch}, max_ch:{max_ch}, Nfg:{Nfg}')
@@ -67,7 +117,21 @@ ich=int(num_ch/2)
 ############################################################################################
 ####################### NEEDLETS2HARMONICS #################################################
 
-b_values = pippo.mylibpy_needlets_std_init_b_values(B,jmax,lmax)
+b_values = mexicanneedlet(B,np.arange(0,jmax+1),lmax, p=3)
+print(b_values.shape)
+fig, ax1  = plt.subplots(1,1,figsize=(7,5)) 
+plt.suptitle(r'$D = %1.2f $' %B +r'$ ,~j_{\mathrm{max}} =$'+str(jmax) + r'$ ,~\ell_{\mathrm{max}} =$'+str(lmax))
+
+
+for i in range(b_values.shape[0]):
+    ax1.plot(b_values[i], label = 'j='+str(i) )
+ax1.set_xscale('log')
+ax1.set_xlabel(r'$\ell$')
+ax1.set_ylabel(r'$w^{2}(\frac{\ell}{D^{j}})$')
+ax1.legend(loc='right')
+plt.tight_layout()
+plt.show()
+
 res_PCA_HI = np.load(path_PCA_HI+'.npy')
 res_PCA_fg = np.load(path_PCA_fg+'.npy')
 
@@ -77,10 +141,8 @@ map_PCA_fg_need2pix=np.zeros((len(nu_ch), npix))
 
 for nu in range(len(nu_ch)):
     for j in range(res_PCA_HI.shape[0]):
-        map_PCA_fg_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(res_PCA_fg[j,nu],b_values,j)
-        map_PCA_HI_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(res_PCA_HI[j,nu],b_values,j)
-    map_PCA_fg_need2pix[nu] = hp.remove_dipole(map_PCA_fg_need2pix[nu])
-    map_PCA_HI_need2pix[nu] = hp.remove_dipole(map_PCA_HI_need2pix[nu])
+        map_PCA_fg_need2pix[nu] += hp.alm2map(hp.almxfl(hp.map2alm(res_PCA_fg[j,nu],lmax=lmax),b_values[j,:]),lmax=lmax,nside=nside)
+        map_PCA_HI_need2pix[nu] += hp.alm2map(hp.almxfl(hp.map2alm(res_PCA_HI[j,nu],lmax=lmax),b_values[j,:]),lmax=lmax,nside=nside)
 #for nu in range(len(nu_ch)):
 #    map_PCA_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_fg[:,nu],B, lmax)
 #    map_PCA_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_HI[:,nu],B, lmax)
@@ -96,10 +158,8 @@ map_input_HI_need2pix=np.zeros((len(nu_ch), npix))
 map_input_fg_need2pix=np.zeros((len(nu_ch), npix))
 for nu in range(len(nu_ch)):
     for j in range(cosmo_HI_bjk.shape[1]):
-        map_input_HI_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(cosmo_HI_bjk[nu,j],b_values,j)
-        map_input_fg_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(fg_bjk[nu,j],b_values,j)
-    map_input_HI_need2pix[nu] = hp.remove_dipole(map_input_HI_need2pix[nu])
-    map_input_fg_need2pix[nu] = hp.remove_dipole(map_input_fg_need2pix[nu])
+        map_input_HI_need2pix[nu] += hp.alm2map(hp.almxfl(hp.map2alm(cosmo_HI_bjk[nu,j],lmax=lmax),b_values[j,:]),lmax=lmax,nside=nside)
+        map_input_fg_need2pix[nu] += hp.alm2map(hp.almxfl(hp.map2alm(fg_bjk[nu,j],lmax=lmax),b_values[j,:]),lmax=lmax,nside=nside)
     #map_input_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(cosmo_HI_bjk[nu,:],B, lmax)
     #map_input_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(fg_bjk[nu,:],B, lmax)
 np.save(out_dir_maps_recon+f'maps_reconstructed_cosmo_HI_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_input_HI_need2pix)
@@ -111,6 +171,8 @@ del cosmo_HI_bjk; del fg_bjk
 #map_PCA_fg_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
 #map_input_fg_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_input_fg_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
 #map_input_HI_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_cosmo_HI_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
+
+
 
 
 fg = np.load(path_fg+'.npy')
@@ -180,7 +242,7 @@ for n in range(len(nu_ch)):
     cl_PCA_HI_need2harm[n] = hp.anafast(map_PCA_HI_need2pix[n], lmax=lmax_cl)
     cl_diff_cosmo_PCA_HI_need2harm[n] = hp.anafast(cosmo_HI[n]-map_PCA_HI_need2pix[n], lmax=lmax_cl)
 
-np.savetxt(out_dir_cl+f'cl_PCA_HI_Nfg{Nfg}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat', cl_PCA_HI_need2harm)
+np.savetxt(out_dir_cl+f'cl_PCA_HI_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat', cl_PCA_HI_need2harm)
 
 
 del map_PCA_HI_need2pix; del cosmo_HI; del map_input_HI_need2pix; 
@@ -258,7 +320,8 @@ map_leak_HI_need2pix=np.zeros((len(nu_ch), npix))
 for nu in range(len(nu_ch)):
     #map_leak_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(need_HI_leak[:,nu],B, lmax)
     for j in range(need_HI_leak.shape[0]):
-        map_leak_HI_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(need_HI_leak[j,nu],b_values,j)
+        map_leak_HI_need2pix[nu] += hp.alm2map(hp.almxfl(hp.map2alm(need_HI_leak[j,nu],lmax=lmax),b_values[j,:]),lmax=lmax,nside=nside)
+        
 np.save(out_dir_maps_recon+f'maps_reconstructed_leak_HI_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_HI_need2pix)
 
 del need_HI_leak
@@ -267,7 +330,7 @@ need_fg_leak=np.load(path_leak_Fg+'.npy')
 map_leak_fg_need2pix=np.zeros((len(nu_ch), npix))
 for nu in range(len(nu_ch)):
     for j in range(need_fg_leak.shape[0]):
-        map_leak_fg_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(need_fg_leak[j,nu],b_values,j)
+        map_leak_fg_need2pix[nu] += hp.alm2map(hp.almxfl(hp.map2alm(need_fg_leak[j,nu],lmax=lmax),b_values[j,:]),lmax=lmax,nside=nside)
     #map_leak_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(need_fg_leak[:,nu],B, lmax)
 del need_fg_leak
 np.save(out_dir_maps_recon+f'maps_reconstructed_leak_fg_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_fg_need2pix)
@@ -297,8 +360,8 @@ for n in range(len(nu_ch)):
     cl_diff_leak[n] = hp.anafast(map_leak_HI_need2pix[n]-map_leak_fg_need2pix[n], lmax=lmax_cl)
 
 
-np.savetxt(out_dir_cl+f'cl_leak_HI_Nfg{Nfg}_{jmax}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_HI)
-np.savetxt(out_dir_cl+f'cl_leak_fg_Nfg{Nfg}_{jmax}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_fg)
+np.savetxt(out_dir_cl+f'cl_leak_HI_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_HI)
+np.savetxt(out_dir_cl+f'cl_leak_fg_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_fg)
 
 del map_leak_HI_need2pix; del map_leak_fg_need2pix
 #

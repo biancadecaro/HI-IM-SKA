@@ -18,14 +18,14 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 #print(sns.color_palette("husl", 15).as_hex())
 sns.palettes.color_palette()
 ###########################################################################3
-path_data_sims_tot = 'Sims/no_mean_sims_synch_ff_ps_40freq_905.0_1295.0MHz_lmax768_nside256'
+path_data_sims_tot = 'Sims/beam_theta40arcmin_no_mean_sims_synch_ff_ps_40freq_905.0_1295.0MHz_lmax768_nside256'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
 
 out_dir_output = 'PCA_needlets_output/'
-out_dir_output_PCA = out_dir_output+'PCA_maps/No_mean/'
-out_dir_plot = out_dir_output+'Plots_PCA_needlets/No_mean/'
+out_dir_output_PCA = out_dir_output+'PCA_maps/No_mean/Beam_40arcmin/'
+out_dir_plot = out_dir_output+'Plots_PCA_needlets/No_mean/Beam_40arcmin/'
 if not os.path.exists(out_dir_output):
         os.makedirs(out_dir_output)
 if not os.path.exists(out_dir_output_PCA):
@@ -36,7 +36,7 @@ del file
 
 fg_comp = 'synch_ff_ps'
 
-need_dir = 'Maps_needlets/No_mean/'
+need_dir = 'Maps_needlets/No_mean/Beam_40arcmin/'
 need_tot_maps_filename = need_dir+f'bjk_maps_obs_{fg_comp}_40freq_905.0_1295.0MHz_jmax4_lmax768_B5.26_nside256.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
@@ -48,7 +48,7 @@ min_ch = min(nu_ch)
 max_ch = max(nu_ch)
 npix = need_tot_maps.shape[2]
 nside = hp.npix2nside(npix)
-lmax = 3*nside #2*nside#
+lmax=3*nside#2*nside#
 B=pow(lmax,(1./jmax))
 
 print(f'jmax:{jmax}, lmax:{lmax}, B:{B:1.2f}, num_freq:{num_freq}, min_ch:{min_ch}, max_ch:{max_ch}, nside:{nside}')
@@ -172,7 +172,7 @@ del leak_fg_maps
 
 
 need_HI_maps_filename = need_dir+f'bjk_maps_HI_{num_freq}freq_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}.npy'
-need_HI_maps = np.load(need_HI_maps_filename)#[:,:jmax,:]
+need_HI_maps = np.load(need_HI_maps_filename)[:,:jmax,:]
 
 
 
