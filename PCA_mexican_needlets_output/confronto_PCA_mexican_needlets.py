@@ -12,6 +12,8 @@ sns.set_theme(style = 'white')
 import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
+
+c_pal = sns.color_palette().as_hex()
 ###########################################################################
 dir_PCA_mex_beam = 'maps_reconstructed/No_mean/p1/Beam_40arcmin/'
 dir_PCA_mex= 'maps_reconstructed/No_mean/p1/'
@@ -100,8 +102,8 @@ fig=plt.figure()
 fig.suptitle(f'mean over channels, Mexican, jmax:12, lmax:{lmax_cl}, Nfg:{Nfg}')
 plt.plot(ell[2:], 100*np.mean(diff_PCA_mex_beam, axis=0)[2:],'--.',mfc='none', label = 'PCA Beam')
 plt.plot(ell[2:], 100*np.mean(diff_PCA_mex, axis=0)[2:],'--.',mfc='none', label = 'PCA No Beam')
-plt.xlim([0,200])
-plt.ylim([-10,10])
+plt.xlim([0,250])
+plt.ylim([-20,20])
 plt.xlabel(r'$\ell$')
 plt.ylabel(r'$\% \langle C_{\ell}^{\rm rec}/C_{\ell}^{\rm cosmo}-1 \rangle $')
 plt.axhline(y=0,c='k',ls='--',alpha=0.5)
@@ -113,14 +115,14 @@ print('% rel diff PCA:',min(100*diff_PCA_mex[ich]), max(100*diff_PCA_mex[ich]))
 
 
 fig=plt.figure()
-fig.suptitle(f'mean over channels, Standard, jmax:4, lmax:{lmax}, Nfg:{Nfg}')
+fig.suptitle(f'mean over channels, Standard, jmax:4, lmax:{lmax_cl}, Nfg:{Nfg}')
 plt.plot(ell[2:], 100*np.mean(diff_PCA_std_beam, axis=0)[2:],'--.',mfc='none', label='PCA Beam')
 plt.plot(ell[2:], 100*np.mean(diff_PCA_std, axis=0)[2:],'--.',mfc='none', label='PCA No Beam')
 plt.xlabel(r'$\ell$')
 plt.ylabel(r'$\%\langle C_{\ell}^{\rm rec}/C_{\ell}^{\rm cosmo}-1 \rangle$')
 plt.axhline(y=0,c='k',ls='--',alpha=0.5)
-plt.xlim([0,200])
-plt.ylim([-10,10])
+plt.xlim([0,250])
+plt.ylim([-20,20])
 plt.legend()
 plt.tight_layout()
 plt.show()
@@ -223,8 +225,8 @@ plt.plot(ell[2:], 100*np.abs(np.mean(diff_PCA_std_beam, axis=0))[2:],'--',mfc='n
 plt.plot(ell[2:], 100*np.abs(np.mean(diff_PCA_std, axis=0))[2:],'--',mfc='none', label='PCA No Beam Need std, jmax:4')
 
 
-plt.plot(ell[2:], 100*np.abs(np.mean(diff_PCA_beam_sph, axis=0))[2:],'k--',mfc='none', label='PCA Beam Sph')
-#plt.plot(ell[2:], 100*np.abs(np.mean(diff_PCA_sph, axis=0))[2:],'--',mfc='none', label='PCA No Beam Sph')
+#plt.plot(ell[2:], 100*np.abs(np.mean(diff_PCA_beam_sph, axis=0))[2:],'k--',mfc='none', label='PCA Beam Sph')
+plt.plot(ell[2:], 100*np.abs(np.mean(diff_PCA_sph, axis=0))[2:],'k--',mfc='none', label='PCA No Beam Sph')
 
 plt.xlabel(r'$\ell$')
 plt.ylabel(r'$\%|\langle C_{\ell}^{\rm rec}/C_{\ell}^{\rm cosmo}-1 \rangle|$')
@@ -250,6 +252,42 @@ plt.xlim([0,256])
 plt.ylim([-5,20])
 plt.legend()
 plt.tight_layout()
+#plt.savefig('beam_convu_no_beam_abs_diff_cls_st_mex_need_mean_ch.png')
+plt.show()
+
+fig=plt.figure()
+fig.suptitle(f'mean over channels, lmax:{lmax_cl}, Nfg:{Nfg}')
+plt.plot(ell[2:], 100*(np.mean(diff_PCA_mex_beam, axis=0))[2:],'--',mfc='none', label='PCA Beam Need Mex, jmax:12')
+plt.plot(ell[2:], 100*(np.mean(diff_PCA_mex, axis=0))[2:],'--',mfc='none', label='PCA No Beam Need Mex, jmax:12')
+
+plt.plot(ell[2:], 100*(np.mean(diff_PCA_std_beam, axis=0))[2:],'--',mfc='none', label='PCA Beam Need Std, jmax:4')
+plt.plot(ell[2:], 100*(np.mean(diff_PCA_std, axis=0))[2:],'--',mfc='none', label='PCA No Beam Need Std, jmax:4')
+plt.plot(ell[2:], 100*(np.mean(diff_PCA_sph, axis=0))[2:],'k',mfc='none', label='PCA No Beam Sph')
+plt.xlabel(r'$\ell$')
+plt.ylabel(r'$\%\langle C_{\ell}^{\rm rec}/C_{\ell}^{\rm cosmo}-1 \rangle$')
+plt.axhline(y=0,c='k',ls='--',alpha=0.5)
+plt.xlim([0,256])
+plt.ylim([-20,20])
+plt.legend()
+plt.tight_layout()
+#plt.savefig('beam_convu_no_beam_diff_cls_st_mex_need_mean_ch.png')
+plt.show()
+
+
+fig=plt.figure()
+fig.suptitle(f'BEAM 40 arcmin, mean over channels, lmax:{lmax_cl}, Nfg:{Nfg}')
+plt.plot(ell[2:], 100*(np.mean(diff_PCA_mex_beam, axis=0))[2:],'--',mfc='none', label='PCA Need Mex, jmax:12')
+
+plt.plot(ell[2:], 100*(np.mean(diff_PCA_std_beam, axis=0))[2:],'--',mfc='none', label='PCA Need Std, jmax:4')
+plt.plot(ell[2:], 100*(np.mean(diff_PCA_beam_sph, axis=0))[2:],'k',mfc='none', label='PCA Sph')
+plt.xlabel(r'$\ell$')
+plt.ylabel(r'$\%\langle C_{\ell}^{\rm rec}/C_{\ell}^{\rm cosmo}-1 \rangle$')
+plt.axhline(y=0,c='k',ls='--',alpha=0.5)
+plt.xlim([0,270])
+plt.ylim([-20,20])
+plt.legend()
+plt.tight_layout()
+plt.savefig(f'beam_40arcmin_diff_cls_mean_over_ch_st_mex_need_lmax{lmax_cl}_Nfg{Nfg}_nside{nside}.png')
 plt.show()
 
 
@@ -311,11 +349,28 @@ plt.plot(ell[2:], factor[2:]*cl_cosmo_HI_beam[ich][2:],'k--',mfc='none', label='
 plt.xlabel(r'$\ell$')
 plt.ylabel(r'$\ell(\ell+1)/(2\pi) C_{\ell}^{\rm HI}$')
 plt.axhline(y=0,c='k',ls='--',alpha=0.5)
-plt.xlim([0,142])
+plt.xlim([0,150])
 plt.ylim([0,0.016])
 plt.legend()
 plt.tight_layout()
 plt.savefig(f'beam_40arcmin_ch{nu_ch[ich]}_cls_need_mexjmax12_stdjmax4sph.png')
+plt.show()
+
+fig=plt.figure()
+fig.suptitle(f'BEAM 40 arcmin, channel :{nu_ch[ich]} MHz, lmax:{lmax_cl}, Nfg:{Nfg}')
+
+plt.plot(ell[2:], (cl_PCA_HI_mex_beam[ich][2:]/cl_cosmo_HI_beam[ich][2:]-1)*100,'--',mfc='none', label='PCA Need mex, jmax:12')
+plt.plot(ell[2:], (cl_PCA_HI_std_beam[ich][2:]/cl_cosmo_HI_beam[ich][2:]-1)*100,'--',mfc='none', label='PCA Need std, jmax:4')
+plt.plot(ell[2:], (cl_PCA_HI_beam_sph[ich][2:]/cl_cosmo_HI_beam[ich][2:]-1)*100,'--',mfc='none', label='PCA Sph')
+
+plt.xlabel(r'$\ell$')
+plt.ylabel(r'\% $C_{\ell}^{\rm PCA}/C_{\ell}^{\rm HI}-1$')
+plt.axhline(y=0,c='k',ls='--',alpha=0.5)
+plt.xlim([0,150])
+plt.ylim([-20,20])
+plt.legend()
+plt.tight_layout()
+plt.savefig(f'rel_diff_beam_40arcmin_ch{nu_ch[ich]}_cls_need_mexjmax12_stdjmax4sph.png')
 plt.show()
 
 fig=plt.figure()
@@ -329,9 +384,93 @@ plt.plot(ell[2:], factor[2:]*cl_cosmo_HI[ich][2:],'k--',mfc='none', label='Input
 plt.xlabel(r'$\ell$')
 plt.ylabel(r'$\ell(\ell+1)/(2\pi)C_{\ell}^{\rm HI}$')
 plt.axhline(y=0,c='k',ls='--',alpha=0.5)
-plt.xlim([0,142])
+plt.xlim([0,250])
 plt.ylim([0,0.016])
 plt.legend()
 plt.tight_layout()
 plt.savefig(f'ch{nu_ch[ich]}_cls_need_mexjmax12_stdjmax4sph.png')
+plt.show()
+
+
+fig=plt.figure()
+fig.suptitle(f'channel :{nu_ch[ich]} MHz, lmax:{lmax_cl}, Nfg:{Nfg}')
+
+plt.plot(ell[2:], (cl_PCA_HI_mex[ich][2:]/cl_cosmo_HI[ich][2:]-1)*100,'--',mfc='none', label='PCA Need mex, jmax:12')
+plt.plot(ell[2:], (cl_PCA_HI_std[ich][2:]/cl_cosmo_HI[ich][2:]-1)*100,'--',mfc='none', label='PCA Need std, jmax:4')
+plt.plot(ell[2:], (cl_PCA_HI_sph[ich][2:]/cl_cosmo_HI[ich][2:]-1)*100,'--',mfc='none', label='PCA Sph')
+
+plt.xlabel(r'$\ell$')
+plt.ylabel(r'% $C_{\ell}^{\rm PCA}/C_{\ell}^{\rm HI}-1$')
+plt.axhline(y=0,c='k',ls='--',alpha=0.5)
+plt.xlim([0,250])
+plt.ylim([-20,20])
+plt.legend()
+plt.tight_layout()
+plt.savefig(f'rel_diff_ch{nu_ch[ich]}_cls_need_mexjmax12_stdjmax4sph.png')
+plt.show()
+
+
+##################################################################
+############## LEAKAGE ###########################################
+
+cl_leak_HI_mex_beam=np.loadtxt(dir_PCA_cl_mex_beam+f'cl_leak_HI_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat')
+cl_leak_fg_mex_beam=np.loadtxt(dir_PCA_cl_mex_beam+f'cl_leak_fg_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat')
+
+cl_leak_HI_mex=np.loadtxt(dir_PCA_cl_mex+f'cl_leak_HI_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat')
+cl_leak_fg_mex=np.loadtxt(dir_PCA_cl_mex+f'cl_leak_fg_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat')
+
+cl_leak_HI_std_beam=np.loadtxt(dir_PCA_cl_std_beam+f'cl_leak_HI_Nfg{Nfg}_4_lmax{lmax_cl}_nside{nside}.dat')
+cl_leak_fg_std_beam=np.loadtxt(dir_PCA_cl_std_beam+f'cl_leak_fg_Nfg{Nfg}_4_lmax{lmax_cl}_nside{nside}.dat')
+-4
+cl_leak_HI_std=np.loadtxt(dir_PCA_cl_std+f'cl_leak_HI_Nfg{Nfg}_4_lmax{lmax_cl}_nside{nside}.dat')
+cl_leak_fg_std=np.loadtxt(dir_PCA_cl_std+f'cl_leak_fg_Nfg{Nfg}_4_lmax{lmax_cl}_nside{nside}.dat')
+
+cl_HI_leak_sph_beam = np.loadtxt(f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_40arcmin/power_spectra_cls_from_healpix_maps/cl_leak_HI_Nfg3_lmax{lmax_cl}_nside{nside}.dat')
+cl_fg_leak_sph_beam = np.loadtxt(f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_40arcmin/power_spectra_cls_from_healpix_maps/cl_leak_fg_Nfg3_lmax{lmax_cl}_nside{nside}.dat')
+
+cl_HI_leak_sph = np.loadtxt(f'../PCA_pixels_output/Maps_PCA/No_mean/power_spectra_cls_from_healpix_maps/cl_leak_HI_Nfg3_lmax{lmax_cl}_nside{nside}.dat')
+cl_fg_leak_sph = np.loadtxt(f'../PCA_pixels_output/Maps_PCA/No_mean/power_spectra_cls_from_healpix_maps/cl_leak_fg_Nfg3_lmax{lmax_cl}_nside{nside}.dat')
+
+
+
+fig=plt.figure()
+fig.suptitle(f'BEAM 40 arcmin, mean over channels, lmax:{lmax_cl}, Nfg:{Nfg}')
+plt.semilogy(ell[2:], (np.mean(cl_leak_HI_mex_beam, axis=0))[2:],c=c_pal[0],mfc='none', label='Lkg HI Need Mex')
+plt.semilogy(ell[2:], (np.mean(cl_leak_fg_mex_beam, axis=0))[2:],ls='--',c=c_pal[0],mfc='none', label='Lkg fg Need Mex')
+
+plt.semilogy(ell[2:], (np.mean(cl_leak_HI_std_beam, axis=0))[2:],c=c_pal[1],mfc='none', label='Lkg HI Need Std')
+plt.semilogy(ell[2:], (np.mean(cl_leak_fg_std_beam, axis=0))[2:],ls='--',c=c_pal[1],mfc='none', label='Lkg fg Need Std')
+
+plt.semilogy(ell[2:], (np.mean(cl_HI_leak_sph_beam, axis=0))[2:],'k',mfc='none', label='Lkg HI Sph')
+plt.semilogy(ell[2:], (np.mean(cl_fg_leak_sph_beam, axis=0))[2:],'k--',mfc='none', label='Lkg fg Sph')
+
+plt.xlabel(r'$\ell$')
+plt.ylabel(r'$\langle C_{\ell}^{\rm lkg}\rangle$')
+plt.axhline(y=0,c='k',ls='--',alpha=0.5)
+plt.xlim([0,256])
+plt.ylim([1e-13, 1e-5])
+plt.legend()
+plt.tight_layout()
+plt.savefig('beam_cls_lkg_st_mex_need_mean_ch.png')
+ 
+
+fig=plt.figure()
+fig.suptitle(f' mean over channels, lmax:{lmax_cl}, Nfg:{Nfg}')
+plt.semilogy(ell[2:], (np.mean(cl_leak_HI_mex, axis=0))[2:],c=c_pal[0],mfc='none', label='Lkg HI Need Mex')
+plt.semilogy(ell[2:], (np.mean(cl_leak_fg_mex, axis=0))[2:],ls='--',c=c_pal[0],mfc='none', label='Lkg fg Need Mex')
+
+plt.semilogy(ell[2:], (np.mean(cl_leak_HI_std, axis=0))[2:],c=c_pal[1],mfc='none', label='Lkg HI Need Std')
+plt.semilogy(ell[2:], (np.mean(cl_leak_fg_std, axis=0))[2:],ls='--',c=c_pal[1],mfc='none', label='Lkg fg Need Std')
+
+plt.semilogy(ell[2:], (np.mean(cl_HI_leak_sph, axis=0))[2:],'k',mfc='none', label='Lkg HI Sph')
+plt.semilogy(ell[2:], (np.mean(cl_fg_leak_sph, axis=0))[2:],'k--',mfc='none', label='Lkg fg Sph')
+
+plt.xlabel(r'$\ell$')
+plt.ylabel(r'$\langle C_{\ell}^{\rm lkg} \rangle$')
+plt.axhline(y=0,c='k',ls='--',alpha=0.5)
+plt.xlim([0,256])
+plt.ylim([1e-13, 1e-5])
+plt.legend()
+plt.tight_layout()
+plt.savefig('cls_lkg_st_mex_need_mean_ch.png')
 plt.show()

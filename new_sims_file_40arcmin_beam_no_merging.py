@@ -32,7 +32,8 @@ def merging_maps(nu_ch_in,nu_ch_out,maps_in,deltanu_out):
 
 def nu_ch_f(nu_ch_in,dnu_out):
 	du_in = abs(nu_ch_in[-1]-nu_ch_in[-2])
-	a1 = nu_ch_in[0] - du_in/2; a2 = nu_ch_in[-1] + du_in/2
+	a1 = nu_ch_in[0] - du_in/2
+	a2 = nu_ch_in[-1] + du_in/2
 	M = int((a2-a1)/dnu_out)
 	if (dnu_out*M)!=(a2-a1):
 		print('just dnu multiples!')
@@ -110,60 +111,102 @@ def convolve(map_in,beam_l,lmax):
 	tab = alm_product(alm,beam_l)
 	m = almrec(tab,nside=hp.get_nside(map_in))
 	return m
+
+
+## angle in radians of the FWHM
+def theta_FWHM(nu,dish_diam): # nu in MHz, dish_diam in m
+	return c_light*1e-6/nu/float(dish_diam) # rad
+
+## solid angle of beam in steradian 
+def Omega_beam(nu,dish_diam): # nu in MHz, dish_diam in m 
+	return np.pi/(4.*np.log(2))*theta_FWHM(nu,dish_diam)**2
+
+## how many beams to cover my survey area (fraction of sky)
+def N_beams(f_sky,nu,dish_diam): # nu in MHz, dish_diam in m 
+	return 4*np.pi*f_sky/Omega_beam(nu,dish_diam)
+
+
+####THERMAL NOISE#####
+
+def T_sky(nu): # K
+	return 60.*(300./nu)**2.55  # K
+
+def T_rcvr(nu,T_inst): # K
+	temp_sky = T_sky(nu)
+	return 0.1* temp_sky + T_inst
+
+def T_sys(nu,T_inst): # K
+	return T_rcvr(nu,T_inst) + T_sky(nu)
+
+## final sigma in mK 
+def sigma_N(nu,dnu,T_inst,f_sky,t_obs,Ndishes,dish_diam):
+	t_obs = t_obs * 3600 # hrs to s
+	dnu = dnu * 1.e6 # MHz to Hz
+
+	temp_sys = T_sys(nu,T_inst)  # in K
+	A = np.sqrt(N_beams(f_sky,nu,dish_diam)/dnu/t_obs/Ndishes)
+	
+	return temp_sys * A *1e3  # mK
+
+def noise_map(sigma,nside=512):
+	npixels = hp.nside2npix(nside)
+	m = np.random.normal(0.0, sigma, npixels)
+	return m
 ######################################################
 
 path_data = 'sim_PL05_from191030.hd5'
 file = h5py.File(path_data,'r')
-print("Keys: %s" % file.keys())
 nu_ch = np.array(file['frequencies'])
+print(nu_ch[0], nu_ch[-1])
 
+file_new_temp={}
 
-file_new={}
-
-delta_nu_out = 10
-file_new['frequencies'] = nu_ch_f(nu_ch,delta_nu_out)#np.array([nu_ch[i*delta_nu] for i in range(0,int(len(nu_ch)/delta_nu))])
+delta_nu_out = 2
+file_new_temp['frequencies'] = nu_ch_f(nu_ch,delta_nu_out)#np.array([nu_ch[i*delta_nu] for i in range(0,int(len(nu_ch)/delta_nu))])
 
 components = list(file.keys())
-#print(components)
+print(components)
 components.remove('frequencies')
 components.remove('pol_leakage')
 
 for c in components:
-  print(c)
-  file_new[c]=merging_maps(nu_ch,file_new['frequencies'],file[c], delta_nu_out )
+	print(c)
+	file_new_temp[c]=merging_maps(nu_ch,file_new_temp['frequencies'],file[c], delta_nu_out )
 
-#print(len(file_new['frequencies']), hp.get_nside(file_new['cosmological_signal'][1]))
+#qua sto mergiando 2 canali in uno e poi ne devo prendere 40 
+#######
+num_ch = 40
+delta_ch = int(len(file_new_temp['frequencies'])/num_ch)
+print(delta_ch)
+file_new={}
+file_new['frequencies'] = []
+for c in components:
+	file_new[c]=[]
+nn=0
+while(nn<(len(file_new_temp['frequencies']))):
+	file_new['frequencies'].append(file_new_temp['frequencies'][nn])
+	for c in components:
+		file_new[c].append(file_new_temp[c][nn])
+	nn+=delta_ch
+
+del file_new_temp; del nn
+
+file_new['frequencies']=np.asarray(file_new['frequencies'])
+for c in components:
+	file_new[c]=np.asarray(file_new[c])
+#######
  
 nside = hp.get_nside(file_new['cosmological_signal'][1])
+npix = hp.nside2npix(nside)
 
 del file
 
 nu_ch_new = np.array(file_new['frequencies'])
-f = open(f'nu_ch_{len(nu_ch)}_{min(nu_ch)}_{max(nu_ch)}MHz.dat', 'w')
-for n in nu_ch_new:
-	f.write(f'{n}\n')
-f.close()
-
 num_freq_new=len(nu_ch_new)
 npix = np.shape(file_new['cosmological_signal'])[1]
 
 obs_maps = np.zeros((num_freq_new,npix))
 fg_maps = np.zeros((num_freq_new,npix))
-
-ich=int(num_freq_new/2)
-print(ich)
-
-fig = plt.figure(figsize=(10, 7))
-fig.suptitle(f'channel {ich}: {nu_ch_new[ich]} MHz',fontsize=20)
-fig.add_subplot(221) 
-hp.mollview(file_new['gal_synch'][ich], cmap='viridis', norm='log',title=f'Gal sync', hold=True)
-fig.add_subplot(222) 
-hp.mollview(file_new['gal_ff'][ich], cmap='viridis', norm='log',title=f'Gal ff',hold=True)
-fig.add_subplot(223)
-hp.mollview(file_new['point_sources'][ich], norm='log',title=f'Point sources',cmap='viridis', hold=True)
-#fig.add_subplot(224)
-#hp.mollview(file_new['pol_leakage'][ich], title=f'Pol leakage',cmap='viridis', hold=True)
-plt.show()
 
 for c in components:
 	print(c)
@@ -174,6 +217,7 @@ for cc in components:
 	print(cc)
 	fg_maps += np.array(file_new[cc])
 	
+
 ich = int(num_freq_new/2)
 
 lmax=3*nside
@@ -191,18 +235,8 @@ file_sims['maps_sims_HI'] = HI_maps_no_mean
 
 for nu in range(num_freq_new):
 		alm_HI = hp.map2alm(file_sims['maps_sims_HI'][nu], lmax=lmax)
-		#idx1 = hp.Alm.getidx(lmax, l=0,m=0)
-		#idx2 = hp.Alm.getidx(lmax, l=1,m=0)
-		#idx3 = hp.Alm.getidx(lmax, l=1,m=1)
-		#print(alm_HI[idx1], alm_HI[idx2], alm_HI[idx3])
 		file_sims['maps_sims_HI'][nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside)
 		file_sims['maps_sims_HI'][nu] = hp.remove_dipole(file_sims['maps_sims_HI'][nu])
-		#alm_HI = hp.map2alm(file_sims['maps_sims_HI'][nu], lmax=lmax)
-		#idx1 = hp.Alm.getidx(lmax, l=0,m=0)
-		#idx2 = hp.Alm.getidx(lmax, l=1,m=0)
-		#idx3 = hp.Alm.getidx(lmax, l=1,m=1)
-		#print(alm_HI[idx1], alm_HI[idx2], alm_HI[idx3])
-		#print('\n')
 		del alm_HI
 		alm_fg = hp.map2alm(file_sims['maps_sims_fg'][nu], lmax=lmax)
 		file_sims['maps_sims_fg'][nu] = hp.alm2map(alm_fg, lmax=lmax, nside = nside)
@@ -213,12 +247,45 @@ for nu in range(num_freq_new):
 		file_sims['maps_sims_tot'][nu] = hp.remove_dipole(file_sims['maps_sims_tot'][nu])
 		del alm_obs
 
-import pickle
-filename = f'Sims/no_mean_sims_synch_ff_ps_{len(nu_ch_new)}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}'
-with open(filename+'.pkl', 'wb') as f:
-	pickle.dump(file_sims, f)
-	f.close()
-del obs_maps; del fg_maps#; del file_new['cosmological_signal']
+
+
+################## plot temperatura in frequenza ##############
+lng = np.random.randint(low=0, high=np.pi,size=1)[0]
+lat = 95*np.pi/180 #rad
+pix = hp.ang2pix(nside=nside, theta=lat, phi=lng )
+print(f'lng={lng}, pix {pix}')
+#map_test =np.zeros(npix)
+#map_test[pix]=1
+#hp.mollview(map_test,min=0.5, max=1, title='test', cmap='viridis')
+#plt.show()
+
+
+T_HI = np.zeros(num_freq_new)
+T_sync = np.zeros(num_freq_new)
+T_ff = np.zeros(num_freq_new)
+T_ps = np.zeros(num_freq_new)
+
+for i in range(num_freq_new):
+	T_HI[i] = np.array(file_new['cosmological_signal'])[i, pix]
+	T_sync[i] = np.array(file_new['gal_synch'])[i, pix]
+	T_ff[i] = np.array(file_new['gal_ff'])[i, pix]
+	T_ps[i] = np.array(file_new['point_sources'])[i, pix]
+
+fig=plt.figure()
+plt.plot(nu_ch_new, np.abs(T_HI)  , label= '21cm signal')
+plt.plot(nu_ch_new, np.abs(T_sync) ,ls= '--', label= 'gal synchrotron')
+plt.plot(nu_ch_new, np.abs(T_ff),ls=':', label='gal free-free' )
+plt.plot(nu_ch_new, np.abs(T_ps),ls='-.', label='point sources' )
+plt.yscale('log')
+plt.ylim([1e-4,1e4])
+plt.xlabel('$\\nu$')
+plt.ylabel('|T| [mk]')
+plt.legend()
+plt.show()
+
+############################################################
+
+del obs_maps; del fg_maps; del file_new['cosmological_signal']
 
 fig = plt.figure(figsize=(10, 7))
 fig.suptitle(f'channel {ich}: {nu_ch_new[ich]} MHz',fontsize=20)
@@ -229,38 +296,6 @@ hp.mollview(file_sims['maps_sims_HI'][ich], cmap='viridis',title=f'HI signal, fr
 fig.add_subplot(223)
 hp.mollview(file_sims['maps_sims_fg'][ich],title=f'Foregrounds, freq={nu_ch_new[ich]}',cmap='viridis',hold=True)
 #plt.savefig('plots_PCA/maps_fg_HI_obs_input.png')
-
-
-def plot_cl(fmap):
-	LMAX = 2*hp.get_nside(fmap)
-	cl = hp.anafast(fmap, lmax=LMAX)
-	ell = np.arange(len(cl))
-	y = ell * (ell + 1) * cl/2.0/np.pi
-
-	return ell, y
-
-ls_dic = {'cosmological_signal':"-",'gal_ff':"--",'gal_synch':"-.",'point_sources':(0, (3, 5, 1, 5))}
-c_dic = {'cosmological_signal':"#1f77b4",'gal_ff':"#ff7f0e",'gal_synch':"#d62728",'point_sources':"#2ca02c" }
-label = components.copy()
-for cc,c in enumerate(components):
-	if c=='cosmological_signal':
-		label[cc]='21cm signal'
-
-fig  = plt.figure()
-for cc,c in enumerate(components):
-    ell, y = plot_cl(file_new[c][ich])
-    plt.semilogy(ell, y, ls=ls_dic[c], c=c_dic[c], label=label[cc])
-
-plt.legend(fontsize=12,ncol=2)
-ax = plt.gca()
-ax.set_title('$\\nu$ = '+'%4.f'%nu_ch_new[ich]+' MHz')
-ax.set(xlim=[15,200],xlabel="$\\ell$",ylabel="$\\ell(\\ell+1)C_{\\ell}/(2\\pi)$ [mK$^2$]");
-
-
-plt.savefig(f'cl_components_HI_sync_ff_ps_ch{nu_ch_new[ich]}MHz_lmax{2*nside}_nside{nside}.png')
-
-plt.show()
-
 
 ###########################################################################
 ######## Computing beam size using given survey specifics: ################
@@ -275,9 +310,8 @@ specs_dict = {'dish_diam': dish_diam, 'T_inst': T_inst,
 			  'f_sky': f_sky, 't_obs': t_obs, 'Ndishes' : Ndishes}
 
 theta_arcmin = 40 #arcmin
-theta_FWMH = theta_arcmin*np.pi/(60*180)
-#theta_worst_deg = 1.41
-#theta_FWMH_worst = theta_worst_deg*np.pi/180.
+theta_FWMH = theta_arcmin*np.pi/(60*180) #radians
+
 
 beam_40arcmin = hp.gauss_beam(theta_FWMH, lmax=3*nside)
 #beam_worst = hp.gauss_beam(theta_FWMH_worst, lmax=3*nside)
@@ -287,18 +321,21 @@ lmax_fwmh = int(np.pi/theta_FWMH)
 
 print(f'theta_F at {np.min(nu_ch_new)} MHz:{theta_FWMH} rad, {theta_FWMH*180./np.pi} degree, {theta_FWMH*(60*180)/np.pi} arcmin')
 print(f'lmax = {lmax_fwmh}')
-#print(f'theta_F worst at {np.min(nu_ch_new)} MHz:{theta_FWMH_worst} rad, {theta_FWMH_worst*180./np.pi} degree, {theta_FWMH*(60*180)/np.pi} arcmin')
-#print(f'lmax = {lmax_fwmh_worst}')
 
-#fig = plt.figure()
-#plt.plot(beam_40arcmin, label = f'Theta {theta_FWMH:0.3f} rad, {theta_FWMH*180./np.pi:1.2f} deg, l_beam {lmax_fwmh}')
-#plt.plot(beam_worst, label = f'Theta {theta_FWMH_worst:0.3f} rad, {theta_FWMH_worst*180./np.pi:1.2f} deg, l_beam {lmax_fwmh_worst}')
-#plt.ylabel('Gaussian beam')
-#plt.xlabel('ell')
-#plt.legend()
-#plt.savefig('gauss_beam_40arcmin_1p41_deg.png')
-#plt.show()
+print()
 
+#beam_worst = hp.gauss_beam(theta_FWMH_max, lmax=3*nside)
+
+
+################################## NOISE ################################################
+#dnu = nu_ch_new[1]-nu_ch_new[0]
+#
+#sigma_noise = sigma_N(nu_ch_new,dnu,**specs_dict)
+#
+#noise = [noise_map(sigma,nside=nside) for sigma in sigma_noise]
+#del sigma_noise
+
+#########################################################################################
 
 file_sims_beam = {}
 file_sims_beam['freq'] = nu_ch_new
@@ -307,23 +344,28 @@ file_sims_beam['maps_sims_fg'] = np.array([convolve(fg_maps_no_mean[i],beam_40ar
 file_sims_beam['maps_sims_HI'] = np.array([convolve(HI_maps_no_mean[i],beam_40arcmin, lmax=3*nside) for i in range(num_freq_new)])
 
 
-#for nu in range(num_freq_new):
-#		alm_HI = hp.map2alm(file_sims_beam['maps_sims_HI'][nu], lmax=lmax)
-#		file_sims_beam['maps_sims_HI'][nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside)
-#		file_sims_beam['maps_sims_HI'][nu] = hp.remove_dipole(file_sims_beam['maps_sims_HI'][nu])
-#		del alm_HI
-#		alm_fg = hp.map2alm(file_sims_beam['maps_sims_fg'][nu], lmax=lmax)
-#		file_sims_beam['maps_sims_fg'][nu] = hp.alm2map(alm_fg, lmax=lmax, nside = nside)
-#		file_sims_beam['maps_sims_fg'][nu] = hp.remove_dipole(file_sims_beam['maps_sims_fg'][nu])
-#		del alm_fg
-#		alm_obs = hp.map2alm(file_sims_beam['maps_sims_tot'][nu], lmax=lmax)
-#		file_sims_beam['maps_sims_tot'][nu] = hp.alm2map(alm_obs, lmax=lmax, nside = nside)
-#		file_sims_beam['maps_sims_tot'][nu] = hp.remove_dipole(file_sims_beam['maps_sims_tot'][nu])
-#		del alm_obs
+
+for nu in range(num_freq_new):
+		alm_HI = hp.map2alm(file_sims_beam['maps_sims_HI'][nu], lmax=lmax)
+		file_sims_beam['maps_sims_HI'][nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside)
+		file_sims_beam['maps_sims_HI'][nu] = hp.remove_dipole(file_sims_beam['maps_sims_HI'][nu])
+		del alm_HI
+		alm_fg = hp.map2alm(file_sims_beam['maps_sims_fg'][nu], lmax=lmax)
+		file_sims_beam['maps_sims_fg'][nu] = hp.alm2map(alm_fg, lmax=lmax, nside = nside)
+		file_sims_beam['maps_sims_fg'][nu] = hp.remove_dipole(file_sims_beam['maps_sims_fg'][nu])
+		del alm_fg
+		alm_obs = hp.map2alm(file_sims_beam['maps_sims_tot'][nu], lmax=lmax)
+		file_sims_beam['maps_sims_tot'][nu] = hp.alm2map(alm_obs, lmax=lmax, nside = nside)
+		file_sims_beam['maps_sims_tot'][nu] = hp.remove_dipole(file_sims_beam['maps_sims_tot'][nu])
+		del alm_obs
+		#alm_noise = hp.map2alm(file_sims_beam['maps_sims_noise'][nu], lmax=lmax)
+		#file_sims_beam['maps_sims_noise'][nu] = hp.alm2map(alm_noise, lmax=lmax, nside = nside)
+		#file_sims_beam['maps_sims_noise'][nu] = hp.remove_dipole(file_sims_beam['maps_sims_noise'][nu])
+		#del alm_noise
 
 
 import pickle
-filename = f'Sims/beam_theta{theta_arcmin}arcmin_no_mean_sims_synch_ff_ps_{len(nu_ch_new)}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}'
+filename = f'Sims/beam_theta40arcmin_no_mean_sims_synch_ff_ps_{len(nu_ch_new)}freq_thick{delta_nu_out}_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}'
 with open(filename+'.pkl', 'wb') as ff:
 	pickle.dump(file_sims_beam, ff)
 	ff.close()
@@ -337,6 +379,8 @@ fig.add_subplot(222)
 hp.mollview(file_sims_beam['maps_sims_HI'][ich], cmap='viridis',title=f'HI signal, freq={nu_ch_new[ich]}',min=0, max=1,hold=True)
 fig.add_subplot(223)
 hp.mollview(file_sims_beam['maps_sims_fg'][ich],title=f'Foregrounds, freq={nu_ch_new[ich]}',cmap='viridis',hold=True)
+#fig.add_subplot(224)
+#hp.mollview(file_sims_beam['maps_sims_noise'][ich],title=f'Noise, freq={nu_ch_new[ich]}',cmap='viridis',hold=True)
 
 del file_sims_beam
 

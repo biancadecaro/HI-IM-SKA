@@ -72,9 +72,12 @@ ich = int(num_freq_new/2)
 
 lmax=3*nside
 
+
 synch_maps_no_mean = np.array([file_new['gal_synch'][i] -np.mean(file_new['gal_synch'][i],axis=0)  for i in range(num_freq_new)])
 ff_maps_no_mean = np.array([file_new['gal_ff'][i] -np.mean(file_new['gal_ff'][i],axis=0) for i in range(num_freq_new)])
 ps_maps_no_mean = np.array([file_new['point_sources'][i] -np.mean(file_new['point_sources'][i],axis=0) for i in range(num_freq_new)]) 
+HI_maps_no_mean = np.array([file_new['cosmological_signal'][i] -np.mean(file_new['cosmological_signal'][i],axis=0) for i in range(num_freq_new)]) 
+
 del file_new
 
 for nu in range(num_freq_new):
@@ -93,18 +96,39 @@ for nu in range(num_freq_new):
 		ps_maps_no_mean[nu] = hp.remove_dipole(ps_maps_no_mean[nu])
 		del alm_ps
 
-fig = plt.figure(figsize=(10, 7))
-fig.suptitle(f'channel {ich}: {nu_ch[ich]} MHz',fontsize=20)
-fig.add_subplot(221) 
-hp.mollview(synch_maps_no_mean[ich], cmap='viridis',title=f'Gal synch', hold=True)
-fig.add_subplot(222) 
-hp.mollview(ff_maps_no_mean[ich], cmap='viridis',title=f'Gal ff',hold=True)
-fig.add_subplot(223)
-hp.mollview(ps_maps_no_mean[ich], title=f'Point sources',cmap='viridis', hold=True)
-#fig.add_subplot(224)
-#hp.mollview(file_new['cosmological_signal'][ich], norm='log', title=f'Cosmological signal, freq={nu_ch[ich]}',cmap='viridis', hold=True)
-plt.savefig(f'fg_input_lmax{lmax}_nside{nside}_ch{nu_ch[ich]}.png')
+		alm_HI = hp.map2alm(HI_maps_no_mean[nu], lmax=lmax)
+		HI_maps_no_mean[nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside)
+		HI_maps_no_mean[nu] = hp.remove_dipole(HI_maps_no_mean[nu])
+		del alm_HI
+
+
+#fig = plt.figure(figsize=(10, 7))
+#fig.suptitle(f'channel: {nu_ch_new[ich]} MHz, Nside {nside}',fontsize=20)
+#fig.add_subplot(221) 
+#hp.mollview(np.abs(synch_maps_no_mean[ich]), min=0.0001,norm='log', cmap='viridis',title=f'Gal synch', hold=True)
+#fig.add_subplot(222) 
+#hp.mollview(np.abs(ff_maps_no_mean[ich]), min=0.0001,norm='log', cmap='viridis',title=f'Gal ff',hold=True)
+#fig.add_subplot(223)
+#hp.mollview(np.abs(ps_maps_no_mean[ich]),min=0.0001, norm='log', title=f'Point sources',cmap='viridis', hold=True)
+##fig.add_subplot(224)
+##hp.mollview(file_new['cosmological_signal'][ich], norm='log', title=f'Cosmological signal, freq={nu_ch[ich]}',cmap='viridis', hold=True)
+#plt.savefig(f'fg_input_lmax{lmax}_nside{nside}_ch{nu_ch_new[ich]}.png')
+#plt.show()
+
+fig = plt.figure(figsize=(15, 7))
+fig.suptitle(f'channel: {nu_ch_new[ich]} MHz, Nside {nside}',fontsize=20)
+fig.add_subplot(141) 
+hp.mollview(synch_maps_no_mean[ich],  min=-1e3, max=1e3,unit='mK',cmap='viridis',title=f'Gal synch', hold=True)
+fig.add_subplot(142) 
+hp.mollview(ff_maps_no_mean[ich], min=-1e3, max=1e3, unit='mK',cmap='viridis',title=f'Gal ff',hold=True)
+fig.add_subplot(143)
+hp.mollview(ps_maps_no_mean[ich],  min=-1e2, max=1e2,unit='mK',title=f'Point sources',cmap='viridis', hold=True)
+fig.add_subplot(144)
+hp.mollview(HI_maps_no_mean[ich],  unit= 'mK', min=0, max=1, title=f'Cosmological signal',cmap='viridis', hold=True)
+plt.savefig(f'comp_HI_fg_input_lmax{lmax}_nside{nside}_ch{nu_ch_new[ich]}.png')
 plt.show()
+
+
 
 #########################################################################
 ####################### MEXICAN NEEDLETS #################################

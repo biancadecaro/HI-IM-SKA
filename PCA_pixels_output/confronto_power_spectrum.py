@@ -28,7 +28,7 @@ npix = hp.nside2npix(nside)
 out_dir = './'
 
 res_HI = np.load('res_PCA_HI_200_901.0_1299.0MHz_Nfg3.npy')
-cosmo_HI = np.load('/home/bianca/Documents/HI IM SKA/PCA_pixels_output/cosmo_HI_200_901.0_1299.0MHz.npy')
+cosmo_HI = np.load('/home/bianca-ubuntu/Documents/HI IM SKA/PCA_pixels_output/cosmo_HI_200_901.0_1299.0MHz.npy')
 
 need_analysis_res = analysis.NeedAnalysis(jmax, lmax, out_dir, res_HI)
 need_analysis_HI = analysis.NeedAnalysis(jmax, lmax, out_dir, cosmo_HI)
@@ -42,7 +42,7 @@ fname_HI=f'bjk_maps_cosmo_HI_200freq_901.0_1299.0MHz_Nfg3_jmax{jmax}_B{B_HI:0.2f
 
 res_HI_need_output = need_analysis_res.GetBetajkSims(map_input=res_HI, nfreq=200, fname=fname_res)
 cosmo_HI_need_output = need_analysis_HI.GetBetajkSims(map_input=cosmo_HI, nfreq=200, fname=fname_HI)
-#cosmo_HI_need_output = np.load('/home/bianca/Documents/HI IM SKA/Maps_test_2/bjk_maps_HI_200freq_901.0_1299.0MHz_jmax12_B1.59_nside128.npy')
+#cosmo_HI_need_output = np.load('/home/bianca-ubuntu/Documents/HI IM SKA/Maps_test_2/bjk_maps_HI_200freq_901.0_1299.0MHz_jmax12_B1.59_nside128.npy')
 
 nu_ch = np.linspace(901.0, 1299.0, 200)
 

@@ -37,7 +37,7 @@ del file
 fg_comp = 'synch_ff_ps'
 
 need_dir = 'Maps_needlets/No_mean/'
-need_tot_maps_filename = need_dir+f'bjk_maps_obs_{fg_comp}_40freq_905.0_1295.0MHz_jmax4_lmax768_B5.26_nside256.npy'
+need_tot_maps_filename = need_dir+f'bjk_maps_obs_{fg_comp}_40freq_905.0_1295.0MHz_jmax12_lmax768_B1.74_nside256.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
 jmax=need_tot_maps.shape[1]-1
@@ -48,7 +48,7 @@ min_ch = min(nu_ch)
 max_ch = max(nu_ch)
 npix = need_tot_maps.shape[2]
 nside = hp.npix2nside(npix)
-lmax = 3*nside #2*nside#
+lmax = 3*nside #
 B=pow(lmax,(1./jmax))
 
 print(f'jmax:{jmax}, lmax:{lmax}, B:{B:1.2f}, num_freq:{num_freq}, min_ch:{min_ch}, max_ch:{max_ch}, nside:{nside}')
@@ -56,7 +56,7 @@ print(f'jmax:{jmax}, lmax:{lmax}, B:{B:1.2f}, num_freq:{num_freq}, min_ch:{min_c
 
 #np.save(out_dir_output+f'need_HI_maps_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz.npy',need_HI_maps)
 
-Cov_channels = np.zeros((jmax,num_freq, num_freq))
+Cov_channels = np.zeros((jmax+1,num_freq, num_freq))
 
 
 for j in range(Cov_channels.shape[0]):
@@ -78,8 +78,8 @@ for j in range(eigenval.shape[0]):
 plt.legend(fontsize=12, ncols=2)
 x_ticks = np.arange(-10,num_freq+10, 10)
 ax = plt.gca()
-ax.set(xlim=[-10,num_freq+10],xticks=x_ticks,xlabel="eigenvalue number",ylabel="$\\lambda$",title='Eigenvalues')
-#plt.savefig(out_dir_plot+f'eigenvalue_cov_need_jmax{jmax}_lmax{lmax}_nside{nside}.png')
+ax.set(xlim=[-10,num_freq+10],xticks=x_ticks,xlabel="eigenvalue number",ylabel="$\\lambda$",title='STANDARD NEED - Eigenvalues')
+plt.savefig(out_dir_output+f'eigenvalue_cov_need_no_mean_jmax{jmax}_lmax{lmax}_nside{nside}.png')
 plt.show()
 
 num_sources=3
@@ -154,10 +154,9 @@ print('fin qui ci sono')
 #Foreground's maps
 
 need_fg_maps_filename = need_dir+f'bjk_maps_fg_{fg_comp}_{num_freq}freq_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}.npy'
-need_fg_maps = np.load(need_fg_maps_filename)[:,:jmax,:]
+need_fg_maps = np.load(need_fg_maps_filename)#[:,:jmax,:]
 
 leak_fg_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
-leak_HI_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
 
 for j in range(eigenvec_fg_Nfg.shape[0]):
     leak_fg_maps[j] = need_fg_maps[:,j,:]-eigenvec_fg_Nfg[j]@eigenvec_fg_Nfg[j].T@need_fg_maps[:,j,:]
@@ -175,6 +174,7 @@ need_HI_maps_filename = need_dir+f'bjk_maps_HI_{num_freq}freq_{min_ch}_{max_ch}M
 need_HI_maps = np.load(need_HI_maps_filename)#[:,:jmax,:]
 
 
+leak_HI_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
 
 for j in range(eigenvec_fg_Nfg.shape[0]):
     leak_HI_maps[j] = eigenvec_fg_Nfg[j]@eigenvec_fg_Nfg[j].T@need_HI_maps[:,j,:]

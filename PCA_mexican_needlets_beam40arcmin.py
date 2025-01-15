@@ -15,16 +15,17 @@ import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 
+#print(sns.color_palette("husl", 15).as_hex())
+sns.palettes.color_palette()
 ###########################################################################3
-fg_components='synch_ff_ps'
-path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_components}_40freq_905.0_1295.0MHz_lmax768_nside256'
+path_data_sims_tot = 'Sims/beam_theta40arcmin_no_mean_sims_synch_ff_ps_40freq_905.0_1295.0MHz_lmax768_nside256'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
 
-out_dir_output = 'PCA_needlets_output/'
-out_dir_output_PCA = out_dir_output+'PCA_maps/No_mean/Beam_40arcmin/'
-out_dir_plot = out_dir_output+'Plots_PCA_needlets/No_mean/Beam_40arcmin/'
+out_dir_output = 'PCA_mexican_needlets_output/'
+out_dir_output_PCA = out_dir_output+'PCA_maps/No_mean/p1/Beam_40arcmin/'
+out_dir_plot = out_dir_output+'Plots_PCA_needlets/No_mean/p1/Beam_40arcmin/'
 if not os.path.exists(out_dir_output):
         os.makedirs(out_dir_output)
 if not os.path.exists(out_dir_output_PCA):
@@ -35,8 +36,8 @@ del file
 
 fg_comp = 'synch_ff_ps'
 
-need_dir = 'Maps_needlets/No_mean/Beam_40arcmin/'
-need_tot_maps_filename = need_dir+f'bjk_maps_obs_{fg_comp}_40freq_905.0_1295.0MHz_jmax4_lmax768_B5.26_nside256.npy'
+need_dir = 'Maps_needlets_mexican/No_mean/p1/Beam_40arcmin/'
+need_tot_maps_filename = need_dir+f'bjk_maps_obs_{fg_comp}_40freq_905.0_1295.0MHz_jmax12_lmax768_B1.74_nside256.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
 jmax=need_tot_maps.shape[1]-1
@@ -61,8 +62,6 @@ Cov_channels = np.zeros((jmax+1,num_freq, num_freq))
 for j in range(Cov_channels.shape[0]):
     Cov_channels[j]=np.cov(need_tot_maps[:,j,:])
 
-
-
 eigenval=np.zeros((Cov_channels.shape[0], num_freq))
 eigenvec=np.zeros((Cov_channels.shape[0], num_freq,num_freq))
 for j in range(eigenval.shape[0]):
@@ -77,8 +76,8 @@ for j in range(eigenval.shape[0]):
 plt.legend(fontsize=12, ncols=2)
 x_ticks = np.arange(-10,num_freq+10, 10)
 ax = plt.gca()
-ax.set(xlim=[-10,num_freq+10],xticks=x_ticks,xlabel="eigenvalue number",ylabel="$\\lambda$",title='STANDARD NEED - Eigenvalues')
-plt.savefig(out_dir_output+f'eigenvalue_cov_need_no_mean_jmax{jmax}_lmax{lmax}_nside{nside}.png')
+ax.set(xlim=[-10,num_freq+10],xticks=x_ticks,xlabel="eigenvalue number",ylabel="$\\lambda$",title='MEXICAN NEED-Eigenvalues')
+plt.savefig(out_dir_output+f'eigenvalue_cov_mex_need_no_mean_jmax{jmax}_lmax{lmax}_nside{nside}.png')
 plt.show()
 
 num_sources=3
@@ -109,7 +108,7 @@ plt.rcParams["axes.labelsize"] = 12
 x = np.arange(0,len(nu_ch))
 
 plt.fill_between(x,y1.T[0],y2.T[0],alpha=0.3,label='gal synch')
-for j in [1,2,3]:
+for j in [4,8,11]:
     plt.plot(abs(eigenvec_fg_Nfg[j]/np.linalg.norm(eigenvec_fg_Nfg[j],axis=0)),label=f'mix mat column,j={j}')
 plt.plot(FF_col/np.linalg.norm(FF_col),'m:',label='gal ff')
 
@@ -171,8 +170,7 @@ del leak_fg_maps
 
 
 need_HI_maps_filename = need_dir+f'bjk_maps_HI_{num_freq}freq_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}.npy'
-need_HI_maps = np.load(need_HI_maps_filename)#[:,:jmax,:]
-
+need_HI_maps = np.load(need_HI_maps_filename)
 
 
 for j in range(eigenvec_fg_Nfg.shape[0]):

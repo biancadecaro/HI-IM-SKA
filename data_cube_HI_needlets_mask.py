@@ -25,42 +25,56 @@ fg_maps_freq = file['maps_sims_fg']
 full_maps_freq = file['maps_sims_tot']
 print(HI_maps_freq.shape)
 
+npix = np.shape(HI_maps_freq)[1]
+nside = hp.get_nside(HI_maps_freq[0])
+lmax=3*nside#2*nside#
+######################################################################################
+mask1_40 = hp.read_map('HFI_Mask_GalPlane_2048_R1.10.fits', field=1)#fsky 40 %
+mask_40 = hp.ud_grade(mask1_40, nside_out=nside)
+del mask1_40
+mask_40s = hp.sphtfunc.smoothing(mask_40, 3*np.pi/180,lmax=lmax)
+del mask_40
+fsky  = np.mean(mask_40s) 
+#fsky  = np.mean(mask_40) 
+
+fig=plt.figure()
+hp.mollview(mask_40s, cmap='viridis', title=f'Mask, fsky={fsky:0.2f}', hold=True)
+plt.show()
+
+
+for n in range(num_freq):
+        HI_maps_freq[n] = HI_maps_freq[n]*mask_40s
+        HI_maps_freq[n] = hp.remove_dipole(HI_maps_freq[n])
+        fg_maps_freq[n] = fg_maps_freq[n]*mask_40s
+        fg_maps_freq[n] = hp.remove_dipole(fg_maps_freq[n])
+        full_maps_freq[n] = full_maps_freq[n]*mask_40s
+        full_maps_freq[n] = hp.remove_dipole(full_maps_freq[n])
+
+#devo rimuovere il dipolo? si direi di si 
+####################################################################################
+
 
 ich=int(num_freq/2)
 print(ich)
 fig = plt.figure(figsize=(10, 7))
 fig.suptitle(f'channel {ich}: {nu_ch[ich]} MHz',fontsize=20)
 fig.add_subplot(221) 
-hp.mollview(full_maps_freq[ich], cmap='viridis', title=f'Observation', min=-1e3, max=1e4, hold=True)
+hp.mollview(full_maps_freq[ich], cmap='viridis', title=f'Observation', min=-1e3, max=1e3, hold=True)
 fig.add_subplot(222) 
 hp.mollview(HI_maps_freq[ich], cmap='viridis', title=f'HI signal',min=0, max=1,hold=True)
 fig.add_subplot(223)
-hp.mollview(fg_maps_freq[ich], title=f'Fg signal',cmap='viridis', min=-1e3, max=1e4, hold=True)
+hp.mollview(fg_maps_freq[ich], title=f'Fg signal',cmap='viridis', min=-1e3, max=1e3, hold=True)
 fig.add_subplot(224)
 hp.mollview(full_maps_freq[ich]-fg_maps_freq[ich], title=f'Observation - Fg',cmap='viridis',min=0, max=1, hold=True)
 plt.show()
 
 del file
 
-npix = np.shape(HI_maps_freq)[1]
-nside = hp.get_nside(HI_maps_freq[0])
-lmax=3*nside#2*nside#
-jmax=4
-out_dir = './Maps_needlets/No_mean/Beam_40arcmin/'
+
+jmax=12
+out_dir = './Maps_needlets/No_mean/Beam_40arcmin_mask/'
 if not os.path.exists(out_dir):
 	os.makedirs(out_dir)
-
-#for nu in range(num_freq):
-#        alm_HI = hp.map2alm(HI_maps_freq[nu], lmax=lmax)
-#        HI_maps_freq[nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside)
-#        del alm_HI
-#        alm_fg = hp.map2alm(fg_maps_freq[nu], lmax=lmax)
-#        fg_maps_freq[nu] = hp.alm2map(alm_fg, lmax=lmax, nside = nside)
-#        del alm_fg
-#        alm_obs = hp.map2alm(full_maps_freq[nu], lmax=lmax)
-#        full_maps_freq[nu] = hp.alm2map(alm_obs, lmax=lmax, nside = nside)
-#        del alm_obs
-
 
 need_analysis = analysis.NeedAnalysis(jmax, lmax, out_dir, full_maps_freq)
 need_analysis_HI = analysis.NeedAnalysis(jmax, lmax, out_dir, HI_maps_freq)
@@ -68,9 +82,9 @@ need_analysis_fg = analysis.NeedAnalysis(jmax, lmax, out_dir, fg_maps_freq)
 
 B=need_analysis.B
 
-fname_obs_tot=f'bjk_maps_obs_synch_ff_ps_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}'
-fname_HI=f'bjk_maps_HI_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}'
-fname_fg=f'bjk_maps_fg_synch_ff_ps_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}'
+fname_obs_tot=f'bjk_maps_obs_synch_ff_ps_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}_fsky{fsky:0.2f}'
+fname_HI=f'bjk_maps_HI_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}_fsky{fsky:0.2f}'
+fname_fg=f'bjk_maps_fg_synch_ff_ps_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}_fsky{fsky:0.2f}'
 
 
 #try:
@@ -89,7 +103,6 @@ fname_fg=f'bjk_maps_fg_synch_ff_ps_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_j
 
 j_test=4#7
 need_theory=theory.NeedletTheory(B,jmax, lmax)
-np.savetxt(out_dir+f'b_values_std_jmax{jmax}_lmax{lmax}_B{B:1.2f}.dat',need_theory.b_values)
 
 fig, ax1  = plt.subplots(1,1,figsize=(7,5)) 
 plt.suptitle(r'STANDARD $D = %1.2f $' %B +r'$ ,~j_{\mathrm{max}} =$'+str(jmax) + r'$ ,~\ell_{\mathrm{max}} =$'+str(lmax))

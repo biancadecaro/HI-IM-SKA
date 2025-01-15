@@ -71,7 +71,9 @@ def ell_binning(b_values,lmax):#, ell):
 
 ######################################################################################################
 
-path_data_sims_tot = 'Sims/beam_theta40arcmin_no_mean_sims_synch_ff_ps_40freq_905.0_1295.0MHz_lmax768_nside256'
+fg_components='synch_ff_ps'
+path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_components}_40freq_905.0_1295.0MHz_lmax768_nside256'
+
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
@@ -110,7 +112,7 @@ npix = np.shape(HI_maps_freq)[1]
 nside = hp.get_nside(HI_maps_freq[0])
 lmax=3*nside#2*nside#
 jmax=12
-out_dir = './Maps_needlets_mexican/No_mean/p3/Beam_40arcmin/'
+out_dir = './Maps_needlets_mexican/No_mean/p1/Beam_40arcmin/'
 if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
@@ -137,12 +139,12 @@ fname_HI=f'bjk_maps_HI_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lm
 fname_fg=f'bjk_maps_fg_synch_ff_ps_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}'
 
 
-j_test=4#7
+j_test=3#7
 
-b_values = mexicanneedlet(B,np.arange(0,jmax+1),lmax, p=3)
+b_values = mexicanneedlet(B,np.arange(0,jmax+1),lmax, p=1)
 
 fig, ax1  = plt.subplots(1,1,figsize=(7,5)) 
-plt.suptitle(r'$D = %1.2f $' %B +r'$ ,~j_{\mathrm{max}} =$'+str(jmax) + r'$ ,~\ell_{\mathrm{max}} =$'+str(lmax))
+plt.suptitle(r'MEXICAN $D = %1.2f $' %B +r'$ ,~j_{\mathrm{max}} =$'+str(jmax) + r'$ ,~\ell_{\mathrm{max}} =$'+str(lmax))
 
 
 for i in range(b_values.shape[0]):
@@ -152,6 +154,7 @@ ax1.set_xlabel(r'$\ell$')
 ax1.set_ylabel(r'$w^{2}(\frac{\ell}{D^{j}})$')
 ax1.legend(loc='right')
 plt.tight_layout()
+plt.savefig(f'PCA_mexican_needlets_output/windows_function_mex_p1_jmax{jmax}_lmax{lmax}')
 
 ell_binning=ell_binning(b_values,lmax)
 fig = plt.figure()
