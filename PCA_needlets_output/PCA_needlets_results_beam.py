@@ -67,6 +67,7 @@ ich=int(num_ch/2)
 ############################################################################################
 ####################### NEEDLETS2HARMONICS #################################################
 
+<<<<<<< Updated upstream
 b_values = pippo.mylibpy_needlets_std_init_b_values(B,jmax,lmax)
 #res_PCA_HI = np.load(path_PCA_HI+'.npy')
 #res_PCA_fg = np.load(path_PCA_fg+'.npy')
@@ -99,6 +100,21 @@ b_values = pippo.mylibpy_needlets_std_init_b_values(B,jmax,lmax)
 #    map_PCA_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_HI[:,nu],B, lmax)
 np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_HI_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_HI_need2pix)
 np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_fg_need2pix)
+=======
+_values = pippo.mylibpy_needlets_std_init_b_values(B,jmax,lmax)
+res_PCA_HI = np.load(path_PCA_HI+'.npy')
+res_PCA_fg = np.load(path_PCA_fg+'.npy')
+
+print(res_PCA_HI.shape)
+map_PCA_HI_need2pix=np.zeros((len(nu_ch), npix))
+map_PCA_fg_need2pix=np.zeros((len(nu_ch), npix))
+
+for nu in range(len(nu_ch)):
+    map_PCA_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_fg[:,nu],B, lmax)
+    map_PCA_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_HI[:,nu],B, lmax)
+np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_HI_{fg_comp}_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_HI_need2pix)
+np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{fg_comp}_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_fg_need2pix)
+>>>>>>> Stashed changes
 del res_PCA_HI; del res_PCA_fg
 
 cosmo_HI_bjk = np.load(path_cosmo_HI_bjk+'.npy')[:,:jmax,:]
