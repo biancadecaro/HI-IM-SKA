@@ -18,14 +18,14 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 #print(sns.color_palette("husl", 15).as_hex())
 sns.palettes.color_palette()
 ###########################################################################3
-path_data_sims_tot = 'Sims/beam_theta40arcmin_no_mean_sims_synch_ff_ps_40freq_905.0_1295.0MHz_lmax768_nside256'
+path_data_sims_tot = 'Sims/beam_Carucci_no_mean_sims_synch_ff_ps_40freq_905.0_1295.0MHz_thick10MHz_lmax768_nside256'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
 
 out_dir_output = 'PCA_mexican_needlets_output/'
-out_dir_output_PCA = out_dir_output+'PCA_maps/No_mean/p3/Beam_40arcmin/'
-out_dir_plot = out_dir_output+'Plots_PCA_needlets/No_mean/p3/Beam_40arcmin/'
+out_dir_output_PCA = out_dir_output+'PCA_maps/No_mean/p1/Beam_Carucci/'
+out_dir_plot = out_dir_output+'Plots_PCA_needlets/No_mean/p1/Beam_Carucci/'
 if not os.path.exists(out_dir_output):
         os.makedirs(out_dir_output)
 if not os.path.exists(out_dir_output_PCA):
@@ -36,7 +36,7 @@ del file
 
 fg_comp = 'synch_ff_ps'
 
-need_dir = 'Maps_needlets_mexican/No_mean/p3/Beam_40arcmin/'
+need_dir = 'Maps_needlets_mexican/No_mean/p1/Beam_Carucci/'
 need_tot_maps_filename = need_dir+f'bjk_maps_obs_{fg_comp}_40freq_905.0_1295.0MHz_jmax12_lmax768_B1.74_nside256.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
@@ -76,8 +76,8 @@ for j in range(eigenval.shape[0]):
 plt.legend(fontsize=12, ncols=2)
 x_ticks = np.arange(-10,num_freq+10, 10)
 ax = plt.gca()
-ax.set(xlim=[-10,num_freq+10],xticks=x_ticks,xlabel="eigenvalue number",ylabel="$\\lambda$",title='Eigenvalues')
-#plt.savefig(out_dir_plot+f'eigenvalue_cov_need_jmax{jmax}_lmax{lmax}_nside{nside}.png')
+ax.set(xlim=[-10,num_freq+10],xticks=x_ticks,xlabel="eigenvalue number",ylabel="$\\lambda$",title='MEXICAN NEED-Eigenvalues')
+plt.savefig(out_dir_output+f'eigenvalue_cov_mex_need_no_mean_jmax{jmax}_lmax{lmax}_nside{nside}.png')
 plt.show()
 
 num_sources=3
@@ -108,7 +108,7 @@ plt.rcParams["axes.labelsize"] = 12
 x = np.arange(0,len(nu_ch))
 
 plt.fill_between(x,y1.T[0],y2.T[0],alpha=0.3,label='gal synch')
-for j in [4,10,11]:
+for j in [4,8,11]:
     plt.plot(abs(eigenvec_fg_Nfg[j]/np.linalg.norm(eigenvec_fg_Nfg[j],axis=0)),label=f'mix mat column,j={j}')
 plt.plot(FF_col/np.linalg.norm(FF_col),'m:',label='gal ff')
 

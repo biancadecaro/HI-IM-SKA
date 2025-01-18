@@ -3,7 +3,9 @@ from astropy import io
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy.linalg as lng
+import sys
+sys.path.insert(1, '/home/bianca/Documents/gmca4im-master/scripts/')
+import gmca4im_lib2 as g4i
 import os
 
 import seaborn as sns
@@ -15,82 +17,95 @@ import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 
-###########################################################################3
-fg_components='synch_ff_ps_pol'
-path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_components}_40freq_905.0_1295.0MHz_lmax768_nside256'
-with open(path_data_sims_tot+'.pkl', 'rb') as f:
-        file = pickle.load(f)
-        f.close()
+#print(sns.color_palette("husl", 15).as_hex())
+sns.palettes.color_palette()
+###########################################################################
+try:
+    from mpi4py import MPI
+    comm = MPI.COMM_WORLD
+    myid, nproc = comm.Get_rank(), comm.Get_size()
+except ImportError:
+    myid, nproc = 0, 1
+#############################################################################
 
-out_dir_output = 'PCA_needlets_output/'
-out_dir_output_PCA = out_dir_output+'PCA_maps/No_mean/Beam_40arcmin/'
-out_dir_plot = out_dir_output+'Plots_PCA_needlets/No_mean/Beam_40arcmin/'
-if not os.path.exists(out_dir_output):
-        os.makedirs(out_dir_output)
-if not os.path.exists(out_dir_output_PCA):
-        os.makedirs(out_dir_output_PCA)
+if myid == 0:
 
-nu_ch= file['freq']
-del file
-
-fg_comp = 'synch_ff_ps_pol'
-
-need_dir = 'Maps_needlets/No_mean/Beam_40arcmin/'
-need_tot_maps_filename = need_dir+f'bjk_maps_obs_{fg_comp}_40freq_905.0_1295.0MHz_jmax4_lmax383_B4.42_nside128.npy'
-need_tot_maps = np.load(need_tot_maps_filename)
-
-jmax=need_tot_maps.shape[1]-1
-
-num_freq = need_tot_maps.shape[0]
-nu_ch = np.linspace(905.0, 1295.0, num_freq)
-min_ch = min(nu_ch)
-max_ch = max(nu_ch)
-npix = need_tot_maps.shape[2]
-nside = hp.npix2nside(npix)
-lmax=3*nside-1#2*nside#
-B=pow(lmax,(1./jmax))
-
-print(f'jmax:{jmax}, lmax:{lmax}, B:{B:1.2f}, num_freq:{num_freq}, min_ch:{min_ch}, max_ch:{max_ch}, nside:{nside}')
-
-
-#np.save(out_dir_output+f'need_HI_maps_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz.npy',need_HI_maps)
-
-Cov_channels = np.zeros((jmax+1,num_freq, num_freq))
-
-
-for j in range(Cov_channels.shape[0]):
-    Cov_channels[j]=np.cov(need_tot_maps[:,j,:])
-
-
-
-eigenval=np.zeros((Cov_channels.shape[0], num_freq))
-eigenvec=np.zeros((Cov_channels.shape[0], num_freq,num_freq))
-for j in range(eigenval.shape[0]):
-    eigenval[j], eigenvec[j] = np.linalg.eigh(Cov_channels[j])#np.linalg.eigh(Cov_channels[j])
-del Cov_channels
+    path_data_sims_tot = 'Sims/no_mean_sims_synch_ff_ps_40freq_905.0_1295.0MHz_nside256'
+    with open(path_data_sims_tot+'.pkl', 'rb') as f:
+            file = pickle.load(f)
+            f.close()
+    
+    out_dir_output = 'GMCA_needlets_output/'
+    out_dir_output_GMCA = out_dir_output+'GMCA_maps/No_mean/'
+    out_dir_plot = out_dir_output+'Plots_GMCA_needlets/No_mean/'
+    if not os.path.exists(out_dir_output):
+            os.makedirs(out_dir_output)
+    if not os.path.exists(out_dir_output_GMCA):
+            os.makedirs(out_dir_output_GMCA)
+    
+    nu_ch= file['freq']
+    del file
+    
+    fg_comp = 'synch_ff_ps'
+    
+    need_dir = 'Maps_needlets/No_mean/'
+    need_tot_maps_filename = need_dir+f'bjk_maps_obs_{fg_comp}_40freq_905.0_1295.0MHz_jmax12_lmax512_B1.68_nside256.npy'
+    need_tot_maps = np.load(need_tot_maps_filename)
+    
+    jmax=need_tot_maps.shape[1]-1
+    
+    num_freq = need_tot_maps.shape[0]
+    nu_ch = np.linspace(905.0, 1295.0, num_freq)
+    min_ch = min(nu_ch)
+    max_ch = max(nu_ch)
+    npix = need_tot_maps.shape[2]
+    nside = hp.npix2nside(npix)
+    lmax=2*nside#3*nside-1#
+    B=pow(lmax,(1./jmax))
+    
+    print(f'jmax:{jmax}, lmax:{lmax}, B:{B:1.2f}, num_freq:{num_freq}, min_ch:{min_ch}, max_ch:{max_ch}, nside:{nside}')
 
 
-fig = plt.figure(figsize=(8,4))
-for j in range(eigenval.shape[0]):
-    plt.semilogy(np.arange(1,num_freq+1),eigenval[j],'--o',mfc='none',markersize=5,label=f'j={j}')
+#############################################################################
+############################# GMCA ##########################################
+dim = (jmax+1) / nproc
+if nproc > 1:
+    if myid < (jmax+1) % nproc:
+        dim += 1
+################   GMCA PARAMETERS   ##################
+num_sources   = 3   # number of sources to be estimated
+mints = 0.1 # min threshold (what is sparse compared to noise?)
+nmax  = 100 # number of iterations (usually 100 is safe)
+L0    = 0   # switch between L0 norm (1) or L1 norm (0)
+#######################################################
 
-plt.legend(fontsize=12, ncols=2)
-x_ticks = np.arange(-10,num_freq+10, 10)
-ax = plt.gca()
-ax.set(xlim=[-10,num_freq+10],xticks=x_ticks,xlabel="eigenvalue number",ylabel="$\\lambda$",title='STANDARD NEED - Eigenvalues')
-plt.savefig(out_dir_output+f'eigenvalue_cov_need_no_mean_jmax{jmax}_lmax{lmax}_nside{nside}.png')
-plt.show()
+# initial guess for the mixing matrix?
+# i.e. we could start from PCA-determined mix matrix
+AInit = None
 
-num_sources=18
+# we can impose a column of the mixing matrix
+ColFixed = None
 
-Nfg = num_freq - num_sources
-print(f'Nfg:{num_sources}')
-print(eigenvec.shape)
-eigenvec_fg_Nfg = eigenvec[:, :,Nfg:num_freq]#eigenvec[:, :,:num_sources]#
+# we can whiten the data
+whitening = False; epsi = 1e-3
 
-print(eigenvec_fg_Nfg.shape)
+# estimated mixing matrix:
+Ae_proc = np.zeros((dim, num_freq,num_sources))
+for j in range(myid, jmax+1, nproc): 
+    Ae_proc[j] = g4i.run_GMCA(need_tot_maps[:,j,:],AInit,num_sources,mints,nmax,L0,ColFixed,whitening,epsi)
 
-del eigenvec, eigenval
+
+if nproc > 1:
+       Ae = comm.gather(Ae_proc, root=0)
+       if myid == 0:
+           Ae = np.vstack((i for i in Ae)) 
+else:
+       Ae = Ae_proc
+if myid == 0: 
+        np.save(out_dir_output_GMCA + 'Ae_GMCA_mixing_matrix', Ae)
+if nproc > 1:
+        comm.Barrier() 
+
 #############################################################################
 # gal freefree spectral index for reference
 FF_col = np.array([nu_ch**(-2.13)]).T 
@@ -109,36 +124,37 @@ plt.rcParams["axes.labelsize"] = 12
 x = np.arange(0,len(nu_ch))
 
 plt.fill_between(x,y1.T[0],y2.T[0],alpha=0.3,label='gal synch')
-for j in [1,2,3]:
-    plt.plot(abs(eigenvec_fg_Nfg[j]/np.linalg.norm(eigenvec_fg_Nfg[j],axis=0)),label=f'mix mat column,j={j}')
+for j in [4,11,12]:
+    plt.plot(abs(Ae[j]/np.linalg.norm(Ae[j],axis=0)),label=f'mix mat column,j={j}')
 plt.plot(FF_col/np.linalg.norm(FF_col),'m:',label='gal ff')
 
 ax = plt.gca()
 ax.set(ylim=[0.0,0.4],xlabel="frequency channel",ylabel="Spectral emission",title='PCA-mixing matrix columns')
 plt.legend(ncols=2)
 plt.show()
+
 ####################################################################################################
-res_fg_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
-for j in range(eigenvec_fg_Nfg.shape[0]):
-    res_fg_maps[j] = eigenvec_fg_Nfg[j]@eigenvec_fg_Nfg[j].T@need_tot_maps[:,j,:]
+res_fg_maps = np.zeros((Ae.shape[0], num_freq, npix))
+for j in range(Ae.shape[0]):
+    res_fg_maps[j] = Ae[j]@np.linalg.inv(Ae[j].T@Ae[j])@Ae[j].T@need_tot_maps[:,j,:]
 print(res_fg_maps.shape)
 
-np.save(out_dir_output_PCA+f'res_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',res_fg_maps)
+np.save(out_dir_output_GMCA+f'res_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',res_fg_maps)
 
 print('.. ho calcolato res fg .. ')
 
 ich= int(num_freq/2)
 j_test=7
 
-res_HI_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
-for j in range(eigenvec_fg_Nfg.shape[0]):
+res_HI_maps = np.zeros((Ae.shape[0], num_freq, npix))
+for j in range(Ae.shape[0]):
     res_HI_maps[j,:,:] = need_tot_maps[:,j,:] - res_fg_maps[j,:,:]
     hp.mollview(res_HI_maps[j][ich],min=0, max=0.2, cmap='viridis', title=f'j={j}')
 plt.show()
 del need_tot_maps
 
 
-np.save(out_dir_output_PCA+f'res_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',res_HI_maps)
+np.save(out_dir_output_GMCA+f'res_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',res_HI_maps)
 
 print('.. ho calcolato res HI .. ')
 
@@ -153,14 +169,14 @@ print('fin qui ci sono')
 #Foreground's maps
 
 need_fg_maps_filename = need_dir+f'bjk_maps_fg_{fg_comp}_{num_freq}freq_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}.npy'
-need_fg_maps = np.load(need_fg_maps_filename)#[:,:jmax,:]
+need_fg_maps = np.load(need_fg_maps_filename)
 
-leak_fg_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
-leak_HI_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
+leak_fg_maps = np.zeros((Ae.shape[0], num_freq, npix))
+leak_HI_maps = np.zeros((Ae.shape[0], num_freq, npix))
 
-for j in range(eigenvec_fg_Nfg.shape[0]):
-    leak_fg_maps[j] = need_fg_maps[:,j,:]-eigenvec_fg_Nfg[j]@eigenvec_fg_Nfg[j].T@need_fg_maps[:,j,:]
-np.save(out_dir_output_PCA+f'leak_PCA_{fg_comp}_jmax{jmax}_lmax{lmax}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',leak_fg_maps)
+for j in range(Ae.shape[0]):
+    leak_fg_maps[j] = need_fg_maps[:,j,:]-Ae[j]@np.linalg.inv(Ae[j].T@Ae[j])@Ae[j].T@need_fg_maps[:,j,:]
+np.save(out_dir_output_GMCA+f'leak_PCA_{fg_comp}_jmax{jmax}_lmax{lmax}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',leak_fg_maps)
 
 fig = plt.figure()
 plt.suptitle(f'Frequency channel: {nu_ch[ich]} MHz, Nfg:{num_sources}, jmax:{jmax}, lmax:{lmax} ')
@@ -171,15 +187,14 @@ del leak_fg_maps
 
 
 need_HI_maps_filename = need_dir+f'bjk_maps_HI_{num_freq}freq_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}.npy'
-need_HI_maps = np.load(need_HI_maps_filename)#[:,:jmax,:]
+need_HI_maps = np.load(need_HI_maps_filename)
 
 
+for j in range(Ae.shape[0]):
+    leak_HI_maps[j] = Ae[j]@np.linalg.inv(Ae[j].T@Ae[j])@Ae[j].T@need_HI_maps[:,j,:]
 
-for j in range(eigenvec_fg_Nfg.shape[0]):
-    leak_HI_maps[j] = eigenvec_fg_Nfg[j]@eigenvec_fg_Nfg[j].T@need_HI_maps[:,j,:]
-
-del eigenvec_fg_Nfg; 
-np.save(out_dir_output_PCA+f'leak_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',leak_HI_maps)
+del Ae; 
+np.save(out_dir_output_GMCA+f'leak_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',leak_HI_maps)
 
 fig = plt.figure()
 plt.suptitle(f'Frequency channel: {nu_ch[ich]} MHz, Nfg:{num_sources}, jmax:{jmax}, lmax:{lmax} ')
@@ -212,7 +227,7 @@ plt.show()
 
 ###################### PROVIAMO CON I CL #########################
 
-lmax_cl = 2*nside#512
+lmax_cl = 510
 
 cl_cosmo_HI = np.zeros((len(nu_ch), lmax_cl+1))
 cl_PCA_HI_need2harm = np.zeros((len(nu_ch), lmax_cl+1))
@@ -227,11 +242,9 @@ ell=np.arange(lmax_cl+1)
 factor=ell*(ell+1)/(2*np.pi)
 
 fig = plt.figure()
-plt.title(f'NEEDLETS CLs: channel:{nu_ch[ich]} MHz, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}')
+plt.title(f'NEEDLETS CLs: channel:{nu_ch[ich]} MHz, jmax:{jmax}, lmax:{lmax}, Nfg:{num_sources}')
 plt.semilogy(ell[2:],factor[2:]*cl_PCA_HI_need2harm[ich][2:], label='PCA HI')
 plt.semilogy(ell[2:],factor[2:]*cl_cosmo_HI[ich][2:], label='Cosmo')
-plt.xlim([0,200])
-plt.ylim([-10,10])
 plt.legend()
 plt.show()
 
@@ -240,23 +253,20 @@ frame1=fig.add_axes((.1,.3,.8,.6))
 plt.title(f'NEEDLETS CLs: mean over channels, jmax:{jmax}, lmax:{lmax}, Nfg:{num_sources}')
 plt.plot(ell[2:], factor[2:]*cl_cosmo_HI.mean(axis=0)[2:], label = f'Cosmo')
 plt.plot(ell[2:], factor[2:]*cl_PCA_HI_need2harm.mean(axis=0)[2:],'+',mfc='none', label = f'PCA')
-plt.xlim([0,200])
 plt.legend()
 frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi} \langle C_{\ell} \rangle_{\rm ch}$')
 frame1.set_xlabel([])
-frame1.set_xticks(np.arange(1,200+1, 30))
+frame1.set_xticks(np.arange(1,lmax_cl+1, 30))
 
 
 diff_cl_need2sphe = cl_PCA_HI_need2harm/cl_cosmo_HI-1
 del cl_PCA_HI_need2harm; del cl_cosmo_HI
 frame2=fig.add_axes((.1,.1,.8,.2))
 plt.plot(ell[2:], diff_cl_need2sphe.mean(axis=0)[2:]*100, label='% PCA_HI/input_HI -1')
-frame2.set_xlim([0,200])
-frame2.set_ylim([-10,10])
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_ylabel(r'%$ \langle diff \rangle_{\rm ch}$')
 frame2.set_xlabel(r'$\ell$')
-frame2.set_xticks(np.arange(1,200+1, 30))
+frame2.set_xticks(np.arange(1,lmax_cl+1, 30))
 plt.tight_layout()
 plt.legend()
 #plt.savefig(out_dir_plot+f'cls_need2pix_jmax{jmax}_lmax{lmax}_nside{nside}_Nfg{Nfg}.png')
