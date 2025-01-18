@@ -38,12 +38,12 @@ lmax= 3*nside-1
 Nfg=18
 B = pippo.mylibpy_jmax_lmax2B(jmax, lmax)
 
-path_PCA_HI=dir_PCA+f'res_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
-path_PCA_fg=dir_PCA+f'res_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
-path_cosmo_HI = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_40arcmin/cosmo_HI_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
-path_fg = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_40arcmin/fg_input_{fg_comp}_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
-path_leak_Fg = dir_PCA+f'leak_PCA_{fg_comp}_jmax{jmax}_lmax{lmax}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
-path_leak_HI = dir_PCA+f'leak_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
+path_PCA_HI=dir_PCA+f'res_PCA_HI_synch_ff_ps_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
+path_PCA_fg=dir_PCA+f'res_PCA_fg_synch_ff_ps_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
+path_cosmo_HI = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_40arcmin/cosmo_HI_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_{lmax}'
+path_fg = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_40arcmin/fg_input_synch_ff_ps_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_{lmax}'
+path_leak_Fg = dir_PCA+f'leak_PCA_synch_ff_ps_jmax{jmax}_lmax{lmax}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
+path_leak_HI = dir_PCA+f'leak_PCA_HI_synch_ff_ps_jmax{jmax}_lmax{lmax}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 path_cosmo_HI_bjk = f'../Maps_needlets/No_mean/Beam_40arcmin/bjk_maps_HI_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
 path_input_fg_bjk = f'../Maps_needlets/No_mean/Beam_40arcmin/bjk_maps_fg_{fg_comp}_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
 
@@ -68,28 +68,41 @@ ich=int(num_ch/2)
 ####################### NEEDLETS2HARMONICS #################################################
 
 b_values = pippo.mylibpy_needlets_std_init_b_values(B,jmax,lmax)
-res_PCA_HI = np.load(path_PCA_HI+'.npy')
-res_PCA_fg = np.load(path_PCA_fg+'.npy')
-
-print(res_PCA_HI.shape)
-map_PCA_HI_need2pix=np.zeros((len(nu_ch), npix))
-map_PCA_fg_need2pix=np.zeros((len(nu_ch), npix))
-
-for nu in range(len(nu_ch)):
-	for j in range(res_PCA_HI.shape[0]):
-		map_PCA_fg_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(res_PCA_fg[j,nu],b_values,j)
-		map_PCA_HI_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(res_PCA_HI[j,nu],b_values,j)
-	#map_PCA_fg_need2pix[nu] = hp.remove_dipole(map_PCA_fg_need2pix[nu])
-	#map_PCA_HI_need2pix[nu] = hp.remove_dipole(map_PCA_HI_need2pix[nu])
+#res_PCA_HI = np.load(path_PCA_HI+'.npy')
+#res_PCA_fg = np.load(path_PCA_fg+'.npy')
+#
+#print(res_PCA_HI.shape)
+#map_PCA_HI_need2pix=np.zeros((len(nu_ch), npix))
+#map_PCA_fg_need2pix=np.zeros((len(nu_ch), npix))
+#
+#for nu in range(len(nu_ch)):
+#	for j in range(res_PCA_HI.shape[0]):
+#		map_PCA_fg_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(res_PCA_fg[j,nu],b_values,j)
+#		map_PCA_HI_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(res_PCA_HI[j,nu],b_values,j)
+#	#map_PCA_fg_need2pix[nu] = hp.remove_dipole(map_PCA_fg_need2pix[nu])
+#	#map_PCA_HI_need2pix[nu] = hp.remove_dipole(map_PCA_HI_need2pix[nu])
+##for nu in range(len(nu_ch)):
+##    map_PCA_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_fg[:,nu],B, lmax)
+##    map_PCA_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_HI[:,nu],B, lmax)
+#np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_HI_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_HI_need2pix)
+#np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_fg_need2pix)
+#del res_PCA_HI; del res_PCA_fg
+#
+#cosmo_HI_bjk = np.load(path_cosmo_HI_bjk+'.npy')#[:,:jmax,:]
+#fg_bjk = np.load(path_input_fg_bjk+'.npy')#[:,:jmax,:]
+#print(cosmo_HI_bjk.shape)
+#
+#map_input_HI_need2pix=np.zeros((len(nu_ch), npix))
+#map_input_fg_need2pix=np.zeros((len(nu_ch), npix))
 #for nu in range(len(nu_ch)):
 #    map_PCA_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_fg[:,nu],B, lmax)
 #    map_PCA_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_HI[:,nu],B, lmax)
-np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_HI_{fg_comp}_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_HI_need2pix)
-np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{fg_comp}_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_fg_need2pix)
+np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_HI_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_HI_need2pix)
+np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_fg_need2pix)
 del res_PCA_HI; del res_PCA_fg
 
-cosmo_HI_bjk = np.load(path_cosmo_HI_bjk+'.npy')#[:,:jmax,:]
-fg_bjk = np.load(path_input_fg_bjk+'.npy')#[:,:jmax,:]
+cosmo_HI_bjk = np.load(path_cosmo_HI_bjk+'.npy')[:,:jmax,:]
+fg_bjk = np.load(path_input_fg_bjk+'.npy')[:,:jmax,:]
 print(cosmo_HI_bjk.shape)
 
 map_input_HI_need2pix=np.zeros((len(nu_ch), npix))
@@ -103,14 +116,14 @@ for nu in range(len(nu_ch)):
 	#map_input_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(cosmo_HI_bjk[nu,:],B, lmax)
 	#map_input_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(fg_bjk[nu,:],B, lmax)
 np.save(out_dir_maps_recon+f'maps_reconstructed_cosmo_HI_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_input_HI_need2pix)
-np.save(out_dir_maps_recon+f'maps_reconstructed_input_fg_{fg_comp}_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_input_fg_need2pix)
+np.save(out_dir_maps_recon+f'maps_reconstructed_input_fg_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_input_fg_need2pix)
 del cosmo_HI_bjk; del fg_bjk
 
 
-#map_PCA_HI_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_PCA_HI_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
-#map_PCA_fg_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
-#map_input_fg_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_input_fg_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
-#map_input_HI_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_cosmo_HI_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
+map_PCA_HI_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_PCA_HI_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
+map_PCA_fg_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
+map_input_fg_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_input_fg_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
+map_input_HI_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_cosmo_HI_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
 
 
 fg = np.load(path_fg+'.npy')
