@@ -16,8 +16,8 @@ mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 
 ###########################################################################3
-fg_components='synch_ff_ps_pol'
-path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_components}_40freq_905.0_1295.0MHz_lmax768_nside256'
+fg_comp='synch_ff_ps_pol'
+path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_comp}_40freq_905.0_1295.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
@@ -32,8 +32,6 @@ if not os.path.exists(out_dir_output_PCA):
 
 nu_ch= file['freq']
 del file
-
-fg_comp = 'synch_ff_ps_pol'
 
 need_dir = 'Maps_needlets/No_mean/Beam_40arcmin/'
 need_tot_maps_filename = need_dir+f'bjk_maps_obs_{fg_comp}_40freq_905.0_1295.0MHz_jmax4_lmax383_B4.42_nside128.npy'

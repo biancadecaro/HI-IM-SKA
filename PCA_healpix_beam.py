@@ -24,7 +24,7 @@ if not os.path.exists(out_dir_plot):
 
 ###################################################################################
 
-fg_components='synch_ff_ps'
+fg_components='synch_ff_ps_pol'
 path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_components}_40freq_905.0_1295.0MHz_lmax383_nside128'
 
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
@@ -58,7 +58,7 @@ del file
 npix = np.shape(HI_maps_freq)[1]
 nside = hp.get_nside(HI_maps_freq[0])
 lmax=3*nside-1
-num_sources = 3
+num_sources = 18
 print(f'nside:{nside}, lmax:{lmax}, num_ch:{num_freq}, min_ch:{min(nu_ch)}, max_ch:{max(nu_ch)}, Nfg:{num_sources}')
 
 #for nu in range(len(nu_ch)):

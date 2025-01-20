@@ -5,8 +5,8 @@ import re
 import os
 
 import seaborn as sns
-sns.set()
-sns.set(style = 'white')
+sns.set_theme()
+sns.set_theme(style = 'white')
 #sns.set_palette('husl',15)
 from matplotlib import colors
 import matplotlib as mpl
@@ -40,8 +40,8 @@ B = pippo.mylibpy_jmax_lmax2B(jmax, lmax)
 
 path_PCA_HI=dir_PCA+f'res_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 path_PCA_fg=dir_PCA+f'res_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
-path_cosmo_HI = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_40arcmin/cosmo_HI_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_{lmax}'
-path_fg = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_40arcmin/fg_input_{fg_comp}_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_{lmax}'
+path_cosmo_HI = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_40arcmin/cosmo_HI_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
+path_fg = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_40arcmin/fg_input_{fg_comp}_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
 path_leak_Fg = dir_PCA+f'leak_PCA_{fg_comp}_jmax{jmax}_lmax{lmax}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 path_leak_HI = dir_PCA+f'leak_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 path_cosmo_HI_bjk = f'../Maps_needlets/No_mean/Beam_40arcmin/bjk_maps_HI_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
@@ -83,8 +83,8 @@ np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{fg_comp}_{num_ch}_jmax{j
 
 del res_PCA_HI; del res_PCA_fg
 
-cosmo_HI_bjk = np.load(path_cosmo_HI_bjk+'.npy')[:,:jmax,:]
-fg_bjk = np.load(path_input_fg_bjk+'.npy')[:,:jmax,:]
+cosmo_HI_bjk = np.load(path_cosmo_HI_bjk+'.npy')#[:,:jmax,:]
+fg_bjk = np.load(path_input_fg_bjk+'.npy')#[:,:jmax,:]
 print(cosmo_HI_bjk.shape)
 
 map_input_HI_need2pix=np.zeros((len(nu_ch), npix))
@@ -129,7 +129,7 @@ fig.add_subplot(132)
 hp.gnomview(map_input_fg_need2pix[ich],rot=[-22,21], coord='G', reso=hp.nside2resol(nside, arcmin=True), min=-1e3, max=1e4, title='Need recons fg', cmap= 'viridis', hold=True)
 fig.add_subplot(133) 
 hp.gnomview(100*(map_input_fg_need2pix[ich]/fg[ich]-1), rot=[-22,21], coord='G', reso=hp.nside2resol(nside, arcmin=True), min=-0.02, max=0.02, title='% Need recons fg/fg -1', cmap= 'viridis', hold=True)
-plt.tight_layout()
+#plt.tight_layout()
 plt.show()
 #del map_input_fg_need2pix
 
@@ -141,7 +141,7 @@ plt.show()
 #hp.gnomview(map_PCA_HI_need2pix[ich],rot=[-22,21], coord='G', reso=hp.nside2resol(nside, arcmin=True), min=0, max=1, title='PCA HI', cmap= 'viridis', hold=True)
 #fig.add_subplot(133) 
 #hp.gnomview(cosmo_HI[ich]-map_PCA_HI_need2pix[ich], rot=[-22,21],coord='G', reso=hp.nside2resol(nside, arcmin=True), min=-0.2, max=0.2, title='% HI - PCA', cmap= 'viridis', hold=True)
-#plt.tight_layout()
+##plt.tight_layout()
 #plt.show()
 
 rot = [-56,87]
@@ -182,7 +182,7 @@ fig.add_subplot(222)
 hp.mollview(cosmo_HI[ich],min=0, max=1, title= 'Cosmo HI',cmap='viridis', hold=True)
 fig.add_subplot(223) 
 hp.mollview(map_PCA_HI_need2pix[ich],min=0, max=1, title= 'Res PCA HI Needlets 2 Pix',cmap='viridis', hold= True)
-plt.tight_layout()
+#plt.tight_layout()
 plt.show()
 
 del fg; del map_PCA_fg_need2pix;del map_input_fg_need2pix
@@ -236,7 +236,7 @@ frame2.set_ylim([-10,10])
 frame2.set_ylabel(r'%$ diff $')
 frame2.set_xlabel(r'$\ell$')
 frame1.set_xticks(np.arange(1,200+1, 10))
-plt.tight_layout()
+#plt.tight_layout()
 plt.legend()
 plt.show()
 
@@ -264,7 +264,7 @@ frame2.set_ylim([-10,10])
 frame2.set_ylabel(r'%$ \langle diff \rangle_{\rm ch}$')
 frame2.set_xlabel(r'$\ell$')
 frame1.set_xticks(np.arange(1,200+1, 10))
-plt.tight_layout()
+#plt.tight_layout()
 plt.legend()
 
 
@@ -284,7 +284,7 @@ for nu in range(len(nu_ch)):
     for j in range(need_HI_leak.shape[0]):
         map_leak_HI_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(need_HI_leak[j,nu],b_values,j)
     #map_leak_HI_need2pix[nu] = hp.remove_dipole(map_leak_HI_need2pix[nu])
-np.save(out_dir_maps_recon+f'maps_reconstructed_leak_HI_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_HI_need2pix)
+np.save(out_dir_maps_recon+f'maps_reconstructed_leak_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_HI_need2pix)
 
 del need_HI_leak
 
@@ -296,11 +296,11 @@ for nu in range(len(nu_ch)):
     #map_leak_fg_need2pix[nu] = hp.remove_dipole(map_leak_fg_need2pix[nu])
     #map_leak_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(need_fg_leak[:,nu],B, lmax)
 del need_fg_leak
-np.save(out_dir_maps_recon+f'maps_reconstructed_leak_fg_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_fg_need2pix)
+np.save(out_dir_maps_recon+f'maps_reconstructed_leak_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_fg_need2pix)
 
 
-#map_leak_HI_need2pix = np.load(out_dir_maps_recon+f'maps_reconstructed_leak_HI_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
-#map_leak_fg_need2pix = np.load(out_dir_maps_recon+f'maps_reconstructed_leak_fg_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
+#map_leak_HI_need2pix = np.load(out_dir_maps_recon+f'maps_reconstructed_leak_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
+#map_leak_fg_need2pix = np.load(out_dir_maps_recon+f'maps_reconstructed_leak_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
 
 fig = plt.figure(figsize=(10, 7))
 fig.suptitle(f'channel: {nu_ch[ich]} MHz, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}',fontsize=20)
@@ -308,7 +308,7 @@ fig.add_subplot(211)
 hp.mollview(map_leak_HI_need2pix[ich],min=0, max=1, title= 'Leakage HI',cmap='viridis', hold=True)
 fig.add_subplot(212) 
 hp.mollview(map_leak_fg_need2pix[ich],min=0, max=1, title= 'Leakage Fg',cmap='viridis', hold= True)
-plt.tight_layout()
+#plt.tight_layout()
 plt.show()
 
 ######################################################################
@@ -336,7 +336,7 @@ plt.title(f'STANDARD NEED CLs: mean over channels, jmax:{jmax}, lmax:{lmax_cl}, 
 plt.xlabel(r'$\ell$')
 plt.ylabel(r'$ \frac{\ell*(\ell+1)}{2\pi} \langle C_{\ell} \rangle$')
 plt.legend()
-plt.tight_layout()
+#plt.tight_layout()
 plt.savefig(f'recons_factorxcl_beam40arcmin_leakage_jmax{jmax}_lmax{lmax_cl}.png')
 plt.show()
 
