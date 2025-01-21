@@ -21,15 +21,15 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 #print(sns.color_palette("husl", 15).as_hex())
 sns.palettes.color_palette()
 ###########################################################################3
-fg_comp='synch_ff_ps_pol'
-path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_comp}_40freq_905.0_1295.0MHz_lmax383_nside128'
+fg_comp='synch_ff_ps'
+path_data_sims_tot = f'Sims/beam_Carucci_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
 
 out_dir_output = 'GMCA_needlets_output/'
-out_dir_output_GMCA = out_dir_output+'GMCA_maps/No_mean/Beam_40arcmin/'
-out_dir_plot = out_dir_output+'Plots_GMCA_needlets/No_mean/Beam_40arcmin/'
+out_dir_output_GMCA = out_dir_output+'GMCA_maps/No_mean/Beam_Carucci_noise/'
+out_dir_plot = out_dir_output+'Plots_GMCA_needlets/No_mean/Beam_Carucci_noise/'
 if not os.path.exists(out_dir_output):
         os.makedirs(out_dir_output)
 if not os.path.exists(out_dir_output_GMCA):
@@ -38,8 +38,7 @@ if not os.path.exists(out_dir_output_GMCA):
 nu_ch= file['freq']
 del file
 
-
-need_dir = 'Maps_needlets/No_mean/Beam_40arcmin/'
+need_dir = 'Maps_needlets/No_mean/Beam_Carucci_noise/'
 need_tot_maps_filename = need_dir+f'bjk_maps_obs_{fg_comp}_40freq_905.0_1295.0MHz_jmax4_lmax383_B4.42_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
@@ -51,17 +50,18 @@ min_ch = min(nu_ch)
 max_ch = max(nu_ch)
 npix = need_tot_maps.shape[2]
 nside = hp.npix2nside(npix)
-lmax=3*nside-1#2*nside
+lmax=3*nside-1#2*nside#
 B=pow(lmax,(1./jmax))
 
 print(f'jmax:{jmax}, lmax:{lmax}, B:{B:1.2f}, num_freq:{num_freq}, min_ch:{min_ch}, max_ch:{max_ch}, nside:{nside}')
+
 
 
 #############################################################################
 ############################# GMCA ##########################################
 
 ################   GMCA PARAMETERS   ##################
-num_sources   = 18   # number of sources to be estimated
+num_sources   = 3   # number of sources to be estimated
 mints = 0.1 # min threshold (what is sparse compared to noise?)
 nmax  = 100 # number of iterations (usually 100 is safe)
 L0    = 0   # switch between L0 norm (1) or L1 norm (0)
@@ -137,7 +137,7 @@ plt.show()
 del need_tot_maps
 
 
-np.save(out_dir_output_GMCA+f'res_GMCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',res_HI_maps)
+np.save(out_dir_output_GMCA+f'res_GMCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',res_HI_maps)
 
 print('.. ho calcolato res HI .. ')
 
@@ -169,7 +169,7 @@ plt.show()
 del leak_fg_maps
 
 
-need_HI_maps_filename = need_dir+f'bjk_maps_HI_{num_freq}freq_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}.npy'
+need_HI_maps_filename = need_dir+f'bjk_maps_HI_noise_{num_freq}freq_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}.npy'
 need_HI_maps = np.load(need_HI_maps_filename)#[:,:jmax,:]
 
 
@@ -199,9 +199,9 @@ del need_HI_maps;del need_fg_maps
 fig = plt.figure(figsize=(10, 7))
 fig.suptitle(f'channel {ich}: {nu_ch[ich]} MHz, jmax:{jmax}, lmax:{lmax}',fontsize=20)
 fig.add_subplot(222) 
-hp.mollview(need_HI_maps_totj[ich], cmap='viridis', title=f'HI signal',min=0, max =1,hold=True)
+hp.mollview(need_HI_maps_totj[ich], cmap='viridis', title=f'HI signal + noise',min=0, max =1,hold=True)
 fig.add_subplot(223)
-hp.mollview(res_HI_maps_totj[ich], title=f'GMCA HI',min=0, max =1,cmap='viridis', hold=True)
+hp.mollview(res_HI_maps_totj[ich], title=f'GMCA HI + noise',min=0, max =1,cmap='viridis', hold=True)
 fig.add_subplot(221)
 hp.mollview(np.abs(res_fg_maps_totj[ich]/need_fg_maps_jtot[ich]-1)*100, min=0, max=0.1,cmap='viridis', title=f'%(Res fg/Fg)-1',unit='%' ,hold=True)
 #plt.savefig(out_dir_plot+f'betajk_res_need_GMCA_sumj_Nfg{num_sources}_jmax{jmax}_lmax{lmax}_nside{nside}.png')
@@ -227,8 +227,8 @@ factor=ell*(ell+1)/(2*np.pi)
 fig = plt.figure(figsize=(10,7))
 frame1=fig.add_axes((.1,.3,.8,.6))
 plt.title(f'NEEDLETS CLs: channel:{nu_ch[ich]} MHz, jmax:{jmax}, lmax:{lmax}, Nfg:{num_sources}')
-plt.semilogy(ell[2:],factor[2:]*cl_cosmo_HI[ich][2:], label='Cosmo')
-plt.semilogy(ell[2:],factor[2:]*cl_GMCA_HI_need2harm[ich][2:],'+', mfc='none', label='GMCA HI')
+plt.plot(ell[2:],factor[2:]*cl_cosmo_HI[ich][2:], label='Cosmo HI + noise')
+plt.plot(ell[2:],factor[2:]*cl_GMCA_HI_need2harm[ich][2:],'+', mfc='none', label='GMCA HI + noise')
 plt.ylabel(r'$\frac{\ell(\ell+1)}{2\pi}  C_{\ell} $')
 plt.xlim([0,200])
 plt.legend()
@@ -253,8 +253,8 @@ plt.show()
 fig = plt.figure(figsize=(10,7))
 frame1=fig.add_axes((.1,.3,.8,.6))
 plt.title(f'NEEDLETS CLs: mean over channels, jmax:{jmax}, lmax:{lmax}, Nfg:{num_sources}')
-plt.plot(ell[2:], factor[2:]*cl_cosmo_HI.mean(axis=0)[2:], label = f'Cosmo')
-plt.plot(ell[2:], factor[2:]*cl_GMCA_HI_need2harm.mean(axis=0)[2:],'+',mfc='none', label = f'GMCA')
+plt.plot(ell[2:], factor[2:]*cl_cosmo_HI.mean(axis=0)[2:], label = f'Cosmo HI + noise')
+plt.plot(ell[2:], factor[2:]*cl_GMCA_HI_need2harm.mean(axis=0)[2:],'+',mfc='none', label = f'GMCA HI + noise')
 plt.xlim([0,200])
 plt.legend()
 frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi} \langle C_{\ell} \rangle_{\rm ch}$')

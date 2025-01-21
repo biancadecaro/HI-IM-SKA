@@ -15,7 +15,7 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 ###########################################################################
 
 out_dir= 'PCA_pixels_output/Maps_PCA/No_mean/Beam_40arcmin/'
-out_dir_plot = 'PCA_pixels_output/Plots_PCA/No_mean/Beam_40arcmin/'
+out_dir_plot = 'PCA_pixels_output/Plots_PCA_healpix/No_mean/Beam_40arcmin/'
 
 if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -61,16 +61,6 @@ lmax=3*nside-1
 num_sources = 18
 print(f'nside:{nside}, lmax:{lmax}, num_ch:{num_freq}, min_ch:{min(nu_ch)}, max_ch:{max(nu_ch)}, Nfg:{num_sources}')
 
-#for nu in range(len(nu_ch)):
-#        alm_HI = hp.map2alm(HI_maps_freq[nu], lmax=lmax)
-#        HI_maps_freq[nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside)
-#        del alm_HI
-#        alm_fg = hp.map2alm(fg_maps_freq[nu], lmax=lmax)
-#        fg_maps_freq[nu] = hp.alm2map(alm_fg, lmax=lmax, nside = nside)
-#        del alm_fg
-#        alm_obs = hp.map2alm(full_maps_freq[nu], lmax=lmax)
-#        full_maps_freq[nu] = hp.alm2map(alm_obs, lmax=lmax, nside = nside)
-#        del alm_obs
 
 ######################################################################################
 
@@ -217,22 +207,11 @@ for i in range(num_freq):
     cl_diff_HI_cosmo_PCA_Nfg[i] = hp.anafast(HI_maps_freq[i]-res_HI[i], lmax=lmax_cl)
     cl_diff_HI_fg_leak_Nfg[i] = hp.anafast(HI_leakage[i]-fg_leakage[i], lmax=lmax_cl)
 #
-np.savetxt(out_dir_cl+f'cl_input_HI_lmax{lmax_cl}_nside{nside}.dat', cl_Hi)
-np.savetxt(out_dir_cl+f'cl_input_fg_lmax{lmax_cl}_nside{nside}.dat', cl_fg)
-np.savetxt(out_dir_cl+f'cl_PCA_HI_{fg_components}_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_Hi_recons_Nfg)
-np.savetxt(out_dir_cl+f'cl_leak_HI_{fg_components}_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_HI_leak_Nfg)
-np.savetxt(out_dir_cl+f'cl_leak_fg_{fg_components}_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_fg_leak_Nfg)
-#np.savetxt(out_dir_cl+f'cl_diff_HI_cosmo_PCA_Nfg{Nfg}_lmax{lmax}_nside{nside}.dat', cl_diff_HI_cosmo_PCA_Nfg)
-#np.savetxt(out_dir_cl+f'cl_diff_HI_fg_leak_Nfg{Nfg}_lmax{lmax}_nside{nside}.dat', cl_diff_HI_fg_leak_Nfg)
-
-#cl_Hi=np.loadtxt(out_dir_cl+f'cl_input_HI_lmax{lmax}_nside{nside}.dat')
-#cl_fg=np.loadtxt(out_dir_cl+f'cl_input_fg_lmax{lmax}_nside{nside}.dat')
-#cl_Hi_recons_Nfg=np.loadtxt(out_dir_cl+f'cl_PCA_HI_Nfg{Nfg}_lmax{lmax}_nside{nside}.dat')
-#cl_fg_leak_Nfg=np.loadtxt(out_dir_cl+f'cl_leak_HI_Nfg{Nfg}_lmax{lmax}_nside{nside}.dat')
-#cl_HI_leak_Nfg=np.loadtxt(out_dir_cl+f'cl_leak_fg_Nfg{Nfg}_lmax{lmax}_nside{nside}.dat')
-#cl_diff_HI_cosmo_PCA_Nfg=np.loadtxt(out_dir_cl+f'cl_diff_HI_cosmo_PCA_Nfg{Nfg}_lmax{lmax}_nside{nside}.dat')
-#cl_diff_HI_fg_leak_Nfg=np.loadtxt(out_dir_cl+f'cl_diff_HI_fg_leak_Nfg{Nfg}_lmax{lmax}_nside{nside}.dat')
-
+np.savetxt(out_dir_cl+f'cl_input_HI_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_lmax{lmax_cl}_nside{nside}.dat', cl_Hi)
+np.savetxt(out_dir_cl+f'cl_input_fg_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_lmax{lmax_cl}_nside{nside}.dat', cl_fg)
+np.savetxt(out_dir_cl+f'cl_PCA_HI_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_Hi_recons_Nfg)
+np.savetxt(out_dir_cl+f'cl_leak_HI_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_HI_leak_Nfg)
+np.savetxt(out_dir_cl+f'cl_leak_fg_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_fg_leak_Nfg)
 
 del res_HI; del HI_maps_freq; del fg_leakage; del HI_leakage;del fg_maps_freq
 

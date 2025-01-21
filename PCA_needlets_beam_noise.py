@@ -16,15 +16,15 @@ mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 
 ###########################################################################3
-fg_comp='synch_ff_ps_pol'
-path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_comp}_40freq_905.0_1295.0MHz_lmax383_nside128'
+fg_comp='synch_ff_ps'
+path_data_sims_tot = f'Sims/beam_Carucci_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
 
 out_dir_output = 'PCA_needlets_output/'
-out_dir_output_PCA = out_dir_output+'PCA_maps/No_mean/Beam_40arcmin/'
-out_dir_plot = out_dir_output+'Plots_PCA_needlets/No_mean/Beam_40arcmin/'
+out_dir_output_PCA = out_dir_output+'PCA_maps/No_mean/Beam_Carucci_noise/'
+out_dir_plot = out_dir_output+'Plots_PCA_needlets/No_mean/Beam_Carucci_noise/'
 if not os.path.exists(out_dir_output):
         os.makedirs(out_dir_output)
 if not os.path.exists(out_dir_output_PCA):
@@ -33,7 +33,7 @@ if not os.path.exists(out_dir_output_PCA):
 nu_ch= file['freq']
 del file
 
-need_dir = 'Maps_needlets/No_mean/Beam_40arcmin/'
+need_dir = 'Maps_needlets/No_mean/Beam_Carucci_noise/'
 need_tot_maps_filename = need_dir+f'bjk_maps_obs_{fg_comp}_40freq_905.0_1295.0MHz_jmax4_lmax383_B4.42_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
@@ -79,7 +79,7 @@ ax.set(xlim=[-10,num_freq+10],xticks=x_ticks,xlabel="eigenvalue number",ylabel="
 #plt.savefig(out_dir_output+f'eigenvalue_cov_need_no_mean_jmax{jmax}_lmax{lmax}_nside{nside}.png')
 plt.show()
 
-num_sources=18
+num_sources=3
 
 Nfg = num_freq - num_sources
 print(f'Nfg:{num_sources}')
@@ -136,7 +136,7 @@ plt.show()
 del need_tot_maps
 
 
-np.save(out_dir_output_PCA+f'res_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',res_HI_maps)
+np.save(out_dir_output_PCA+f'res_PCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',res_HI_maps)
 
 print('.. ho calcolato res HI .. ')
 
@@ -168,7 +168,7 @@ plt.show()
 del leak_fg_maps
 
 
-need_HI_maps_filename = need_dir+f'bjk_maps_HI_{num_freq}freq_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}.npy'
+need_HI_maps_filename = need_dir+f'bjk_maps_HI_noise_{num_freq}freq_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}.npy'
 need_HI_maps = np.load(need_HI_maps_filename)#[:,:jmax,:]
 
 
@@ -199,9 +199,9 @@ del need_HI_maps;del need_fg_maps
 fig = plt.figure(figsize=(10, 7))
 fig.suptitle(f'channel {ich}: {nu_ch[ich]} MHz, jmax:{jmax}, lmax:{lmax}',fontsize=20)
 fig.add_subplot(222) 
-hp.mollview(need_HI_maps_totj[ich], cmap='viridis', title=f'HI signal',min=0, max =1,hold=True)
+hp.mollview(need_HI_maps_totj[ich], cmap='viridis', title=f'HI signal + noise',min=0, max =1,hold=True)
 fig.add_subplot(223)
-hp.mollview(res_HI_maps_totj[ich], title=f'PCA HI',min=0, max =1,cmap='viridis', hold=True)
+hp.mollview(res_HI_maps_totj[ich], title=f'PCA HI + noise',min=0, max =1,cmap='viridis', hold=True)
 fig.add_subplot(221)
 hp.mollview(np.abs(res_fg_maps_totj[ich]/need_fg_maps_jtot[ich]-1)*100, min=0, max=0.1,cmap='viridis', title=f'%(Res fg/Fg)-1',unit='%' ,hold=True)
 #plt.savefig(out_dir_plot+f'betajk_res_need_PCA_sumj_Nfg{num_sources}_jmax{jmax}_lmax{lmax}_nside{nside}.png')
@@ -224,34 +224,51 @@ del need_HI_maps_totj; del res_HI_maps_totj
 ell=np.arange(lmax_cl+1)
 factor=ell*(ell+1)/(2*np.pi)
 
-fig = plt.figure()
-plt.title(f'NEEDLETS CLs: channel:{nu_ch[ich]} MHz, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}')
-plt.semilogy(ell[2:],factor[2:]*cl_PCA_HI_need2harm[ich][2:], label='PCA HI')
-plt.semilogy(ell[2:],factor[2:]*cl_cosmo_HI[ich][2:], label='Cosmo')
+
+fig = plt.figure(figsize=(10,7))
+frame1=fig.add_axes((.1,.3,.8,.6))
+plt.title(f'NEEDLETS CLs: channel:{nu_ch[ich]} MHz, jmax:{jmax}, lmax:{lmax}, Nfg:{num_sources}')
+plt.plot(ell[2:],factor[2:]*cl_cosmo_HI[ich][2:], label='Cosmo HI + noise')
+plt.plot(ell[2:],factor[2:]*cl_PCA_HI_need2harm[ich][2:],'+', mfc='none', label='PCA HI + noise')
+plt.ylabel(r'$\frac{\ell(\ell+1)}{2\pi}  C_{\ell} $')
 plt.xlim([0,200])
-plt.ylim([-10,10])
 plt.legend()
+frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi} e C_{\ell} $')
+frame1.set_xlabel([])
+frame1.set_xticks(np.arange(1,200+1, 30))
+
+diff_cl_need2sphe = cl_PCA_HI_need2harm/cl_cosmo_HI-1
+frame2=fig.add_axes((.1,.1,.8,.2))
+plt.plot(ell[2:], diff_cl_need2sphe[ich][2:]*100, label='% PCA_HI/input_HI -1')
+frame2.axhline(ls='--', c= 'k', alpha=0.3)
+frame2.set_xlim([0,200])
+frame2.set_ylim([-10,10])
+frame2.set_ylabel(r'%$  diff$')
+frame2.set_xlabel(r'$\ell$')
+frame2.set_xticks(np.arange(1,200+1, 30))
+plt.tight_layout()
+plt.legend()
+#plt.savefig(out_dir_plot+f'cls_need2pix_jmax{jmax}_lmax{lmax}_nside{nside}_Nfg{Nfg}.png')
 plt.show()
+
 
 fig = plt.figure(figsize=(10,7))
 frame1=fig.add_axes((.1,.3,.8,.6))
 plt.title(f'NEEDLETS CLs: mean over channels, jmax:{jmax}, lmax:{lmax}, Nfg:{num_sources}')
-plt.plot(ell[2:], factor[2:]*cl_cosmo_HI.mean(axis=0)[2:], label = f'Cosmo')
-plt.plot(ell[2:], factor[2:]*cl_PCA_HI_need2harm.mean(axis=0)[2:],'+',mfc='none', label = f'PCA')
+plt.plot(ell[2:], factor[2:]*cl_cosmo_HI.mean(axis=0)[2:], label = f'Cosmo HI + noise')
+plt.plot(ell[2:], factor[2:]*cl_PCA_HI_need2harm.mean(axis=0)[2:],'+',mfc='none', label = f'PCA HI + noise')
 plt.xlim([0,200])
 plt.legend()
 frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi} \langle C_{\ell} \rangle_{\rm ch}$')
 frame1.set_xlabel([])
 frame1.set_xticks(np.arange(1,200+1, 30))
 
-
-diff_cl_need2sphe = cl_PCA_HI_need2harm/cl_cosmo_HI-1
 del cl_PCA_HI_need2harm; del cl_cosmo_HI
 frame2=fig.add_axes((.1,.1,.8,.2))
 plt.plot(ell[2:], diff_cl_need2sphe.mean(axis=0)[2:]*100, label='% PCA_HI/input_HI -1')
+frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_xlim([0,200])
 frame2.set_ylim([-10,10])
-frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_ylabel(r'%$ \langle diff \rangle_{\rm ch}$')
 frame2.set_xlabel(r'$\ell$')
 frame2.set_xticks(np.arange(1,200+1, 30))
@@ -262,3 +279,5 @@ plt.legend()
 plt.show()
 
 del diff_cl_need2sphe
+
+

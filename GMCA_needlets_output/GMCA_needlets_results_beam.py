@@ -42,8 +42,8 @@ path_GMCA_HI=dir_GMCA+f'res_GMCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{mi
 path_GMCA_fg=dir_GMCA+f'res_GMCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 path_cosmo_HI = f'../GMCA_pixels_output/Maps_GMCA/No_mean/Beam_40arcmin/cosmo_HI_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
 path_fg = f'../GMCA_pixels_output/Maps_GMCA/No_mean/Beam_40arcmin/fg_input_{fg_comp}_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
-path_leak_Fg = dir_GMCA+f'leak_GMCA_{fg_comp}_jmax{jmax}_lmax{lmax}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
-path_leak_HI = dir_GMCA+f'leak_GMCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
+path_leak_Fg = dir_GMCA+f'leak_GMCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
+path_leak_HI = dir_GMCA+f'leak_GMCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 path_cosmo_HI_bjk = f'../Maps_needlets/No_mean/Beam_40arcmin/bjk_maps_HI_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
 path_input_fg_bjk = f'../Maps_needlets/No_mean/Beam_40arcmin/bjk_maps_fg_{fg_comp}_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
 
@@ -51,8 +51,6 @@ path_input_fg_bjk = f'../Maps_needlets/No_mean/Beam_40arcmin/bjk_maps_fg_{fg_com
 print(f'jmax:{jmax}, lmax:{lmax}, num_ch:{num_ch}, min_ch:{min_ch}, max_ch:{max_ch}, Nfg:{Nfg}')
 
 nu_ch = np.linspace(min_ch, max_ch, num_ch)
-del min_ch;del max_ch
-
 
 #for nu in range(len(nu_ch)):
 #        alm_HI = hp.map2alm(cosmo_HI[nu], lmax=lmax)
@@ -84,8 +82,8 @@ for nu in range(len(nu_ch)):
 #for nu in range(len(nu_ch)):
 #    map_GMCA_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_GMCA_fg[:,nu],B, lmax)
 #    map_GMCA_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_GMCA_HI[:,nu],B, lmax)
-np.save(out_dir_maps_recon+f'maps_reconstructed_GMCA_HI_{fg_comp}_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_GMCA_HI_need2pix)
-np.save(out_dir_maps_recon+f'maps_reconstructed_GMCA_fg_{fg_comp}_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_GMCA_fg_need2pix)
+np.save(out_dir_maps_recon+f'maps_reconstructed_GMCA_HI_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_GMCA_HI_need2pix)
+np.save(out_dir_maps_recon+f'maps_reconstructed_GMCA_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_GMCA_fg_need2pix)
 del res_GMCA_HI; del res_GMCA_fg
 
 cosmo_HI_bjk = np.load(path_cosmo_HI_bjk+'.npy')#[:,:jmax,:]
@@ -102,8 +100,8 @@ for nu in range(len(nu_ch)):
 	#map_input_fg_need2pix[nu] = hp.remove_dipole(map_input_fg_need2pix[nu])
 	#map_input_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(cosmo_HI_bjk[nu,:],B, lmax)
 	#map_input_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(fg_bjk[nu,:],B, lmax)
-np.save(out_dir_maps_recon+f'maps_reconstructed_cosmo_HI_{fg_comp}_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_input_HI_need2pix)
-np.save(out_dir_maps_recon+f'maps_reconstructed_input_fg_{fg_comp}_{num_ch}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_input_fg_need2pix)
+np.save(out_dir_maps_recon+f'maps_reconstructed_cosmo_HI_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_input_HI_need2pix)
+np.save(out_dir_maps_recon+f'maps_reconstructed_input_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_input_fg_need2pix)
 del cosmo_HI_bjk; del fg_bjk
 
 
@@ -181,7 +179,8 @@ for n in range(len(nu_ch)):
 	cl_GMCA_HI_need2harm[n] = hp.anafast(map_GMCA_HI_need2pix[n], lmax=lmax_cl)
 	cl_diff_cosmo_GMCA_HI_need2harm[n] = hp.anafast(cosmo_HI[n]-map_GMCA_HI_need2pix[n], lmax=lmax_cl)
 
-np.savetxt(out_dir_cl+f'cl_GMCA_HI_{fg_comp}_Nfg{Nfg}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat', cl_GMCA_HI_need2harm)
+np.savetxt(out_dir_cl+f'cl_GMCA_HI_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat', cl_GMCA_HI_need2harm)
+
 
 
 del map_GMCA_HI_need2pix; del cosmo_HI; del map_input_HI_need2pix; 
@@ -261,7 +260,8 @@ for nu in range(len(nu_ch)):
     for j in range(need_HI_leak.shape[0]):
         map_leak_HI_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(need_HI_leak[j,nu],b_values,j)
     #map_leak_HI_need2pix[nu] = hp.remove_dipole(map_leak_HI_need2pix[nu])
-np.save(out_dir_maps_recon+f'maps_reconstructed_leak_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_HI_need2pix)
+np.save(out_dir_maps_recon+f'maps_reconstructed_leak_HI_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_HI_need2pix)
+
 
 del need_HI_leak
 
@@ -273,7 +273,7 @@ for nu in range(len(nu_ch)):
     #map_leak_fg_need2pix[nu] = hp.remove_dipole(map_leak_fg_need2pix[nu])
     #map_leak_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(need_fg_leak[:,nu],B, lmax)
 del need_fg_leak
-np.save(out_dir_maps_recon+f'maps_reconstructed_leak_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_fg_need2pix)
+np.save(out_dir_maps_recon+f'maps_reconstructed_leak_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_fg_need2pix)
 
 
 #map_leak_HI_need2pix = np.load(out_dir_maps_recon+f'maps_reconstructed_leak_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
