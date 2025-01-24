@@ -14,8 +14,8 @@ mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 ###########################################################################
 
-out_dir= 'PCA_pixels_output/Maps_PCA/No_mean/Beam_Carucci_noise/'
-out_dir_plot = 'PCA_pixels_output/Plots_PCA/No_mean/Beam_Carucci_noise/'
+out_dir= 'PCA_pixels_output/Maps_PCA/No_mean/Beam_3deg_noise/'
+out_dir_plot = 'PCA_pixels_output/Plots_PCA/No_mean/Beam_3deg_noise/'
 
 if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -25,7 +25,7 @@ if not os.path.exists(out_dir_plot):
 ###################################################################################
 
 fg_components='synch_ff_ps'
-path_data_sims_tot = f'Sims/beam_Carucci_no_mean_sims_{fg_components}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
+path_data_sims_tot = f'Sims/beam_theta3deg_no_mean_sims_{fg_components}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
 
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -84,7 +84,7 @@ plt.semilogy(np.arange(1,num_freq+1),eigenval,'--.',mfc='none',markersize=10)
 x_ticks = np.arange(-10, num_freq+1, 10 )
 ax = plt.gca()
 ax.set(xlim=[-10,num_freq+2],xticks=x_ticks,xlabel="eigenvalue number",ylabel="$\\lambda$",title='Eigenvalues')
-plt.tight_layout()
+#plt.tight_layout()
 #plt.savefig(out_dir_plot+f'eigenvalues_Nfg_{fg_components}.png')
 plt.show()
 
@@ -175,7 +175,7 @@ fig.add_subplot(132)
 hp.gnomview(res_HI[ich],rot=[-22,21], coord='G', reso=hp.nside2resol(nside, arcmin=True), min=0, max=1, title='PCA HI+noise', cmap= 'viridis', hold=True)
 fig.add_subplot(133) 
 hp.gnomview(HI_maps_freq[ich]-res_HI[ich], rot=[-22,21],coord='G', reso=hp.nside2resol(nside, arcmin=True), min=-0.2, max=0.2, title='PCA residuals', cmap= 'viridis', hold=True)
-plt.tight_layout()
+#plt.tight_layout()
 plt.show()
 
 fig = plt.figure(figsize=(10, 7))
@@ -259,7 +259,7 @@ plt.ylabel(r'$\%\langle C_{\ell}^{\rm rec}/C_{\ell}^{\rm cosmo}-1 \rangle$')
 plt.axhline(y=0,c='k',ls='--',alpha=0.5)
 plt.xlim([0,200])
 plt.ylim([-50,50])
-plt.tight_layout()
+#plt.tight_layout()
 plt.show()
 print(min(100*np.mean(cl_Hi_recons_Nfg/cl_Hi-1, axis=0)), max(100*np.mean(cl_Hi_recons_Nfg/cl_Hi-1, axis=0)))
 

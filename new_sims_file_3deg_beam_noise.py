@@ -285,39 +285,24 @@ del sigma_noise
 
 #########################################################################################
 
-beam =np.array( [hp.gauss_beam(theta_FWMH[i], lmax=lmax) for i in range(num_freq_new)])
-beam_to_worst = [hp.gauss_beam(np.sqrt(theta_FWMH_max**2-theta_FWMH[i]**2),lmax=lmax) for i in range(num_freq_new)]
-lmax_fwmh = np.array([int(np.pi/theta_FWMH[i]) for i in range(num_freq_new)])
-print(f'theta_max : {theta_FWMH_max*180./np.pi} deg')
-print(f'theta_F at {nu_ch_new[ich]} MHz:{theta_FWMH[ich]*180./np.pi}')
-print(f'theta_F : :{(np.sqrt(theta_FWMH_max**2-theta_FWMH**2))*180./np.pi}, lmax = {lmax_fwmh}')
-
-#map_1 = np.ones((num_freq_new,npix))
-#
-#temp_1 = np.array([convolve(map_1[i],beam[i], lmax=lmax) for i in range(num_freq_new)])
-#map_1_conv = np.array([convolve(temp_1[i],beam_to_worst[i], lmax=lmax) for i in range(num_freq_new)])
-#del temp_1
-#hp.mollview(map_1[0], title = 'not convolved', min=0, max=1, cmap = 'viridis')
-#hp.mollview(map_1_conv[0], title= 'convolved',min=0, max=1,cmap = 'viridis')
-#plt.show()
-#del map_1; 
-#print(f'std pixel map 1 :{np.std(map_1_conv[0][1])}')
+theta_deg = 3 #deg
+theta_FWMH = theta_deg*np.pi/180.
+beam_3deg = hp.gauss_beam(theta_FWMH, lmax=3*nside_out-1)
+lmax_fwmh = int(np.pi/theta_FWMH) 
+print(f'theta_FWMH : {theta_FWMH} rad,  {theta_FWMH*180./np.pi} deg')
+print(f'ell_beam = {lmax_fwmh}')
 
 
-temp_obs =  np.array([convolve(file_sims_no_mean['maps_sims_tot'][i],beam[i], lmax=lmax) for i in range(num_freq_new)])
-temp_fg =  np.array([convolve(file_sims_no_mean['maps_sims_fg'][i],beam[i], lmax=lmax) for i in range(num_freq_new)])
-temp_HI =  np.array([convolve(file_sims_no_mean['maps_sims_HI'][i],beam[i], lmax=lmax) for i in range(num_freq_new)])
-#temp_noise =  np.array([convolve(noise[i],beam[i], lmax=3*nside) for i in range(num_freq_new)])
 
 file_sims_beam = {}
 file_sims_beam['freq'] = nu_ch_new
-file_sims_beam['maps_sims_tot'] =  np.array([convolve(temp_obs[i],beam_to_worst[i], lmax=lmax) for i in range(num_freq_new)])
-del temp_obs
-file_sims_beam['maps_sims_fg'] = np.array([convolve(temp_fg[i],beam_to_worst[i], lmax=lmax) for i in range(num_freq_new)])
-del temp_fg
-file_sims_beam['maps_sims_HI'] = np.array([convolve(temp_HI[i],beam_to_worst[i], lmax=lmax) for i in range(num_freq_new)])
-del temp_HI
-file_sims_beam['maps_sims_noise'] = np.array([convolve(noise[i],beam_to_worst[i], lmax=lmax) for i in range(num_freq_new)])
+file_sims_beam['maps_sims_tot'] =  np.array([convolve(file_sims_no_mean['maps_sims_tot'][i],beam_3deg, lmax=lmax) for i in range(num_freq_new)])
+
+file_sims_beam['maps_sims_fg'] = np.array([convolve(file_sims_no_mean['maps_sims_fg'][i],beam_3deg, lmax=lmax) for i in range(num_freq_new)])
+
+file_sims_beam['maps_sims_HI'] = np.array([convolve(file_sims_no_mean['maps_sims_HI'][i],beam_3deg, lmax=lmax) for i in range(num_freq_new)])
+
+file_sims_beam['maps_sims_noise'] = np.array([convolve(noise[i],beam_3deg, lmax=lmax) for i in range(num_freq_new)])
 #del temp_noise
 
 
@@ -342,7 +327,7 @@ for nu in range(num_freq_new):
 
 
 import pickle
-filename = f'Sims/beam_Carucci_no_mean_{fg_comp}_noise_{len(nu_ch_new)}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_thick{delta_nu_out}MHz_lmax{lmax}_nside{nside_out}'
+filename = f'Sims/beam_theta3deg_no_mean_sims_{fg_comp}_noise_{len(nu_ch_new)}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_thick{delta_nu_out}MHz_lmax{lmax}_nside{nside_out}'
 with open(filename+'.pkl', 'wb') as ff:
 	pickle.dump(file_sims_beam, ff)
 	ff.close()

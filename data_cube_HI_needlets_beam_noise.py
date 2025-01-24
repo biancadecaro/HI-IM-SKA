@@ -9,7 +9,7 @@ import os
 
 fg_comp = 'synch_ff_ps'
 
-path_data_sims_tot = f'Sims/beam_Carucci_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
+path_data_sims_tot = f'Sims/beam_theta3deg_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
 	file = pickle.load(f)
 	f.close()
@@ -49,7 +49,7 @@ npix = np.shape(HI_noise_maps_freq)[1]
 nside = hp.get_nside(HI_noise_maps_freq[0])
 lmax=3*nside-1#2*nside#
 jmax=4
-out_dir = './Maps_needlets/No_mean/Beam_Carucci_noise/'
+out_dir = './Maps_needlets/No_mean/Beam_3deg_noise/'
 if not os.path.exists(out_dir):
 	os.makedirs(out_dir)
 
@@ -61,7 +61,7 @@ need_analysis_fg = analysis.NeedAnalysis(jmax, lmax, out_dir, fg_maps_freq)
 B=need_analysis.B
 
 fname_obs_tot=f'bjk_maps_obs_{fg_comp}_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}'
-fname_HI=f'_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}'
+fname_HI=f'bjk_maps_HI_noise_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}'
 fname_fg=f'bjk_maps_fg_{fg_comp}_{num_freq}freq_{min(nu_ch)}_{max(nu_ch)}MHz_jmax{jmax}_lmax{lmax}_B{B:0.2f}_nside{nside}'
 
 
@@ -92,7 +92,7 @@ ax1.set_xscale('log')
 ax1.set_xlabel(r'$\ell$')
 ax1.set_ylabel(r'$w^{2}(\frac{\ell}{D^{j}})$')
 ax1.legend(loc='right')
-plt.tight_layout()
+#plt.tight_layout()
 plt.savefig(f'PCA_needlets_output/windows_function_jmax{jmax}_lmax{lmax}')
 
 
@@ -107,7 +107,7 @@ for i in range(0,jmax+1):
 
 ax.set_xlabel(r'$\ell$')
 ax.legend(loc='right', ncol=2)
-plt.tight_layout()
+#plt.tight_layout()
 plt.show()
 
 map_need_output = np.zeros((num_freq, jmax+1, npix))
