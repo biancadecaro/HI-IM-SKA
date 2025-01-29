@@ -17,8 +17,8 @@ import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 ################################################################
-out_dir= 'GMCA_pixels_output/Maps_GMCA/No_mean/Beam_3deg_noise/'
-out_dir_plot = 'GMCA_pixels_output/Plots_GMCA_healpix/No_mean/Beam_3deg_noise/'
+out_dir= 'GMCA_pixels_output/Maps_GMCA/No_mean/Beam_theta40arcmin_noise/'
+out_dir_plot = 'GMCA_pixels_output/Plots_GMCA_healpix/No_mean/Beam_theta40arcmin_noise/'
 
 if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -29,7 +29,7 @@ if not os.path.exists(out_dir_plot):
 
 fg_components='synch_ff_ps'
 
-path_data_sims_tot = f'Sims/beam_theta3deg_no_mean_sims_{fg_components}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
+path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_components}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
 
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)

@@ -48,7 +48,7 @@ npix = np.shape(HI_maps_freq)[1]
 nside = hp.get_nside(HI_maps_freq[0])
 lmax=3*nside-1#2*nside#
 jmax=4
-out_dir = './Maps_needlets/No_mean/Beam_40arcmin/'
+out_dir = './Maps_needlets/No_mean/Beam_theta40arcmin/'
 if not os.path.exists(out_dir):
 	os.makedirs(out_dir)
 

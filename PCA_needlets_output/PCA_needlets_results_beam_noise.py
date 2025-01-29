@@ -19,14 +19,14 @@ import cython_mylibc as pippo
 ##########################################################################################
 
 out_dir_plot = 'Plots_PCA_needlets/'
-dir_PCA = 'PCA_maps/No_mean/Beam_3deg_noise/'
-out_dir_maps_recon = 'maps_reconstructed/No_mean/Beam_3deg_noise/'
+dir_PCA = 'PCA_maps/No_mean/Beam_theta40arcmin_noise/'
+out_dir_maps_recon = 'maps_reconstructed/No_mean/Beam_theta40arcmin_noise/'
 if not os.path.exists(out_dir_maps_recon):
 		os.makedirs(out_dir_maps_recon)
 
 
 fg_comp = 'synch_ff_ps'
-beam = 'theta=3 deg'
+beam = 'theta=40 arcmin'
 
 
 num_ch=40
@@ -41,12 +41,12 @@ B = pippo.mylibpy_jmax_lmax2B(jmax, lmax)
 
 path_PCA_HI=dir_PCA+f'res_PCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 path_PCA_fg=dir_PCA+f'res_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
-path_cosmo_HI = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_3deg_noise/cosmo_HI_noise_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
-path_fg = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_3deg_noise/fg_input_{fg_comp}_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
+path_cosmo_HI = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_theta40arcmin_noise/cosmo_HI_noise_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
+path_fg = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_theta40arcmin_noise/fg_input_{fg_comp}_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
 path_leak_Fg = dir_PCA+f'leak_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 path_leak_HI = dir_PCA+f'leak_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
-path_cosmo_HI_bjk = f'../Maps_needlets/No_mean/Beam_3deg_noise/bjk_maps_HI_noise_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
-path_input_fg_bjk = f'../Maps_needlets/No_mean/Beam_3deg_noise/bjk_maps_fg_{fg_comp}_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
+path_cosmo_HI_bjk = f'../Maps_needlets/No_mean/Beam_theta40arcmin_noise/bjk_maps_HI_noise_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
+path_input_fg_bjk = f'../Maps_needlets/No_mean/Beam_theta40arcmin_noise/bjk_maps_fg_{fg_comp}_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
 
 
 print(f'jmax:{jmax}, lmax:{lmax}, num_ch:{num_ch}, min_ch:{min_ch}, max_ch:{max_ch}, Nfg:{Nfg}')

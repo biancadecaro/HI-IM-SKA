@@ -33,7 +33,7 @@ if not os.path.exists(out_dir_output_PCA):
 nu_ch= file['freq']
 del file
 
-need_dir = 'Maps_needlets/No_mean/Beam_40arcmin/'
+need_dir = 'Maps_needlets/No_mean/Beam_theta40arcmin/'
 need_tot_maps_filename = need_dir+f'bjk_maps_obs_{fg_comp}_40freq_905.0_1295.0MHz_jmax4_lmax383_B4.42_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 

@@ -17,14 +17,14 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 
 ###########################################################################3
 fg_comp='synch_ff_ps'
-path_data_sims_tot = f'Sims/beam_theta3deg_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
+path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
 
 out_dir_output = 'PCA_needlets_output/'
-out_dir_output_PCA = out_dir_output+'PCA_maps/No_mean/Beam_3deg_noise/'
-out_dir_plot = out_dir_output+'Plots_PCA_needlets/No_mean/Beam_3deg_noise/'
+out_dir_output_PCA = out_dir_output+'PCA_maps/No_mean/Beam_theta40arcmin_noise/'
+out_dir_plot = out_dir_output+'Plots_PCA_needlets/No_mean/Beam_theta40arcmin_noise/'
 if not os.path.exists(out_dir_output):
         os.makedirs(out_dir_output)
 if not os.path.exists(out_dir_output_PCA):
@@ -33,7 +33,7 @@ if not os.path.exists(out_dir_output_PCA):
 nu_ch= file['freq']
 del file
 
-need_dir = 'Maps_needlets/No_mean/Beam_3deg_noise/'
+need_dir = 'Maps_needlets/No_mean/Beam_theta40arcmin_noise/'
 need_tot_maps_filename = need_dir+f'bjk_maps_obs_{fg_comp}_40freq_905.0_1295.0MHz_jmax4_lmax383_B4.42_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
