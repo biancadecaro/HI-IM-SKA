@@ -34,7 +34,7 @@ nu_ch= file['freq']
 del file
 
 need_dir = 'Maps_needlets/No_mean/Beam_theta40arcmin_noise/'
-need_tot_maps_filename = need_dir+f'bjk_maps_obs_{fg_comp}_40freq_905.0_1295.0MHz_jmax4_lmax383_B4.42_nside128.npy'
+need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_40freq_905.0_1295.0MHz_jmax12_lmax383_B1.64_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
 jmax=need_tot_maps.shape[1]-1

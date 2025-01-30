@@ -28,8 +28,8 @@ with open(path_data_sims_tot+'.pkl', 'rb') as f:
         f.close()
 
 out_dir_output = 'GMCA_needlets_output/'
-out_dir_output_GMCA = out_dir_output+'GMCA_maps/No_mean/Beam_theta40arcmin_noise/'
-out_dir_plot = out_dir_output+'Plots_GMCA_needlets/No_mean/Beam_theta40arcmin_noise/'
+out_dir_output_GMCA = out_dir_output+'GMCA_maps/No_mean/Beam_theta40arcmin_noise_mask0.20/'
+out_dir_plot = out_dir_output+'Plots_GMCA_needlets/No_mean/Beam_theta40arcmin_noise_mask0.20/'
 if not os.path.exists(out_dir_output):
         os.makedirs(out_dir_output)
 if not os.path.exists(out_dir_output_GMCA):
@@ -38,8 +38,8 @@ if not os.path.exists(out_dir_output_GMCA):
 nu_ch= file['freq']
 del file
 
-need_dir = 'Maps_needlets/No_mean/Beam_theta40arcmin_noise/'
-need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_40freq_905.0_1295.0MHz_jmax12_lmax383_B1.64_nside128.npy'
+need_dir = 'Maps_needlets/No_mean/Beam_theta40arcmin_noise_mask0.20/'
+need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_40freq_905.0_1295.0MHz_jmax4_lmax383_B4.42_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
 jmax=need_tot_maps.shape[1]-1
@@ -55,7 +55,16 @@ B=pow(lmax,(1./jmax))
 
 print(f'jmax:{jmax}, lmax:{lmax}, B:{B:1.2f}, num_freq:{num_freq}, min_ch:{min_ch}, max_ch:{max_ch}, nside:{nside}')
 
+######################################################################################
 
+mask1_20 = hp.read_map('HFI_Mask_GalPlane_2048_R1.10.fits', field=0)#fsky 20 %
+mask_20t = hp.ud_grade(mask1_20, nside_out=256)
+mask_20 = hp.ud_grade(mask_20t, nside_out=nside)
+del mask1_20; del mask_20t
+mask_20s = hp.sphtfunc.smoothing(mask_20, 3*np.pi/180,lmax=lmax)
+del mask_20
+fsky  = np.mean(mask_20s) 
+del mask_20s
 
 #############################################################################
 ############################# GMCA ##########################################
@@ -81,11 +90,11 @@ whitening = False; epsi = 1e-3
 Ae = np.zeros((jmax+1, num_freq,num_sources))
 for j in range(Ae.shape[0]): 
     Ae[j] = g4i.run_GMCA(need_tot_maps[:,j,:],AInit,num_sources,mints,nmax,L0,ColFixed,whitening,epsi)
-    #fig=plt.figure()
-    #plt.suptitle(f'j={j}')
-    #plt.imshow(Ae[j],cmap='crest')
-    #plt.colorbar()
-#plt.show()
+    fig=plt.figure()
+    plt.suptitle(f'j={j}')
+    plt.imshow(Ae[j],cmap='crest')
+    plt.colorbar()
+plt.show()
 
 #np.save(out_dir_output_GMCA+f'Ae_mixing_matrix_{num_freq}_Nfg{num_sources}_jmax{jmax}_lmax{lmax}_nside{nside}', Ae)
 #Ae = np.load(out_dir_output_GMCA+f'Ae_mixing_matrix_{num_freq}_Nfg{num_sources}_jmax{jmax}_lmax{lmax}_nside{nside}.npy')
