@@ -17,15 +17,16 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 
 ###########################################################################3
 fg_comp = 'synch_ff_ps'
-path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
+beam_s = 'Carucci'
+path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
 
 
 out_dir_output = 'PCA_needlets_output/'
-out_dir_output_PCA = out_dir_output+'PCA_maps/No_mean/Beam_theta40arcmin_noise_mask0.20/'
-out_dir_plot = out_dir_output+'Plots_PCA_needlets/No_mean/Beam_theta40arcmin_noise_mask0.20/'
+out_dir_output_PCA = out_dir_output+f'PCA_maps/No_mean/Beam_{beam_s}_noise_mask0.39/'
+out_dir_plot = out_dir_output+f'Plots_PCA_needlets/No_mean/Beam_{beam_s}_noise_mask0.39/'
 if not os.path.exists(out_dir_output):
         os.makedirs(out_dir_output)
 if not os.path.exists(out_dir_output_PCA):
@@ -36,7 +37,7 @@ del file
 
 
 
-need_dir = 'Maps_needlets/No_mean/Beam_theta40arcmin_noise_mask0.20/'
+need_dir = f'Maps_needlets/No_mean/Beam_{beam_s}_noise_mask0.39/'
 need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_40freq_905.0_1295.0MHz_jmax4_lmax383_B4.42_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
@@ -55,14 +56,14 @@ B=pow(lmax,(1./jmax))
 
 ######################################################################################
 
-mask1_20 = hp.read_map('HFI_Mask_GalPlane_2048_R1.10.fits', field=0)#fsky 20 %
-mask_20t = hp.ud_grade(mask1_20, nside_out=256)
-mask_20 = hp.ud_grade(mask_20t, nside_out=nside)
-del mask1_20
-mask_20s = hp.sphtfunc.smoothing(mask_20, 3*np.pi/180,lmax=lmax)
-del mask_20
-fsky  = np.mean(mask_20s) 
-del mask_20s
+mask1_40 = hp.read_map('HFI_Mask_GalPlane_2048_R1.10.fits', field=0)#fsky 20 %
+mask_40t = hp.ud_grade(mask1_40, nside_out=256)
+mask_40 = hp.ud_grade(mask_40t, nside_out=nside)
+del mask1_40
+mask_40s = hp.sphtfunc.smoothing(mask_40, 3*np.pi/180,lmax=lmax)
+del mask_40
+fsky  = np.mean(mask_40s) 
+del mask_40s
 #####################################################################
 
 
@@ -148,7 +149,7 @@ j_test=7
 res_HI_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
 for j in range(eigenvec_fg_Nfg.shape[0]):
     res_HI_maps[j,:,:] = need_tot_maps[:,j,:] - res_fg_maps[j,:,:]
-    hp.mollview(res_HI_maps[j][ich],min=0, max=0.20, cmap='viridis', title=f'j={j}')
+    hp.mollview(res_HI_maps[j][ich],min=0, max=0.39, cmap='viridis', title=f'j={j}')
 plt.show()
 del need_tot_maps
 

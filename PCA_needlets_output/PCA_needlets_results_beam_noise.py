@@ -34,7 +34,7 @@ min_ch = 905
 max_ch = 1295
 nside=128
 npix= hp.nside2npix(nside)
-jmax=12
+jmax=4
 lmax= 3*nside-1
 Nfg=3
 B = pippo.mylibpy_jmax_lmax2B(jmax, lmax)
@@ -170,7 +170,7 @@ norm = colors.Normalize(vmin=0, vmax=1)
 plt.subplots_adjust(wspace=0.2, hspace=0.4, bottom=0.3, left=0.05, top=0.85)
 sub_ax = plt.axes([0.91, 0.367, 0.02, 0.46]) 
 fig.colorbar(im2, ax=axs, cax=sub_ax,location='right',orientation='vertical',label='T [mK]')
-#plt.savefig(f'Plots_PCA_needlets/gnomview_HI_HIfg_PCAHI_std_need_beam40arcmin_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.png')
+plt.savefig(f'Plots_PCA_needlets/gnomview_HI_HIfg_PCAHI_noise_std_need_beam40arcmin_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.png')
 
 print(f'mean % rel diff PCA fg/fg:{100*np.mean((np.abs(map_PCA_fg_need2pix[ich]/fg[ich]-1)))}')
 

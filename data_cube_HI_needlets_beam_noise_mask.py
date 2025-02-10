@@ -9,8 +9,8 @@ import os
 
 
 fg_comp = 'synch_ff_ps'
-
-path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
+beam_s= 'Carucci'
+path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
 	file = pickle.load(f)
 	f.close()
@@ -53,27 +53,27 @@ jmax=4
 	
 ######################################################################################
 
-mask1_20 = hp.read_map('HFI_Mask_GalPlane_2048_R1.10.fits', field=0)#fsky 40 % sky coverage
-mask_20t = hp.ud_grade(mask1_20, nside_out=256)
-mask_20 = hp.ud_grade(mask_20t, nside_out=nside)
+mask1_40 = hp.read_map('HFI_Mask_GalPlane_2048_R1.10.fits', field=1)#fsky 40 % sky coverage
+mask_40t = hp.ud_grade(mask1_40, nside_out=256)
+mask_40 = hp.ud_grade(mask_40t, nside_out=nside)
 #del mask1_40
-mask_20s = hp.sphtfunc.smoothing(mask_20, 3*np.pi/180,lmax=lmax) #aposization 3 deg come in Olivari
+mask_40s = hp.sphtfunc.smoothing(mask_40, 3*np.pi/180,lmax=lmax) #aposization 3 deg come in Olivari
 #del mask_40
-fsky  = np.mean(mask_20s) 
+fsky  = np.mean(mask_40s) 
 
 fig=plt.figure()
-hp.mollview(mask_20s, cmap='viridis', title=f'Mask, fsky={np.mean(mask_20s):0.2f}', hold=True)
+hp.mollview(mask_40s, cmap='viridis', title=f'Mask, fsky={np.mean(mask_40s):0.2f}', hold=True)
 plt.show()
 
 for n in range(num_freq):
         #HI_maps_freq_mean = np.sum(HI_maps_freq[n]*mask_40s)/np.sum(mask_40s)#
-        HI_noise_maps_freq[n] = HI_noise_maps_freq[n]*mask_20s #- HI_maps_freq_mean
+        HI_noise_maps_freq[n] = HI_noise_maps_freq[n]*mask_40s #- HI_maps_freq_mean
         HI_noise_maps_freq[n] = hp.remove_dipole(HI_noise_maps_freq[n])
         #fg_maps_freq_mean = np.sum(fg_maps_freq[n]*mask_40s)/np.sum(mask_40s)#
-        fg_maps_freq[n] = fg_maps_freq[n]*mask_20s #- fg_maps_freq_mean
+        fg_maps_freq[n] = fg_maps_freq[n]*mask_40s #- fg_maps_freq_mean
         fg_maps_freq[n] = hp.remove_dipole(fg_maps_freq[n])
         #full_maps_freq_mean = np.sum(full_maps_freq[n]*mask_40s)/np.sum(mask_40s)#
-        full_maps_freq[n] = full_maps_freq[n]*mask_20s #- full_maps_freq_mean
+        full_maps_freq[n] = full_maps_freq[n]*mask_40s #- full_maps_freq_mean
         full_maps_freq[n] = hp.remove_dipole(full_maps_freq[n])
 #devo rimuovere il dipolo? si direi di si 
 ####################################################################################
@@ -95,7 +95,7 @@ plt.show()
 
 
 jmax=4
-out_dir = f'./Maps_needlets/No_mean/Beam_theta40arcmin_noise_mask{fsky:0.2}/'
+out_dir = f'./Maps_needlets/No_mean/Beam_{beam_s}_noise_mask{fsky:0.2}/'
 if not os.path.exists(out_dir):
 	os.makedirs(out_dir)
 
