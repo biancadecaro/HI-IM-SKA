@@ -8,8 +8,8 @@ import cython_mylibc as pippo
 import os
 
 
-fg_comp = 'synch_ff_ps'
-beam_s= 'Carucci'
+fg_comp = 'synch_ff_ps_pol'
+beam_s= 'theta40arcmin'
 path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
 	file = pickle.load(f)

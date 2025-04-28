@@ -15,10 +15,9 @@ mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 ###########################################################################
 
-
-fg_components='synch_ff_ps'
-path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_components}_40freq_905.0_1295.0MHz_lmax768_nside256'
-
+beam = 'theta40arcmin'
+fg_comp='synch_ff_ps'
+path_data_sims_tot = f'Sims/beam_{beam}_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
@@ -35,17 +34,34 @@ print(f'working with {len(nu_ch)} channels, from {min(nu_ch)} to {max(nu_ch)} MH
 print(f'i.e. channels are {nu_ch[1]-nu_ch[0]} MHz thick')
 print(f'corresponding to the redshift range z: [{min(nu0/nu_ch -1.0):.2f} - {max(nu0/nu_ch -1.0):.2f}] ')
 
-HI_maps_freq = file['maps_sims_HI']
+HI_maps_noise_freq = file['maps_sims_HI'] + file['maps_sims_noise']  #aggiungo il noise
 fg_maps_freq = file['maps_sims_fg']
-full_maps_freq = file['maps_sims_tot']
+full_maps_freq = file['maps_sims_tot'] + file['maps_sims_noise']  #aggiungo il noise
+
 
 nu_ch = np.linspace(min_ch, max_ch, num_ch)
 del min_ch;del max_ch
 
-nside = hp.get_nside(HI_maps_freq[0])
+nside = hp.get_nside(HI_maps_noise_freq[0])
+lmax = 3*nside-1
 
-############################################################################
+
 ich=int(num_ch/2)
+############################################################################
+
+fig = plt.figure(figsize=(10, 7))
+fig.suptitle(f'BEAM theta= 40 arcmin, channel {ich}: {nu_ch[ich]} MHz',fontsize=20)
+fig.add_subplot(221) 
+hp.mollview(full_maps_freq[ich], cmap='viridis',title=f'Observations', hold=True)
+fig.add_subplot(222) 
+hp.mollview(HI_maps_noise_freq[ich], cmap='viridis',title=f'HI signal + noise',min=0, max=1,hold=True)
+fig.add_subplot(223)
+hp.mollview(fg_maps_freq[ich],title=f'Foregrounds',cmap='viridis',hold=True)
+#fig.add_subplot(224)
+#hp.mollview(file['maps_sims_noise'][ich],title=f'Noise, freq={nu_ch[ich]}',cmap='viridis',hold=True)
+plt.savefig(f'Plots_sims/sims_ch{nu_ch[ich]}_{fg_comp}_noise_beam_theta40arcmin_40freq_905.0_1295.0MHz_lmax{lmax}_nside{nside}.png')
+########################################################################################################
+
 z0= nu0/nu_ch[0] -1.0
 z1= nu0/nu_ch[ich] -1.0
 z2= nu0/nu_ch[-1] -1.0
@@ -62,9 +78,11 @@ reso = hp.nside2resol(nside, arcmin=True)
 #fig.add_subplot(313) 
 #hp.gnomview(HI_maps_freq[-1], rot=rot, coord='G', reso=reso,xsize=xsize,min=0, max=1, title=f'z={z2:0.2f}',unit='mK', cmap= 'viridis', cbar=False,notext=True,hold=True)
 #plt.tight_layout()
-map0  = hp.gnomview(HI_maps_freq[0],rot=rot, coord='G', reso=reso,xsize=xsize, min=0, max=1,return_projected_map=True, no_plot=True)
-map1  = hp.gnomview(HI_maps_freq[ich],rot=rot, coord='G', reso=reso,xsize=xsize, min=0, max=1,return_projected_map=True, no_plot=True)
-map2  = hp.gnomview(HI_maps_freq[-1],rot=rot, coord='G', reso=reso,xsize=xsize, min=0, max=1,return_projected_map=True, no_plot=True)
+
+
+map0  = hp.gnomview(HI_maps_noise_freq[0],rot=rot, coord='G', reso=reso,xsize=xsize, min=0, max=1,return_projected_map=True, no_plot=True)
+map1  = hp.gnomview(HI_maps_noise_freq[ich],rot=rot, coord='G', reso=reso,xsize=xsize, min=0, max=1,return_projected_map=True, no_plot=True)
+map2  = hp.gnomview(HI_maps_noise_freq[-1],rot=rot, coord='G', reso=reso,xsize=xsize, min=0, max=1,return_projected_map=True, no_plot=True)
 
 fig, axs = plt.subplots(1,3, figsize=(12,5))
 #fig.tight_layout()
@@ -87,5 +105,5 @@ norm = colors.Normalize(vmin=0, vmax=1)
 plt.subplots_adjust(wspace=0.3, hspace=0.4, bottom=0.3, left=0.05)
 sub_ax = plt.axes([0.93, 0.367, 0.02, 0.46]) 
 fig.colorbar(im2, ax=axs, cax=sub_ax,location='right',orientation='vertical',label='T [mK]')
-plt.savefig('gnomview_HI_simulations_z.png')
+plt.savefig('Plots_sims/gnomview_HI_simulations_z.png')
 plt.show()

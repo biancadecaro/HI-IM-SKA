@@ -25,7 +25,7 @@ if not os.path.exists(out_dir_maps_recon):
 		os.makedirs(out_dir_maps_recon)
 
 
-fg_comp = 'synch_ff_ps'
+fg_comp = 'synch_ff_ps_pol'
 
 beam = 'theta=40 arcmin'
 
@@ -34,9 +34,9 @@ min_ch = 905
 max_ch = 1295
 nside=128
 npix= hp.nside2npix(nside)
-jmax=12
+jmax=4
 lmax= 3*nside-1
-Nfg=3
+Nfg=18
 B = pippo.mylibpy_jmax_lmax2B(jmax, lmax)
 
 path_GMCA_HI=dir_GMCA+f'res_GMCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'

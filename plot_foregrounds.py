@@ -52,7 +52,7 @@ file_new['frequencies'] = nu_ch_f(nu_ch,delta_nu_out)#np.array([nu_ch[i*delta_nu
 components = list(file.keys())
 print(components)
 components.remove('frequencies')
-components.remove('pol_leakage')
+#components.remove('pol_leakage')
 
 for c in components:
   print(c)
@@ -77,6 +77,8 @@ synch_maps_no_mean = np.array([file_new['gal_synch'][i] -np.mean(file_new['gal_s
 ff_maps_no_mean = np.array([file_new['gal_ff'][i] -np.mean(file_new['gal_ff'][i],axis=0) for i in range(num_freq_new)])
 ps_maps_no_mean = np.array([file_new['point_sources'][i] -np.mean(file_new['point_sources'][i],axis=0) for i in range(num_freq_new)]) 
 HI_maps_no_mean = np.array([file_new['cosmological_signal'][i] -np.mean(file_new['cosmological_signal'][i],axis=0) for i in range(num_freq_new)]) 
+pl_maps_no_mean = np.array([file_new['pol_leakage'][i] -np.mean(file_new['pol_leakage'][i],axis=0) for i in range(num_freq_new)]) 
+
 
 del file_new
 
@@ -100,6 +102,11 @@ for nu in range(num_freq_new):
 		HI_maps_no_mean[nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside)
 		HI_maps_no_mean[nu] = hp.remove_dipole(HI_maps_no_mean[nu])
 		del alm_HI
+
+		alm_pl = hp.map2alm(pl_maps_no_mean[nu], lmax=lmax)
+		pl_maps_no_mean[nu] = hp.alm2map(alm_pl, lmax=lmax, nside = nside)
+		pl_maps_no_mean[nu] = hp.remove_dipole(pl_maps_no_mean[nu])
+		del alm_pl
 
 
 #fig = plt.figure(figsize=(10, 7))

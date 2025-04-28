@@ -35,7 +35,7 @@ nu_ch= file['freq']
 del file
 
 need_dir = 'Maps_needlets/No_mean/Beam_theta40arcmin_noise/'
-need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_40freq_905.0_1295.0MHz_jmax12_lmax383_B1.64_nside128.npy'
+need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_40freq_905.0_1295.0MHz_jmax4_lmax383_B4.42_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
 jmax=need_tot_maps.shape[1]-1
@@ -77,25 +77,25 @@ ax.set(xlim=[-10,num_freq+10],xticks=x_ticks,xlabel="eigenvalue number",ylabel="
 #plt.savefig(out_dir_output+f'eigenvalue_cov_need_no_mean_jmax{jmax}_lmax{lmax}_nside{nside}.png')
 plt.show()
 ##############################################################################################
-num_sources = np.array([3,3,3,3,3,3,3,3,3,3,3,40,40])
+num_sources = np.array([3,3, 3, 3, 3, 10])#np.array([3,3,3,3,3,3,3,3,3,3,3,40,40])
 
 Nfg = np.array([num_freq - num_sources[i] for i in range(len(num_sources)) ])
 print(f'Nfg:{Nfg}')
 
 
-eigenvec_fg_Nfg_0 = eigenvec[0, :num_freq, Nfg[0]:num_freq]
-eigenvec_fg_Nfg_1 = eigenvec[1, :num_freq, Nfg[1]:num_freq]
-eigenvec_fg_Nfg_2 = eigenvec[2, :num_freq, Nfg[2]:num_freq]
-eigenvec_fg_Nfg_3 = eigenvec[3, :num_freq, Nfg[3]:num_freq]
-eigenvec_fg_Nfg_4 = eigenvec[4, :num_freq, Nfg[4]:num_freq]
-eigenvec_fg_Nfg_5 = eigenvec[5, :num_freq, Nfg[5]:num_freq]
-eigenvec_fg_Nfg_6 = eigenvec[6, :num_freq, Nfg[6]:num_freq]
-eigenvec_fg_Nfg_7 = eigenvec[7, :num_freq, Nfg[7]:num_freq]
-eigenvec_fg_Nfg_8 = eigenvec[8, :num_freq, Nfg[8]:num_freq]
-eigenvec_fg_Nfg_9 = eigenvec[9, :num_freq, Nfg[9]:num_freq]
-eigenvec_fg_Nfg_10 = eigenvec[10, :num_freq, Nfg[10]:num_freq]
-eigenvec_fg_Nfg_11 = eigenvec[11, :num_freq, Nfg[11]:num_freq]
-eigenvec_fg_Nfg_12 = eigenvec[12, :num_freq, Nfg[12]:num_freq]
+eigenvec_fg_Nfg_0 = eigenvec[0, :, Nfg[0]:num_freq]
+eigenvec_fg_Nfg_1 = eigenvec[1, :, Nfg[1]:num_freq]
+eigenvec_fg_Nfg_2 = eigenvec[2, :, Nfg[2]:num_freq]
+eigenvec_fg_Nfg_3 = eigenvec[3, :, Nfg[3]:num_freq]
+eigenvec_fg_Nfg_4 = eigenvec[4, :, Nfg[4]:num_freq]
+#eigenvec_fg_Nfg_5 = eigenvec[5, :num_freq, Nfg[5]:num_freq]
+#eigenvec_fg_Nfg_6 = eigenvec[6, :num_freq, Nfg[6]:num_freq]
+#eigenvec_fg_Nfg_7 = eigenvec[7, :num_freq, Nfg[7]:num_freq]
+#eigenvec_fg_Nfg_8 = eigenvec[8, :num_freq, Nfg[8]:num_freq]
+#eigenvec_fg_Nfg_9 = eigenvec[9, :num_freq, Nfg[9]:num_freq]
+#eigenvec_fg_Nfg_10 = eigenvec[10, :num_freq, Nfg[10]:num_freq]
+#eigenvec_fg_Nfg_11 = eigenvec[11, :num_freq, Nfg[11]:num_freq]
+#eigenvec_fg_Nfg_12 = eigenvec[12, :num_freq, Nfg[12]:num_freq]
 
 print(eigenvec_fg_Nfg_0.shape, eigenvec_fg_Nfg_1.shape, eigenvec_fg_Nfg_2.shape, eigenvec_fg_Nfg_3.shape)
 
@@ -109,15 +109,15 @@ res_fg_maps[1] = eigenvec_fg_Nfg_1@eigenvec_fg_Nfg_1.T@need_tot_maps[:,1,:]
 res_fg_maps[2] = eigenvec_fg_Nfg_2@eigenvec_fg_Nfg_2.T@need_tot_maps[:,2,:]
 res_fg_maps[3] = eigenvec_fg_Nfg_3@eigenvec_fg_Nfg_3.T@need_tot_maps[:,3,:]
 res_fg_maps[4] = eigenvec_fg_Nfg_4@eigenvec_fg_Nfg_4.T@need_tot_maps[:,4,:]
-res_fg_maps[5] = eigenvec_fg_Nfg_5@eigenvec_fg_Nfg_5.T@need_tot_maps[:,5,:]
-res_fg_maps[6] = eigenvec_fg_Nfg_6@eigenvec_fg_Nfg_6.T@need_tot_maps[:,6,:]
-res_fg_maps[7] = eigenvec_fg_Nfg_7@eigenvec_fg_Nfg_7.T@need_tot_maps[:,7,:]
-res_fg_maps[8] = eigenvec_fg_Nfg_8@eigenvec_fg_Nfg_8.T@need_tot_maps[:,8,:]
-res_fg_maps[9] = eigenvec_fg_Nfg_9@eigenvec_fg_Nfg_9.T@need_tot_maps[:,9,:]
-res_fg_maps[10] = eigenvec_fg_Nfg_10@eigenvec_fg_Nfg_10.T@need_tot_maps[:,10,:]
-res_fg_maps[11] = eigenvec_fg_Nfg_11@eigenvec_fg_Nfg_11.T@need_tot_maps[:,11,:]
-res_fg_maps[12] = eigenvec_fg_Nfg_12@eigenvec_fg_Nfg_12.T@need_tot_maps[:,12,:]
-
+#res_fg_maps[5] = eigenvec_fg_Nfg_5@eigenvec_fg_Nfg_5.T@need_tot_maps[:,5,:]
+#res_fg_maps[6] = eigenvec_fg_Nfg_6@eigenvec_fg_Nfg_6.T@need_tot_maps[:,6,:]
+#res_fg_maps[7] = eigenvec_fg_Nfg_7@eigenvec_fg_Nfg_7.T@need_tot_maps[:,7,:]
+#res_fg_maps[8] = eigenvec_fg_Nfg_8@eigenvec_fg_Nfg_8.T@need_tot_maps[:,8,:]
+#res_fg_maps[9] = eigenvec_fg_Nfg_9@eigenvec_fg_Nfg_9.T@need_tot_maps[:,9,:]
+#res_fg_maps[10] = eigenvec_fg_Nfg_10@eigenvec_fg_Nfg_10.T@need_tot_maps[:,10,:]
+#res_fg_maps[11] = eigenvec_fg_Nfg_11@eigenvec_fg_Nfg_11.T@need_tot_maps[:,11,:]
+#res_fg_maps[12] = eigenvec_fg_Nfg_12@eigenvec_fg_Nfg_12.T@need_tot_maps[:,12,:]
+#
 #np.save(out_dir_output_PCA+f'res_PCA_fg_sync_ff_ps_jmax{jmax}_lmax{lmax}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}.npy',res_fg_maps)
 
 ich=20
@@ -158,14 +158,14 @@ leak_fg_maps[1] = need_fg_maps[:,1,:]-eigenvec_fg_Nfg_1@eigenvec_fg_Nfg_1.T@need
 leak_fg_maps[2] = need_fg_maps[:,2,:]-eigenvec_fg_Nfg_2@eigenvec_fg_Nfg_2.T@need_fg_maps[:,2,:]
 leak_fg_maps[3] = need_fg_maps[:,3,:]-eigenvec_fg_Nfg_3@eigenvec_fg_Nfg_3.T@need_fg_maps[:,3,:]
 leak_fg_maps[4] = need_fg_maps[:,4,:]-eigenvec_fg_Nfg_4@eigenvec_fg_Nfg_4.T@need_fg_maps[:,4,:]
-leak_fg_maps[5] = need_fg_maps[:,5,:]-eigenvec_fg_Nfg_5@eigenvec_fg_Nfg_5.T@need_fg_maps[:,5,:]
-leak_fg_maps[6] = need_fg_maps[:,6,:]-eigenvec_fg_Nfg_6@eigenvec_fg_Nfg_6.T@need_fg_maps[:,6,:]
-leak_fg_maps[7] = need_fg_maps[:,7,:]-eigenvec_fg_Nfg_7@eigenvec_fg_Nfg_7.T@need_fg_maps[:,7,:]
-leak_fg_maps[8] = need_fg_maps[:,8,:]-eigenvec_fg_Nfg_8@eigenvec_fg_Nfg_8.T@need_fg_maps[:,8,:]
-leak_fg_maps[9] = need_fg_maps[:,9,:]-eigenvec_fg_Nfg_9@eigenvec_fg_Nfg_9.T@need_fg_maps[:,9,:]
-leak_fg_maps[10] = need_fg_maps[:,10,:]-eigenvec_fg_Nfg_10@eigenvec_fg_Nfg_10.T@need_fg_maps[:,10,:]
-leak_fg_maps[11] = need_fg_maps[:,11,:]-eigenvec_fg_Nfg_11@eigenvec_fg_Nfg_11.T@need_fg_maps[:,11,:]
-leak_fg_maps[12] = need_fg_maps[:,12,:]-eigenvec_fg_Nfg_12@eigenvec_fg_Nfg_12.T@need_fg_maps[:,12,:]
+#leak_fg_maps[5] = need_fg_maps[:,5,:]-eigenvec_fg_Nfg_5@eigenvec_fg_Nfg_5.T@need_fg_maps[:,5,:]
+#leak_fg_maps[6] = need_fg_maps[:,6,:]-eigenvec_fg_Nfg_6@eigenvec_fg_Nfg_6.T@need_fg_maps[:,6,:]
+#leak_fg_maps[7] = need_fg_maps[:,7,:]-eigenvec_fg_Nfg_7@eigenvec_fg_Nfg_7.T@need_fg_maps[:,7,:]
+#leak_fg_maps[8] = need_fg_maps[:,8,:]-eigenvec_fg_Nfg_8@eigenvec_fg_Nfg_8.T@need_fg_maps[:,8,:]
+#leak_fg_maps[9] = need_fg_maps[:,9,:]-eigenvec_fg_Nfg_9@eigenvec_fg_Nfg_9.T@need_fg_maps[:,9,:]
+#leak_fg_maps[10] = need_fg_maps[:,10,:]-eigenvec_fg_Nfg_10@eigenvec_fg_Nfg_10.T@need_fg_maps[:,10,:]
+#leak_fg_maps[11] = need_fg_maps[:,11,:]-eigenvec_fg_Nfg_11@eigenvec_fg_Nfg_11.T@need_fg_maps[:,11,:]
+#leak_fg_maps[12] = need_fg_maps[:,12,:]-eigenvec_fg_Nfg_12@eigenvec_fg_Nfg_12.T@need_fg_maps[:,12,:]
 
 #np.save(out_dir_output_PCA+f'leak_PCA_fg_sync_ff_ps_jmax{jmax}_lmax{lmax}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}.npy',leak_fg_maps)
 
@@ -186,14 +186,14 @@ leak_HI_maps[1] = eigenvec_fg_Nfg_1@eigenvec_fg_Nfg_1.T@need_HI_maps[:,1,:]
 leak_HI_maps[2] = eigenvec_fg_Nfg_2@eigenvec_fg_Nfg_2.T@need_HI_maps[:,2,:]
 leak_HI_maps[3] = eigenvec_fg_Nfg_3@eigenvec_fg_Nfg_3.T@need_HI_maps[:,3,:]
 leak_HI_maps[4] = eigenvec_fg_Nfg_4@eigenvec_fg_Nfg_4.T@need_HI_maps[:,4,:]
-leak_HI_maps[5] = eigenvec_fg_Nfg_5@eigenvec_fg_Nfg_5.T@need_HI_maps[:,5,:]
-leak_HI_maps[6] = eigenvec_fg_Nfg_6@eigenvec_fg_Nfg_6.T@need_HI_maps[:,6,:]
-leak_HI_maps[7] = eigenvec_fg_Nfg_7@eigenvec_fg_Nfg_7.T@need_HI_maps[:,7,:]
-leak_HI_maps[8] = eigenvec_fg_Nfg_8@eigenvec_fg_Nfg_8.T@need_HI_maps[:,8,:]
-leak_HI_maps[9] = eigenvec_fg_Nfg_9@eigenvec_fg_Nfg_9.T@need_HI_maps[:,9,:]
-leak_HI_maps[10] = eigenvec_fg_Nfg_10@eigenvec_fg_Nfg_10.T@need_HI_maps[:,10,:]
-leak_HI_maps[11] = eigenvec_fg_Nfg_11@eigenvec_fg_Nfg_11.T@need_HI_maps[:,11,:]
-leak_HI_maps[12] = eigenvec_fg_Nfg_12@eigenvec_fg_Nfg_12.T@need_HI_maps[:,12,:]
+#leak_HI_maps[5] = eigenvec_fg_Nfg_5@eigenvec_fg_Nfg_5.T@need_HI_maps[:,5,:]
+#leak_HI_maps[6] = eigenvec_fg_Nfg_6@eigenvec_fg_Nfg_6.T@need_HI_maps[:,6,:]
+#leak_HI_maps[7] = eigenvec_fg_Nfg_7@eigenvec_fg_Nfg_7.T@need_HI_maps[:,7,:]
+#leak_HI_maps[8] = eigenvec_fg_Nfg_8@eigenvec_fg_Nfg_8.T@need_HI_maps[:,8,:]
+#leak_HI_maps[9] = eigenvec_fg_Nfg_9@eigenvec_fg_Nfg_9.T@need_HI_maps[:,9,:]
+#leak_HI_maps[10] = eigenvec_fg_Nfg_10@eigenvec_fg_Nfg_10.T@need_HI_maps[:,10,:]
+#leak_HI_maps[11] = eigenvec_fg_Nfg_11@eigenvec_fg_Nfg_11.T@need_HI_maps[:,11,:]
+#leak_HI_maps[12] = eigenvec_fg_Nfg_12@eigenvec_fg_Nfg_12.T@need_HI_maps[:,12,:]
 
 del eigenvec_fg_Nfg_0; del eigenvec_fg_Nfg_1; del eigenvec_fg_Nfg_2; del eigenvec_fg_Nfg_3#; del eigenvec_fg_Nfg_4
  

@@ -101,7 +101,7 @@ def alm_product(tab,beam_l):
 def almrec(tab,nside):
 
 	alm = tab2alm(tab)
-	map_out = hp.alm2map(alm,nside,verbose=False)
+	map_out = hp.alm2map(alm,nside)
 
 	return map_out
 
@@ -154,7 +154,7 @@ def noise_map(sigma,nside=512):
 ######################################################
 
 
-nside_out= 128
+nside_out= 256
 
 path_data = 'sim_PL05_from191030.hd5'
 file = h5py.File(path_data,'r')
@@ -183,7 +183,7 @@ fg_comp = 'synch_ff_ps'
 for c in components:
   print(c)
   file_new[c]=merging_maps(nu_ch,file_new['frequencies'],file[c], delta_nu_out )
-  file_ud[c] = hp.pixelfunc.ud_grade(map_in=file_new[c], nside_out=128)
+  file_ud[c] = hp.pixelfunc.ud_grade(map_in=file_new[c], nside_out=nside_out)
 
 print(len(file_ud['frequencies']), hp.get_nside(file_ud['cosmological_signal'][1]))
 

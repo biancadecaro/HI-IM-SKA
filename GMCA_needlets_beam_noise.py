@@ -21,7 +21,7 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 #print(sns.color_palette("husl", 15).as_hex())
 sns.palettes.color_palette()
 ###########################################################################3
-fg_comp='synch_ff_ps'
+fg_comp='synch_ff_ps_pol'
 path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -39,7 +39,7 @@ nu_ch= file['freq']
 del file
 
 need_dir = 'Maps_needlets/No_mean/Beam_theta40arcmin_noise/'
-need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_40freq_905.0_1295.0MHz_jmax12_lmax383_B1.64_nside128.npy'
+need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_40freq_905.0_1295.0MHz_jmax4_lmax383_B4.42_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
 jmax=need_tot_maps.shape[1]-1
@@ -61,7 +61,7 @@ print(f'jmax:{jmax}, lmax:{lmax}, B:{B:1.2f}, num_freq:{num_freq}, min_ch:{min_c
 ############################# GMCA ##########################################
 
 ################   GMCA PARAMETERS   ##################
-num_sources   = 3   # number of sources to be estimated
+num_sources   = 18   # number of sources to be estimated
 mints = 0.1 # min threshold (what is sparse compared to noise?)
 nmax  = 100 # number of iterations (usually 100 is safe)
 L0    = 0   # switch between L0 norm (1) or L1 norm (0)

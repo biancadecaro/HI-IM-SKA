@@ -23,9 +23,9 @@ if not os.path.exists(out_dir_plot):
         os.makedirs(out_dir_plot)
 
 ###################################################################################
-
+beam_s = 'theta40arcmin'
 fg_components='synch_ff_ps'
-path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_components}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
+path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_components}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
 
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -94,11 +94,14 @@ plt.show()
 eigenvec_fg_Nfg = eigenvec[:, 0:num_sources]
 
 fig=plt.figure()
+plt.suptitle(f'Mixing matrix, Nfg:{num_sources}, sources: {fg_components},\nbeam: {beam_s}')
 plt.imshow(eigenvec_fg_Nfg, cmap='crest')
 plt.xlabel('[MHz]')
 plt.ylabel('[MHz]')
 plt.colorbar()
 plt.show()
+
+np.save(out_dir+f'mixing_matrix_PCA_beam{beam_s}_{fg_components}_noise_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy', eigenvec_fg_Nfg)
 
 del eigenvec
 
