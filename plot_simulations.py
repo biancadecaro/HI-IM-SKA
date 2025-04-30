@@ -15,12 +15,22 @@ mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 ###########################################################################
 
-beam = 'theta40arcmin'
+beam = 'SKA_AA4'
 fg_comp='synch_ff_ps'
-path_data_sims_tot = f'Sims/beam_{beam}_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
+path_data_sims_tot = f'Sims/beam_SKA_AA4_no_mean_synch_ff_ps_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
+
+min_ch = 900.5
+max_ch = 1004.5
+
+num_ch =105
+
+print(file.keys())
+
+file['freq'] = np.linspace(min_ch, max_ch, num_ch)
+print(file['freq'])
 
 nu_ch= file['freq']
 
@@ -50,7 +60,7 @@ ich=int(num_ch/2)
 ############################################################################
 
 fig = plt.figure(figsize=(10, 7))
-fig.suptitle(f'BEAM theta= 40 arcmin, channel {ich}: {nu_ch[ich]} MHz',fontsize=20)
+fig.suptitle(f'BEAM SKA AA4 channel {ich}: {nu_ch[ich]} MHz',fontsize=20)
 fig.add_subplot(221) 
 hp.mollview(full_maps_freq[ich], cmap='viridis',title=f'Observations', hold=True)
 fig.add_subplot(222) 
@@ -59,7 +69,7 @@ fig.add_subplot(223)
 hp.mollview(fg_maps_freq[ich],title=f'Foregrounds',cmap='viridis',hold=True)
 #fig.add_subplot(224)
 #hp.mollview(file['maps_sims_noise'][ich],title=f'Noise, freq={nu_ch[ich]}',cmap='viridis',hold=True)
-plt.savefig(f'Plots_sims/sims_ch{nu_ch[ich]}_{fg_comp}_noise_beam_theta40arcmin_40freq_905.0_1295.0MHz_lmax{lmax}_nside{nside}.png')
+#plt.savefig(f'Plots_sims/sims_ch{nu_ch[ich]}_{fg_comp}_noise_beam_theta40arcmin_40freq_905.0_1295.0MHz_lmax{lmax}_nside{nside}.png')
 ########################################################################################################
 
 z0= nu0/nu_ch[0] -1.0
@@ -105,5 +115,5 @@ norm = colors.Normalize(vmin=0, vmax=1)
 plt.subplots_adjust(wspace=0.3, hspace=0.4, bottom=0.3, left=0.05)
 sub_ax = plt.axes([0.93, 0.367, 0.02, 0.46]) 
 fig.colorbar(im2, ax=axs, cax=sub_ax,location='right',orientation='vertical',label='T [mK]')
-plt.savefig('Plots_sims/gnomview_HI_simulations_z.png')
+#plt.savefig('Plots_sims/gnomview_HI_simulations_z.png')
 plt.show()
