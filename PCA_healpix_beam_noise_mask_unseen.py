@@ -58,16 +58,15 @@ print(f'nside:{nside}, lmax:{lmax}, num_ch:{num_freq}, min_ch:{min(nu_ch)}, max_
 
 #######################################
 
-mask1_40 = hp.read_map('HFI_Mask_GalPlane_2048_R1.10.fits', field=1)#fsky 40 % coverage
-mask_40t = hp.ud_grade(mask1_40, nside_out=256)
-mask_40 = hp.ud_grade(mask_40t, nside_out=nside)
-del mask1_40
-mask_40s = hp.sphtfunc.smoothing(mask_40, 3*np.pi/180,lmax=lmax) #apodization 3 deg come in Olivari
-#del mask_40
-fsky  = np.mean(mask_40s) 
+pix_mask = hp.query_strip(nside, theta1=np.pi*2/3, theta2=np.pi/3)
+print(pix_mask)
+mask_50 = np.zeros(npix)
+mask_50[pix_mask] =1
+fsky_50 = np.sum(mask_50)/hp.nside2npix(nside)
+hp.mollview(mask_50, cmap='viridis', title=f'fsky:{fsky_50:0.2f}')
 
 fig=plt.figure()
-hp.mollview(mask_40, cmap='viridis', title=f'fsky={np.mean(mask_40s):0.2f}', hold=True)
+hp.mollview(mask_50, cmap='viridis', title=f'fsky={np.mean(mask_50):0.2f}', hold=True)
 #plt.savefig(f'Plots_sims/mask_apo3deg_fsky{np.mean(mask_40s):0.2f}_nside{nside}.png')
 plt.show()
 
@@ -75,14 +74,14 @@ plt.show()
 full_maps_freq_mask_0 = np.zeros((num_freq, npix))
 HI_maps_freq_mask_0 = np.zeros((num_freq, npix))
 for n in range(num_freq):
-        full_maps_freq_mask_0[n] = full_maps_freq[n]*mask_40 #- full_maps_freq_mean
+        full_maps_freq_mask_0[n] = full_maps_freq[n]*mask_50 #- full_maps_freq_mean
         full_maps_freq_mask_0[n] = hp.remove_dipole(full_maps_freq_mask_0[n])
-        HI_maps_freq_mask_0[n] = HI_maps_freq[n]*mask_40 #- full_maps_freq_mean
+        HI_maps_freq_mask_0[n] = HI_maps_freq[n]*mask_50 #- full_maps_freq_mean
         HI_maps_freq_mask_0[n] = hp.remove_dipole(HI_maps_freq_mask_0[n])
 
 
 
-bad_v = np.where(mask_40==0)
+bad_v = np.where(mask_50==0)
 
 HI_maps_freq_mask = copy.deepcopy(HI_maps_freq)
 fg_maps_freq_mask = copy.deepcopy(fg_maps_freq)
@@ -127,7 +126,7 @@ full_maps_freq_masked=ma.zeros((num_freq,npix))
 #fg_maps_freq_masked=ma.zeros((num_freq,npix))
 #HI_maps_freq_masked=ma.zeros((num_freq,npix))
 #full_maps_freq_masked= ma.asarray(full_maps_freq_masked)
-maskt =np.zeros(mask_40.shape)
+maskt =np.zeros(mask_50.shape)
 maskt[bad_v]=  1
 mask = ma.make_mask(maskt, shrink=False)
 #mask_b = np.array(maskt,dtype='int')
@@ -207,7 +206,7 @@ eigenvec_fg_Nfg = eigenvec[:, 0:num_sources]
 eigenvec_fg_Nfg_mask_0 = eigenvec_mask_0[:, 0:num_sources]
 
 fig=plt.figure()
-plt.suptitle(f'Mixing matrix, Nfg:{num_sources}, sources: {fg_components},\nbeam: {beam_s}, fsky:{fsky:0.2f}')
+plt.suptitle(f'Mixing matrix, Nfg:{num_sources}, sources: {fg_components},\nbeam: {beam_s}, fsky:{fsky_50:0.2f}')
 plt.imshow(eigenvec_fg_Nfg, cmap='crest')
 plt.xlabel('[MHz]')
 plt.ylabel('[MHz]')
@@ -361,7 +360,7 @@ factor = ell*(ell+1)/(2*np.pi)
 
 fig = plt.figure(figsize=(10,7))
 frame1=fig.add_axes((.1,.3,.8,.6))
-plt.title(f'Channel:{nu_ch[ich]} MHz, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}, fsky:{fsky}')
+plt.title(f'Channel:{nu_ch[ich]} MHz, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}, fsky:{fsky_50}')
 plt.semilogy(ell[2:], factor[2:]*cl_HI_cosmo_full[ich][2:],'k--',mfc='none', label='Cosmo HI+noise full sky')
 plt.semilogy(ell[2:], factor[2:]*cl_Hi[ich][2:],mfc='none', label='Cosmo HI+noise fsky')
 plt.semilogy(ell[2:], factor[2:]*cl_Hi_recons_Nfg[ich][2:],'+',color=c_pal[1],mfc='none', label='PCA HI+noise fsky mask UNSEEN')
@@ -392,7 +391,7 @@ plt.legend()
 
 fig = plt.figure(figsize=(10,7))
 frame1=fig.add_axes((.1,.3,.8,.6))
-plt.title(f'Mean over channel, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}, fsky:{fsky}')
+plt.title(f'Mean over channel, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}, fsky:{fsky_50}')
 plt.semilogy(ell[2:], factor[2:]*np.mean(cl_HI_cosmo_full, axis=0)[2:],'k--',mfc='none', label='Cosmo HI+noise full sky')
 plt.semilogy(ell[2:], factor[2:]*np.mean(cl_Hi, axis=0)[2:],mfc='none', label='Cosmo HI+noise')
 plt.semilogy(ell[2:], factor[2:]*np.mean(cl_Hi_recons_Nfg, axis=0)[2:],'+',mfc='none', label='PCA HI+noise')
@@ -431,11 +430,11 @@ plt.show()
 ##### confronto maschera non maschera - mashchera deconvolta #######################
 
 #### deconvoluzione
-f_0_mask = nm.NmtField(mask_40,[res_HI[0]] )
+f_0_mask = nm.NmtField(mask_50,[res_HI[0]] )
 b = nm.NmtBin.from_nside_linear(nside, 8)
 ell_mask= b.get_effective_ells()
 
-f_0_mask_0 = nm.NmtField(mask_40,[res_HI_mask_0[0]] )
+f_0_mask_0 = nm.NmtField(mask_50,[res_HI_mask_0[0]] )
 b_0 = nm.NmtBin.from_nside_linear(nside, 8)
 ell_mask_0= b_0.get_effective_ells()
 
@@ -446,10 +445,10 @@ cl_PCA_HI_mask_0_deconv = np.zeros((num_freq, len(ell_mask)))
 cl_PCA_HI_mask_0_deconv_interp = np.zeros((num_freq, lmax_cl+1))
 
 for n in range(num_freq):
-    f_0_mask = nm.NmtField(mask_40,[res_HI[n]] )
+    f_0_mask = nm.NmtField(mask_50,[res_HI[n]] )
     cl_PCA_HI_mask_deconv[n] = nm.compute_full_master(f_0_mask, f_0_mask, b)[0]
     cl_PCA_HI_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_PCA_HI_mask_deconv[n])
-    f_0_mask_0 = nm.NmtField(mask_40,[res_HI_mask_0[n]] )
+    f_0_mask_0 = nm.NmtField(mask_50,[res_HI_mask_0[n]] )
     cl_PCA_HI_mask_0_deconv[n] = nm.compute_full_master(f_0_mask_0, f_0_mask_0, b_0)[0]
     cl_PCA_HI_mask_0_deconv_interp[n] = np.interp(ell, ell_mask_0, cl_PCA_HI_mask_0_deconv[n])
 
