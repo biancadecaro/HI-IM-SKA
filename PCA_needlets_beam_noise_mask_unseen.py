@@ -1,10 +1,10 @@
 import healpy as hp
-from astropy import io
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy.linalg as lng
+import numpy.ma as ma
 import os
+import pickle
 
 import seaborn as sns
 sns.set_theme(style = 'white')
@@ -56,28 +56,44 @@ B=pow(lmax,(1./jmax))
 hp.mollview(need_tot_maps[4][4], cmap='viridis')
 plt.show()
 ######################################################################################
+pix_mask = hp.query_strip(nside, theta1=np.pi*2/3, theta2=np.pi/3)
+print(pix_mask)
+mask_50 = np.zeros(npix)
+mask_50[pix_mask] =1
+fsky_50 = np.sum(mask_50)/hp.nside2npix(nside)
 
-#mask1_40 = hp.read_map('HFI_Mask_GalPlane_2048_R1.10.fits', field=0)#fsky 20 %
-#mask_40t = hp.ud_grade(mask1_40, nside_out=256)
-#mask_40 = hp.ud_grade(mask_40t, nside_out=nside)
-#del mask1_40
-#mask_40s = hp.sphtfunc.smoothing(mask_40, 3*np.pi/180,lmax=lmax)
-#del mask_40
-#fsky  = np.mean(mask_40s) 
-#del mask_40s
-#####################################################################
+fig=plt.figure()
+hp.mollview(mask_50, cmap='viridis', title=f'fsky={np.mean(mask_50):0.2f}', hold=True)
+#plt.savefig(f'Plots_sims/mask_apo3deg_fsky{np.mean(mask_40s):0.2f}_nside{nside}.png')
+plt.show()
+########################################################################
+bad_v = np.where(mask_50==0)
 
 
-print(f'jmax:{jmax}, lmax:{lmax}, B:{B:1.2f}, num_freq:{num_freq}, min_ch:{min_ch}, max_ch:{max_ch}, nside:{nside}')
+maskt =np.zeros(mask_50.shape)
+maskt[bad_v]=  1
+mask = ma.make_mask(maskt, shrink=False)
+
+need_tot_maps_masked=ma.zeros(need_tot_maps.shape)
+
+for n in range(num_freq):
+    for jj in range(jmax+1):
+        need_tot_maps_masked[n,jj]  =ma.MaskedArray(need_tot_maps[n,jj], mask=mask)#np.isnan(full_maps_freq_mask[n])
 
 
-#np.save(out_dir_output+f'need_HI_maps_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz.npy',need_HI_maps)
+hp.mollview(need_tot_maps_masked[0,3], cmap='viridis', title='masked ma')
+plt.show()
+
+
 Cov_channels = np.zeros((jmax+1,num_freq, num_freq))
 
-
 for j in range(Cov_channels.shape[0]):
-    Cov_channels[j]=np.cov(need_tot_maps[:,j,:])
+    Cov_channels[j]=ma.cov(need_tot_maps_masked[:,j,:])
+    #corr_coeff = ma.corrcoef(need_tot_maps_masked)
 
+
+##########################################################################
+print(f'jmax:{jmax}, lmax:{lmax}, B:{B:1.2f}, num_freq:{num_freq}, min_ch:{min_ch}, max_ch:{max_ch}, nside:{nside}')
 
 
 eigenval=np.zeros((Cov_channels.shape[0], num_freq))
@@ -136,11 +152,18 @@ plt.legend(ncols=2)
 plt.show()
 ####################################################################################################
 res_fg_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
+
 for j in range(eigenvec_fg_Nfg.shape[0]):
-    res_fg_maps[j] = eigenvec_fg_Nfg[j]@eigenvec_fg_Nfg[j].T@need_tot_maps[:,j,:]
+    res_fg_maps[j] = ma.dot(eigenvec_fg_Nfg[j],ma.dot(eigenvec_fg_Nfg[j].T,need_tot_maps[:,j,:]))
+
 print(res_fg_maps.shape)
 
-np.save(out_dir_output_PCA+f'res_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',res_fg_maps)
+filename = out_dir_output_PCA+f'res_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_nside{nside}'
+with open(filename+'.pkl', 'wb') as f:
+    pickle.dump(res_fg_maps, f)
+    f.close()
+del f
+#np.save(out_dir_output_PCA+f'res_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',res_fg_maps)
 
 print('.. ho calcolato res fg .. ')
 
@@ -150,17 +173,26 @@ j_test=7
 res_HI_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
 for j in range(eigenvec_fg_Nfg.shape[0]):
     res_HI_maps[j,:,:] = need_tot_maps[:,j,:] - res_fg_maps[j,:,:]
+    res_HI_maps[j,:,bad_v]=hp.UNSEEN
+
     hp.mollview(res_HI_maps[j][ich],min=0, max=0.39, cmap='viridis', title=f'j={j}')
 plt.show()
 del need_tot_maps
 
 
-np.save(out_dir_output_PCA+f'res_PCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',res_HI_maps)
+filename = out_dir_output_PCA+f'res_PCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_nside{nside}'
+with open(filename+'.pkl', 'wb') as f:
+    pickle.dump(res_HI_maps, f)
+    f.close()
+#res_HI_maps.dump(out_dir_output_PCA+f'res_PCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy')
+#np.save(out_dir_output_PCA+f'res_PCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',res_HI_maps)
 
 print('.. ho calcolato res HI .. ')
 
 res_fg_maps_totj=res_fg_maps.sum(axis=0)
 res_HI_maps_totj = res_HI_maps.sum(axis=0)
+res_fg_maps_totj[:, bad_v] = hp.UNSEEN
+res_HI_maps_totj[:, bad_v] = hp.UNSEEN
 del res_HI_maps; del res_fg_maps
 
 
@@ -172,12 +204,27 @@ print('fin qui ci sono')
 need_fg_maps_filename = need_dir+f'bjk_maps_fg_{fg_comp}_{num_freq}freq_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}.npy'
 need_fg_maps = np.load(need_fg_maps_filename)#[:,:jmax,:]
 
+#need_fg_maps_masked=ma.zeros(need_fg_maps.shape)
+#for n in range(num_freq):
+#    for jj in range(jmax+1):
+#        need_fg_maps_masked[n,jj]  =ma.MaskedArray(need_fg_maps[n,jj], mask=mask)#np.isnan(full_maps_freq_mask[n])
+
+
 leak_fg_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
 leak_HI_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
 
 for j in range(eigenvec_fg_Nfg.shape[0]):
-    leak_fg_maps[j] = need_fg_maps[:,j,:]-eigenvec_fg_Nfg[j]@eigenvec_fg_Nfg[j].T@need_fg_maps[:,j,:]
-np.save(out_dir_output_PCA+f'leak_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',leak_fg_maps)
+    leak_fg_maps[j] = need_fg_maps[:,j,:] - ma.dot(eigenvec_fg_Nfg[j],ma.dot(eigenvec_fg_Nfg[j].T,need_fg_maps[:,j,:]))
+    leak_fg_maps[j,:,bad_v]=hp.UNSEEN
+
+
+filename = out_dir_output_PCA+f'leak_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_nside{nside}'
+with open(filename+'.pkl', 'wb') as ff:
+    pickle.dump(leak_fg_maps, ff)
+    ff.close()
+
+#leak_fg_maps.dump(out_dir_output_PCA+f'leak_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy')
+#np.save(out_dir_output_PCA+f'leak_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',leak_fg_maps)
 
 fig = plt.figure()
 plt.suptitle(f'Frequency channel: {nu_ch[ich]} MHz, Nfg:{num_sources}, jmax:{jmax}, lmax:{lmax} ')
@@ -192,11 +239,27 @@ need_HI_maps = np.load(need_HI_maps_filename)#[:,:jmax,:]
 
 
 
+#need_HI_maps_masked=ma.zeros(need_HI_maps.shape)
+#for n in range(num_freq):
+#    for jj in range(jmax+1):
+#        need_HI_maps_masked[n,jj]  =ma.MaskedArray(need_HI_maps[n,jj], mask=mask)#np.isnan(full_maps_freq_mask[n])
+
+
+
 for j in range(eigenvec_fg_Nfg.shape[0]):
-    leak_HI_maps[j] = eigenvec_fg_Nfg[j]@eigenvec_fg_Nfg[j].T@need_HI_maps[:,j,:]
+    leak_HI_maps[j] = ma.dot(eigenvec_fg_Nfg[j],ma.dot(eigenvec_fg_Nfg[j].T,need_HI_maps[:,j,:]))
+    leak_HI_maps[j,:,bad_v]=hp.UNSEEN   
 
 del eigenvec_fg_Nfg; 
-np.save(out_dir_output_PCA+f'leak_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',leak_HI_maps)
+
+
+filename = out_dir_output_PCA+f'leak_PCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_nside{nside}'
+with open(filename+'.pkl', 'wb') as fff:
+    pickle.dump(leak_HI_maps, fff)
+    fff.close()
+
+#leak_HI_maps.dump(out_dir_output_PCA+f'leak_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy')
+#np.save(out_dir_output_PCA+f'leak_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',leak_HI_maps)
 
 fig = plt.figure()
 plt.suptitle(f'Frequency channel: {nu_ch[ich]} MHz, Nfg:{num_sources}, jmax:{jmax}, lmax:{lmax} ')
@@ -210,19 +273,21 @@ del leak_HI_maps#; del leak_fg_maps
 ##############################################
 
 
-need_HI_maps_totj = need_HI_maps.sum(axis=1)
-need_fg_maps_jtot = need_fg_maps.sum(axis=1)
+need_HI_maps_totj = ma.sum(need_HI_maps, axis=1)#need_HI_maps.sum(axis=1)np.nansum(need_HI_maps, axis=1)#
+need_fg_maps_totj = ma.sum(need_fg_maps, axis=1)#need_fg_maps.sum(axis=1)np.nansum(need_fg_maps, axis=1)#
+need_HI_maps_totj[:, bad_v] = hp.UNSEEN
+need_fg_maps_totj[:,bad_v] = hp.UNSEEN
 
 del need_HI_maps;del need_fg_maps
 
 fig = plt.figure(figsize=(10, 7))
 fig.suptitle(f'channel {ich}: {nu_ch[ich]} MHz, jmax:{jmax}, lmax:{lmax}',fontsize=20)
+fig.add_subplot(221)
+hp.mollview(np.abs(res_fg_maps_totj[ich]/need_fg_maps_totj[ich]-1)*100, min=0, max=0.1,cmap='viridis', title=f'%(Res fg/Fg)-1',unit='%' ,hold=True)
 fig.add_subplot(222) 
 hp.mollview(need_HI_maps_totj[ich], cmap='viridis', title=f'HI signal + noise',min=0, max =1,hold=True)
 fig.add_subplot(223)
 hp.mollview(res_HI_maps_totj[ich], title=f'PCA HI + noise',min=0, max =1,cmap='viridis', hold=True)
-fig.add_subplot(221)
-hp.mollview(np.abs(res_fg_maps_totj[ich]/need_fg_maps_jtot[ich]-1)*100, min=0, max=0.1,cmap='viridis', title=f'%(Res fg/Fg)-1',unit='%' ,hold=True)
 #plt.savefig(out_dir_plot+f'betajk_res_need_PCA_sumj_Nfg{num_sources}_jmax{jmax}_lmax{lmax}_nside{nside}.png')
 plt.show()
 

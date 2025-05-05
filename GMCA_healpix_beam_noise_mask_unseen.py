@@ -22,9 +22,9 @@ import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 ################################################################
-beam_s = 'theta40arcmin'
-out_dir= f'GMCA_pixels_output/Maps_GMCA/No_mean/Beam_{beam_s}_noise_mask0.39_unseen/'
-out_dir_plot = f'GMCA_pixels_output/Plots_GMCA_healpix/No_mean/Beam_{beam_s}_noise_mask0.39_unseen/'
+beam_s = 'SKA_AA4'
+out_dir= f'GMCA_pixels_output/Maps_GMCA/No_mean/Beam_{beam_s}_noise_mask0.50_unseen/'
+out_dir_plot = f'GMCA_pixels_output/Plots_GMCA_healpix/No_mean/Beam_{beam_s}_noise_mask0.50_unseen/'
 
 if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -35,7 +35,7 @@ if not os.path.exists(out_dir_plot):
 
 fg_components='synch_ff_ps'
 
-path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_components}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
+path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_{fg_components}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
 
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -64,21 +64,18 @@ print(f'nside:{nside}, lmax:{lmax}, num_ch:{num_freq}, min_ch:{min(nu_ch)}, max_
 
 #######################################
 
-mask1_40 = hp.read_map('HFI_Mask_GalPlane_2048_R1.10.fits', field=1)#fsky 40 % coverage
-mask_40t = hp.ud_grade(mask1_40, nside_out=256)
-mask_40 = hp.ud_grade(mask_40t, nside_out=nside)
-del mask1_40
-mask_40s = hp.sphtfunc.smoothing(mask_40, 3*np.pi/180,lmax=lmax) #apodization 3 deg come in Olivari
-#del mask_40
-fsky  = np.mean(mask_40s) 
+pix_mask = hp.query_strip(nside, theta1=np.pi*2/3, theta2=np.pi/3)
+print(pix_mask)
+mask_50 = np.zeros(npix)
+mask_50[pix_mask] =1
+fsky_50 = np.sum(mask_50)/hp.nside2npix(nside)
 
 fig=plt.figure()
-hp.mollview(mask_40, cmap='viridis', title=f'fsky={np.mean(mask_40s):0.2f}', hold=True)
+hp.mollview(mask_50, cmap='viridis', title=f'fsky_50={np.mean(mask_50):0.2f}', hold=True)
 #plt.savefig(f'Plots_sims/mask_apo3deg_fsky{np.mean(mask_40s):0.2f}_nside{nside}.png')
 plt.show()
-
 #######################################################################################
-bad_v = np.where(mask_40==0)
+bad_v = np.where(mask_50==0)
 
 HI_maps_freq_mask = copy.deepcopy(HI_maps_freq)
 fg_maps_freq_mask = copy.deepcopy(fg_maps_freq)
@@ -123,7 +120,7 @@ full_maps_freq_masked=ma.zeros((num_freq,npix))
 #fg_maps_freq_masked=ma.zeros((num_freq,npix))
 #HI_maps_freq_masked=ma.zeros((num_freq,npix))
 #full_maps_freq_masked= ma.asarray(full_maps_freq_masked)
-maskt =np.zeros(mask_40.shape)
+maskt =np.zeros(mask_50.shape)
 maskt[bad_v]=  1
 mask = ma.make_mask(maskt, shrink=False)
 #mask_b = np.array(maskt,dtype='int')
@@ -320,10 +317,10 @@ factor = ell*(ell+1)/(2*np.pi)
 
 fig = plt.figure(figsize=(10,7))
 frame1=fig.add_axes((.1,.3,.8,.6))
-plt.title(f'Channel:{nu_ch[ich]} MHz, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}, fsky:{fsky}')
+plt.title(f'Channel:{nu_ch[ich]} MHz, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}, fsky_50:{fsky_50}')
 plt.semilogy(ell[2:], factor[2:]*cl_HI_cosmo_full[ich][2:],'k--',mfc='none', label='Cosmo HI+noise full sky')
-plt.semilogy(ell[2:], factor[2:]*cl_Hi[ich][2:],mfc='none', label='Cosmo HI+noise fsky')
-plt.semilogy(ell[2:], factor[2:]*cl_Hi_recons_Nfg[ich][2:],'+',color=c_pal[1],mfc='none', label='GMCA HI+noise fsky mask UNSEEN')
+plt.semilogy(ell[2:], factor[2:]*cl_Hi[ich][2:],mfc='none', label='Cosmo HI+noise fsky_50')
+plt.semilogy(ell[2:], factor[2:]*cl_Hi_recons_Nfg[ich][2:],'+',color=c_pal[1],mfc='none', label='GMCA HI+noise fsky_50 mask UNSEEN')
 plt.xlim([0,200])
 plt.legend()
 frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi}C_{\ell}$')
@@ -348,7 +345,7 @@ plt.legend()
 
 fig = plt.figure(figsize=(10,7))
 frame1=fig.add_axes((.1,.3,.8,.6))
-plt.title(f'Mean over channel, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}, fsky:{fsky}')
+plt.title(f'Mean over channel, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}, fsky_50:{fsky_50}')
 plt.semilogy(ell[2:], factor[2:]*np.mean(cl_HI_cosmo_full, axis=0)[2:],'k--',mfc='none', label='Cosmo HI+noise full sky')
 plt.semilogy(ell[2:], factor[2:]*np.mean(cl_Hi, axis=0)[2:],mfc='none', label='Cosmo HI+noise')
 plt.semilogy(ell[2:], factor[2:]*np.mean(cl_Hi_recons_Nfg, axis=0)[2:],'+',mfc='none', label='GMCA HI+noise')
@@ -387,7 +384,7 @@ plt.show()
 ##### confronto maschera non maschera - mashchera deconvolta #######################
 
 #### deconvoluzione
-f_0_mask = nm.NmtField(mask_40,[res_HI[0]] )
+f_0_mask = nm.NmtField(mask_50,[res_HI[0]] )
 b = nm.NmtBin.from_nside_linear(nside, 8)
 ell_mask= b.get_effective_ells()
 
@@ -398,7 +395,7 @@ cl_GMCA_HI_mask_0_deconv = np.zeros((num_freq, len(ell_mask)))
 cl_GMCA_HI_mask_0_deconv_interp = np.zeros((num_freq, lmax_cl+1))
 
 for n in range(num_freq):
-    f_0_mask = nm.NmtField(mask_40,[res_HI[n]] )
+    f_0_mask = nm.NmtField(mask_50,[res_HI[n]] )
     cl_GMCA_HI_mask_deconv[n] = nm.compute_full_master(f_0_mask, f_0_mask, b)[0]
     cl_GMCA_HI_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_GMCA_HI_mask_deconv[n])
     
@@ -407,72 +404,72 @@ np.savetxt(out_dir_cl+f'cl_deconv_GMCA_HI_noise_{fg_components}_{num_freq}_{min(
 
 ###############
 
-cl_res_HI_no_mask = np.loadtxt(f'GMCA_pixels_output/Maps_GMCA/No_mean/Beam_theta40arcmin_noise/power_spectra_cls_from_healpix_maps/cl_GMCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat')
-
-diff_cl_GMCA_mask_full = cl_Hi_recons_Nfg/cl_res_HI_no_mask -1 
-diff_cl_GMCA_mask_full_deconv = cl_GMCA_HI_mask_deconv_interp/cl_res_HI_no_mask -1 
-diff_cl_GMCA_mask_cosmo_full_deconv = cl_GMCA_HI_mask_deconv_interp/cl_HI_cosmo_full -1 
-
-diff_cl_GMCA_mask_0_full_deconv = cl_GMCA_HI_mask_0_deconv_interp/cl_res_HI_no_mask -1 
-diff_cl_GMCA_mask_0_cosmo_full_deconv = cl_GMCA_HI_mask_0_deconv_interp/cl_HI_cosmo_full -1 
-
-fig = plt.figure(figsize=(10,7))
-frame1=fig.add_axes((.1,.3,.8,.6))
-plt.title(f'Channel:{nu_ch[ich]} MHz, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}')
-plt.semilogy(ell[2:], factor[2:]*cl_HI_cosmo_full[ich][2:],'k--', mfc='none', label='Cosmo HI full sky')
-plt.semilogy(ell[2:], factor[2:]*cl_res_HI_no_mask[ich][2:],mfc='none', label='GMCA HI full sky')
-#plt.semilogy(ell[2:], factor[2:]*cl_Hi_recons_Nfg[ich][2:],'+',mfc='none', label='GMCA HI fsky')
-plt.semilogy(ell[2:], factor[2:]*cl_GMCA_HI_mask_deconv_interp[ich][2:],'+',mfc='none', label='GMCA HI fsky deconvolution mask UNSEEN')
-plt.semilogy(ell[2:], factor[2:]*cl_GMCA_HI_mask_0_deconv_interp[ich][2:],'+',mfc='none', label='GMCA HI fsky deconvolution mask 0')
-plt.xlim([0,200])
-plt.legend()
-frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi}C_{\ell}$')
-frame1.set_xlabel([])
-frame1.set_xticks(np.arange(1,200+1, 10))
-
-frame2=fig.add_axes((.1,.1,.8,.2))
-#plt.plot(ell[2:], diff_cl_GMCA_mask_full_deconv[ich][2:]*100, label='% GMCA mask UNSEEN deconv/GMCA full sky -1 ')
-plt.plot(ell[2:], diff_cl_GMCA_mask_cosmo_full_deconv[ich][2:]*100,c_pal[1],  label='% GMCA mask UNSEEN deconv /cosmo full sky -1  ')
-#plt.plot(ell[2:], diff_cl_GMCA_mask_0_full_deconv[ich][2:]*100, label='% GMCA mask 0 deconv/GMCA full sky -1 ')
-plt.plot(ell[2:], diff_cl_GMCA_mask_0_cosmo_full_deconv[ich][2:]*100, c_pal[2], label='% GMCA mask 0 deconv /cosmo full sky -1  ')
-frame2.axhline(ls='--', c= 'k', alpha=0.3)
-frame2.set_xlim([0,200])
-frame2.set_ylim([-50,50])
-frame2.set_ylabel(r'%$ C_{\ell}^{\rm GMCA,mask} / C_{\ell}^{\rm GMCA,full} -1$')
-frame2.set_xlabel(r'$\ell$')
-frame1.set_xticks(np.arange(1,200+1, 10))
-#plt.tight_layout()
-plt.legend()
-
-
-
-
-fig = plt.figure(figsize=(10,7))
-frame1=fig.add_axes((.1,.3,.8,.6))
-plt.title(f'Mean over channels, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}')
-plt.semilogy(ell[2:], factor[2:]*np.mean(cl_HI_cosmo_full, axis=0)[2:],'k--',mfc='none', label='Cosmo HI full sky')
-plt.semilogy(ell[2:], factor[2:]*np.mean(cl_res_HI_no_mask, axis=0)[2:],mfc='none', label='GMCA HI full sky')
-#plt.semilogy(ell[2:], factor[2:]*np.mean(cl_Hi_recons_Nfg, axis=0)[2:],'+',mfc='none', label='GMCA HI fsky')
-plt.semilogy(ell[2:], factor[2:]*np.mean(cl_GMCA_HI_mask_deconv_interp, axis=0)[2:],'+',mfc='none', label='GMCA HI fsky deconvolution mask UNSEEN')
-plt.semilogy(ell[2:], factor[2:]*np.mean(cl_GMCA_HI_mask_0_deconv_interp, axis=0)[2:],'+',mfc='none', label='GMCA HI fsky deconvolution mask 0')
-plt.xlim([0,200])
-plt.legend()
-frame1.set_ylabel(r'$\langle \frac{\ell(\ell+1)}{2\pi}C_{\ell}\rangle$')
-frame1.set_xlabel([])
-frame1.set_xticks(np.arange(1,200+1, 10))
-
-frame2=fig.add_axes((.1,.1,.8,.2))
-#plt.plot(ell[2:], np.mean(diff_cl_GMCA_mask_full_deconv, axis=0)[2:]*100, label='% GMCA mask deconv/GMCA full sky -1 ')
-plt.plot(ell[2:], np.mean(diff_cl_GMCA_mask_cosmo_full_deconv, axis=0)[2:]*100,c_pal[1], label='% GMCA mask deconv /cosmo full sky -1  ')
-#plt.plot(ell[2:], np.mean(diff_cl_GMCA_mask_0_full_deconv, axis=0)[2:]*100, label='% GMCA mask 0 deconv/GMCA full sky -1 ')
-plt.plot(ell[2:], np.mean(diff_cl_GMCA_mask_0_cosmo_full_deconv, axis=0)[2:]*100, c_pal[2],label='% GMCA mask 0 deconv /cosmo full sky -1  ')
-frame2.axhline(ls='--', c= 'k', alpha=0.3)
-frame2.set_xlim([0,200])
-frame2.set_ylim([-50,50])
-frame2.set_ylabel(r'%$\langle C_{\ell}^{\rm GMCA } / C_{\ell}^{\rm cosmo} -1 \rangle $')
-frame2.set_xlabel(r'$\ell$')
-frame1.set_xticks(np.arange(1,200+1, 10))
-#plt.tight_layout()
-plt.legend()
-
-plt.show()
+#cl_res_HI_no_mask = np.loadtxt(f'GMCA_pixels_output/Maps_GMCA/No_mean/Beam_theta40arcmin_noise/power_spectra_cls_from_healpix_maps/cl_GMCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat')
+#
+#diff_cl_GMCA_mask_full = cl_Hi_recons_Nfg/cl_res_HI_no_mask -1 
+#diff_cl_GMCA_mask_full_deconv = cl_GMCA_HI_mask_deconv_interp/cl_res_HI_no_mask -1 
+#diff_cl_GMCA_mask_cosmo_full_deconv = cl_GMCA_HI_mask_deconv_interp/cl_HI_cosmo_full -1 
+#
+#diff_cl_GMCA_mask_0_full_deconv = cl_GMCA_HI_mask_0_deconv_interp/cl_res_HI_no_mask -1 
+#diff_cl_GMCA_mask_0_cosmo_full_deconv = cl_GMCA_HI_mask_0_deconv_interp/cl_HI_cosmo_full -1 
+#
+#fig = plt.figure(figsize=(10,7))
+#frame1=fig.add_axes((.1,.3,.8,.6))
+#plt.title(f'Channel:{nu_ch[ich]} MHz, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}')
+#plt.semilogy(ell[2:], factor[2:]*cl_HI_cosmo_full[ich][2:],'k--', mfc='none', label='Cosmo HI full sky')
+#plt.semilogy(ell[2:], factor[2:]*cl_res_HI_no_mask[ich][2:],mfc='none', label='GMCA HI full sky')
+##plt.semilogy(ell[2:], factor[2:]*cl_Hi_recons_Nfg[ich][2:],'+',mfc='none', label='GMCA HI fsky_50')
+#plt.semilogy(ell[2:], factor[2:]*cl_GMCA_HI_mask_deconv_interp[ich][2:],'+',mfc='none', label='GMCA HI fsky_50 deconvolution mask UNSEEN')
+#plt.semilogy(ell[2:], factor[2:]*cl_GMCA_HI_mask_0_deconv_interp[ich][2:],'+',mfc='none', label='GMCA HI fsky_50 deconvolution mask 0')
+#plt.xlim([0,200])
+#plt.legend()
+#frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi}C_{\ell}$')
+#frame1.set_xlabel([])
+#frame1.set_xticks(np.arange(1,200+1, 10))
+#
+#frame2=fig.add_axes((.1,.1,.8,.2))
+##plt.plot(ell[2:], diff_cl_GMCA_mask_full_deconv[ich][2:]*100, label='% GMCA mask UNSEEN deconv/GMCA full sky -1 ')
+#plt.plot(ell[2:], diff_cl_GMCA_mask_cosmo_full_deconv[ich][2:]*100,c_pal[1],  label='% GMCA mask UNSEEN deconv /cosmo full sky -1  ')
+##plt.plot(ell[2:], diff_cl_GMCA_mask_0_full_deconv[ich][2:]*100, label='% GMCA mask 0 deconv/GMCA full sky -1 ')
+#plt.plot(ell[2:], diff_cl_GMCA_mask_0_cosmo_full_deconv[ich][2:]*100, c_pal[2], label='% GMCA mask 0 deconv /cosmo full sky -1  ')
+#frame2.axhline(ls='--', c= 'k', alpha=0.3)
+#frame2.set_xlim([0,200])
+#frame2.set_ylim([-50,50])
+#frame2.set_ylabel(r'%$ C_{\ell}^{\rm GMCA,mask} / C_{\ell}^{\rm GMCA,full} -1$')
+#frame2.set_xlabel(r'$\ell$')
+#frame1.set_xticks(np.arange(1,200+1, 10))
+##plt.tight_layout()
+#plt.legend()
+#
+#
+#
+#
+#fig = plt.figure(figsize=(10,7))
+#frame1=fig.add_axes((.1,.3,.8,.6))
+#plt.title(f'Mean over channels, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}')
+#plt.semilogy(ell[2:], factor[2:]*np.mean(cl_HI_cosmo_full, axis=0)[2:],'k--',mfc='none', label='Cosmo HI full sky')
+#plt.semilogy(ell[2:], factor[2:]*np.mean(cl_res_HI_no_mask, axis=0)[2:],mfc='none', label='GMCA HI full sky')
+##plt.semilogy(ell[2:], factor[2:]*np.mean(cl_Hi_recons_Nfg, axis=0)[2:],'+',mfc='none', label='GMCA HI fsky_50')
+#plt.semilogy(ell[2:], factor[2:]*np.mean(cl_GMCA_HI_mask_deconv_interp, axis=0)[2:],'+',mfc='none', label='GMCA HI fsky_50 deconvolution mask UNSEEN')
+#plt.semilogy(ell[2:], factor[2:]*np.mean(cl_GMCA_HI_mask_0_deconv_interp, axis=0)[2:],'+',mfc='none', label='GMCA HI fsky_50 deconvolution mask 0')
+#plt.xlim([0,200])
+#plt.legend()
+#frame1.set_ylabel(r'$\langle \frac{\ell(\ell+1)}{2\pi}C_{\ell}\rangle$')
+#frame1.set_xlabel([])
+#frame1.set_xticks(np.arange(1,200+1, 10))
+#
+#frame2=fig.add_axes((.1,.1,.8,.2))
+##plt.plot(ell[2:], np.mean(diff_cl_GMCA_mask_full_deconv, axis=0)[2:]*100, label='% GMCA mask deconv/GMCA full sky -1 ')
+#plt.plot(ell[2:], np.mean(diff_cl_GMCA_mask_cosmo_full_deconv, axis=0)[2:]*100,c_pal[1], label='% GMCA mask deconv /cosmo full sky -1  ')
+##plt.plot(ell[2:], np.mean(diff_cl_GMCA_mask_0_full_deconv, axis=0)[2:]*100, label='% GMCA mask 0 deconv/GMCA full sky -1 ')
+#plt.plot(ell[2:], np.mean(diff_cl_GMCA_mask_0_cosmo_full_deconv, axis=0)[2:]*100, c_pal[2],label='% GMCA mask 0 deconv /cosmo full sky -1  ')
+#frame2.axhline(ls='--', c= 'k', alpha=0.3)
+#frame2.set_xlim([0,200])
+#frame2.set_ylim([-50,50])
+#frame2.set_ylabel(r'%$\langle C_{\ell}^{\rm GMCA } / C_{\ell}^{\rm cosmo} -1 \rangle $')
+#frame2.set_xlabel(r'$\ell$')
+#frame1.set_xticks(np.arange(1,200+1, 10))
+##plt.tight_layout()
+#plt.legend()
+#
+#plt.show()

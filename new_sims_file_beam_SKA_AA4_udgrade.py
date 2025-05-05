@@ -154,6 +154,7 @@ def noise_map(sigma,nside=512):
 	return m
 ######################################################
 
+nside_out=128
 
 path_data = 'sim_PL05_from191030.hd5'
 file = h5py.File(path_data,'r')
@@ -161,12 +162,14 @@ nu_ch = np.array(file['frequencies'])
 idx_nu_max, = np.where(nu_ch==1005.5)[0]
 print(idx_nu_max)
 
-file_new={}
+#file_new={}
+file_ud={}
 
 
-file_new['frequencies'] = nu_ch[:idx_nu_max]
+#file_new['frequencies'] = nu_ch[:idx_nu_max]
+file_ud['frequencies'] = nu_ch[:idx_nu_max]
 
-print(file_new['frequencies'], len(file_new['frequencies']))
+print(file_ud['frequencies'], len(file_ud['frequencies']))
 
 components = list(file.keys())
 print(components)
@@ -182,32 +185,32 @@ fg_comp = 'synch_ff_ps'
 
 for c in components:
   print(c)
-  file_new[c]=file[c][:idx_nu_max]
+  #file_new[c]=file[c][:idx_nu_max]
+  file_ud[c] = hp.pixelfunc.ud_grade(map_in=file[c][:idx_nu_max], nside_out=nside_out)
 
 del file
 
-nu_ch_new = np.array(file_new['frequencies'])
+nu_ch_new = np.array(file_ud['frequencies'])
 num_freq_new=len(nu_ch_new)
-npix = np.shape(file_new['cosmological_signal'])[1]
-nside = hp.get_nside(file_new['cosmological_signal'][1])
+npix = np.shape(file_ud['cosmological_signal'])[1]
 
-lmax = 3*nside-1
+lmax = 3*nside_out-1
 
 obs_maps = np.zeros((num_freq_new,npix))
 fg_maps = np.zeros((num_freq_new,npix))
 
 for c in components:
     print(c)
-    obs_maps += np.array(file_new[c])
+    obs_maps += np.array(file_ud[c])
 
 for cc in components:
     if cc=='cosmological_signal':
       continue
     print(cc)
-    fg_maps += np.array(file_new[cc])
+    fg_maps += np.array(file_ud[cc])
 
 obs_maps_no_mean = np.array([obs_maps[i] -np.mean(obs_maps[i],axis=0)  for i in range(num_freq_new)])
-HI_maps_no_mean = np.array([file_new['cosmological_signal'][i] -np.mean(file_new['cosmological_signal'][i],axis=0) for i in range(num_freq_new)])
+HI_maps_no_mean = np.array([file_ud['cosmological_signal'][i] -np.mean(file_ud['cosmological_signal'][i],axis=0) for i in range(num_freq_new)])
 fg_maps_no_mean = np.array([fg_maps[i] -np.mean(fg_maps[i],axis=0) for i in range(num_freq_new)]) 
 #
 
@@ -223,15 +226,15 @@ del obs_maps_no_mean; del fg_maps_no_mean; del HI_maps_no_mean
 
 for nu in range(num_freq_new):
 		alm_HI = hp.map2alm(file_sims_no_mean['maps_sims_HI'][nu], lmax=lmax)
-		file_sims_no_mean['maps_sims_HI'][nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside)
+		file_sims_no_mean['maps_sims_HI'][nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside_out)
 		file_sims_no_mean['maps_sims_HI'][nu] = hp.remove_dipole(file_sims_no_mean['maps_sims_HI'][nu])
 		del alm_HI
 		alm_fg = hp.map2alm(file_sims_no_mean['maps_sims_fg'][nu], lmax=lmax)
-		file_sims_no_mean['maps_sims_fg'][nu] = hp.alm2map(alm_fg, lmax=lmax, nside = nside)
+		file_sims_no_mean['maps_sims_fg'][nu] = hp.alm2map(alm_fg, lmax=lmax, nside = nside_out)
 		file_sims_no_mean['maps_sims_fg'][nu] = hp.remove_dipole(file_sims_no_mean['maps_sims_fg'][nu])
 		del alm_fg
 		alm_obs = hp.map2alm(file_sims_no_mean['maps_sims_tot'][nu], lmax=lmax)
-		file_sims_no_mean['maps_sims_tot'][nu] = hp.alm2map(alm_obs, lmax=lmax, nside = nside)
+		file_sims_no_mean['maps_sims_tot'][nu] = hp.alm2map(alm_obs, lmax=lmax, nside = nside_out)
 		file_sims_no_mean['maps_sims_tot'][nu] = hp.remove_dipole(file_sims_no_mean['maps_sims_tot'][nu])
 		del alm_obs
 
@@ -284,7 +287,7 @@ print(f'dnu={dnu} MHz')
 
 sigma_noise = sigma_N(nu_ch_new,dnu,**specs_dict)
 
-noise = [noise_map(sigma,nside=nside) for sigma in sigma_noise]
+noise = [noise_map(sigma,nside=nside_out) for sigma in sigma_noise]
 del sigma_noise
 
 #########################################################################################
@@ -316,25 +319,27 @@ file_sims_beam['maps_sims_noise'] =  np.array([convolve(noise[i],beam[i], lmax=l
 
 for nu in range(num_freq_new):
 		alm_HI = hp.map2alm(file_sims_beam['maps_sims_HI'][nu], lmax=lmax)
-		file_sims_beam['maps_sims_HI'][nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside)
+		file_sims_beam['maps_sims_HI'][nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside_out)
 		file_sims_beam['maps_sims_HI'][nu] = hp.remove_dipole(file_sims_beam['maps_sims_HI'][nu])
 		del alm_HI
 		alm_fg = hp.map2alm(file_sims_beam['maps_sims_fg'][nu], lmax=lmax)
-		file_sims_beam['maps_sims_fg'][nu] = hp.alm2map(alm_fg, lmax=lmax, nside = nside)
+		file_sims_beam['maps_sims_fg'][nu] = hp.alm2map(alm_fg, lmax=lmax, nside = nside_out)
 		file_sims_beam['maps_sims_fg'][nu] = hp.remove_dipole(file_sims_beam['maps_sims_fg'][nu])
 		del alm_fg
 		alm_obs = hp.map2alm(file_sims_beam['maps_sims_tot'][nu], lmax=lmax)
-		file_sims_beam['maps_sims_tot'][nu] = hp.alm2map(alm_obs, lmax=lmax, nside = nside)
+		file_sims_beam['maps_sims_tot'][nu] = hp.alm2map(alm_obs, lmax=lmax, nside = nside_out)
 		file_sims_beam['maps_sims_tot'][nu] = hp.remove_dipole(file_sims_beam['maps_sims_tot'][nu])
 		del alm_obs
 		alm_noise = hp.map2alm(file_sims_beam['maps_sims_noise'][nu], lmax=lmax)
-		file_sims_beam['maps_sims_noise'][nu] = hp.alm2map(alm_noise, lmax=lmax, nside = nside)
+		file_sims_beam['maps_sims_noise'][nu] = hp.alm2map(alm_noise, lmax=lmax, nside = nside_out)
 		file_sims_beam['maps_sims_noise'][nu] = hp.remove_dipole(file_sims_beam['maps_sims_noise'][nu])
 		del alm_noise
 
 
+print(hp.get_nside(file_sims_beam['maps_sims_HI'][ich]))
+
 import pickle
-filename = f'Sims/beam_SKA_AA4_no_mean_{fg_comp}_noise_{len(nu_ch_new)}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_thick{dnu}MHz_lmax{lmax}_nside{nside}'
+filename = f'Sims/beam_SKA_AA4_no_mean_{fg_comp}_noise_{len(nu_ch_new)}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_thick{dnu}MHz_lmax{lmax}_nside{nside_out}'
 with open(filename+'.pkl', 'wb') as ff:
 	pickle.dump(file_sims_beam, ff)
 	ff.close()
