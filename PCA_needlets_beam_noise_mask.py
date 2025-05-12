@@ -18,7 +18,7 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 ###########################################################################3
 fg_comp = 'synch_ff_ps'
 beam_s = 'SKA_AA4'
-path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
+path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()

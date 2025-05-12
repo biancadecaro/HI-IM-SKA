@@ -101,7 +101,7 @@ def alm_product(tab,beam_l):
 def almrec(tab,nside):
 
 	alm = tab2alm(tab)
-	map_out = hp.alm2map(alm,nside,verbose=False)
+	map_out = hp.alm2map(alm,nside)
 
 	return map_out
 

@@ -18,7 +18,7 @@ sns.palettes.color_palette()
 import cython_mylibc as pippo
 ##########################################################################################
 
-beam_s = 'SKA_AA4'
+beam_s = '1.3deg_SKA_AA4'
 
 out_dir_plot = 'Plots_PCA_needlets/'
 dir_PCA = f'PCA_maps/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'# noise_mask0.39
@@ -27,8 +27,8 @@ if not os.path.exists(out_dir_maps_recon):
 		os.makedirs(out_dir_maps_recon)
 
 
-fg_comp = 'synch_ff_ps'
-beam = 'SKA AA4'
+fg_comp = 'synch_ff_ps_pol'
+beam = '1.3 deg SKA AA4'
 
 
 num_ch=105
@@ -38,7 +38,10 @@ nside=256
 npix= hp.nside2npix(nside)
 jmax=4
 lmax= 3*nside-1
-Nfg=3
+if fg_comp=='synch_ff_ps':
+    Nfg=3
+if fg_comp=='synch_ff_ps_pol':
+    Nfg=18
 B = pippo.mylibpy_jmax_lmax2B(jmax, lmax)
 
 path_PCA_HI=dir_PCA+f'res_PCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
@@ -58,15 +61,7 @@ print(f'jmax:{jmax}, lmax:{lmax}, num_ch:{num_ch}, min_ch:{min_ch}, max_ch:{max_
 nu_ch = np.linspace(min_ch, max_ch, num_ch)
 
 
-#for nu in range(len(nu_ch)):
-#        alm_HI = hp.map2alm(cosmo_HI[nu], lmax=lmax)
-#        cosmo_HI[nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside)
-#        del alm_HI
-#        alm_fg = hp.map2alm(fg[nu], lmax=lmax)
-#        fg[nu] = hp.alm2map(alm_fg, lmax=lmax, nside = nside)
-#        del alm_fg
-
-ich=34#int(num_ch/2)
+ich=34
 ###########################################################################################
 pix_mask = hp.query_strip(nside, theta1=np.pi*2/3, theta2=np.pi/3)
 
@@ -83,52 +78,48 @@ bad_v = np.where(mask_50==0)
 ####################### NEEDLETS2HARMONICS #################################################
 
 b_values = pippo.mylibpy_needlets_std_init_b_values(B,jmax,lmax)
-#with open(path_PCA_HI+'.pkl', 'rb') as f:
-#	res_PCA_HI = pickle.load(f)
-#	f.close()
-#del f
-#with open(path_PCA_fg+'.pkl', 'rb') as f:
-#	res_PCA_fg = pickle.load(f)
-#	f.close()	
-#res_PCA_HI[:,:,bad_v] = hp.UNSEEN
-#res_PCA_fg[:,:,bad_v] = hp.UNSEEN
-#
-#print(res_PCA_HI.shape)
-#map_PCA_HI_need2pix=np.zeros((len(nu_ch), npix))
-#map_PCA_fg_need2pix=np.zeros((len(nu_ch), npix))
-#
-#
-#for nu in range(len(nu_ch)):
-#    map_PCA_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_fg[:,nu],B, lmax)
-#    map_PCA_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_HI[:,nu],B, lmax)
-#np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_HI_need2pix)
-#np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_fg_need2pix)
-#
-#del res_PCA_HI; del res_PCA_fg
-#
-#cosmo_HI_bjk = np.load(path_cosmo_HI_bjk+'.npy')#[:,:jmax,:]
-#fg_bjk = np.load(path_input_fg_bjk+'.npy')#[:,:jmax,:]
-#print(cosmo_HI_bjk.shape)
-#
-#map_input_HI_need2pix=np.zeros((len(nu_ch), npix))
-#map_input_fg_need2pix=np.zeros((len(nu_ch), npix))
-#for nu in range(len(nu_ch)):
-#	for j in range(cosmo_HI_bjk.shape[1]):
-#		map_input_HI_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(cosmo_HI_bjk[nu,j],b_values,j)
-#		map_input_fg_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(fg_bjk[nu,j],b_values,j)
-#	#map_input_HI_need2pix[nu] = hp.remove_dipole(map_input_HI_need2pix[nu])
-#	#map_input_fg_need2pix[nu] = hp.remove_dipole(map_input_fg_need2pix[nu])
-#	#map_input_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(cosmo_HI_bjk[nu,:],B, lmax)
-#	#map_input_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(fg_bjk[nu,:],B, lmax)
-#np.save(out_dir_maps_recon+f'maps_reconstructed_cosmo_HI_noise_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_input_HI_need2pix)
-#np.save(out_dir_maps_recon+f'maps_reconstructed_input_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_input_fg_need2pix)
-#del cosmo_HI_bjk; del fg_bjk
+with open(path_PCA_HI+'.pkl', 'rb') as f:
+	res_PCA_HI = pickle.load(f)
+	f.close()
+del f
+with open(path_PCA_fg+'.pkl', 'rb') as f:
+	res_PCA_fg = pickle.load(f)
+	f.close()	
+res_PCA_HI[:,:,bad_v] = hp.UNSEEN
+res_PCA_fg[:,:,bad_v] = hp.UNSEEN
+
+print(res_PCA_HI.shape)
+map_PCA_HI_need2pix=np.zeros((len(nu_ch), npix))
+map_PCA_fg_need2pix=np.zeros((len(nu_ch), npix))
 
 
-map_PCA_HI_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
-map_PCA_fg_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
-map_input_HI_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_cosmo_HI_noise_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
-map_input_fg_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_input_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
+for nu in range(len(nu_ch)):
+    map_PCA_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_fg[:,nu],B, lmax)
+    map_PCA_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_HI[:,nu],B, lmax)
+np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_HI_need2pix)
+np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_fg_need2pix)
+
+del res_PCA_HI; del res_PCA_fg
+
+cosmo_HI_bjk = np.load(path_cosmo_HI_bjk+'.npy')#[:,:jmax,:]
+fg_bjk = np.load(path_input_fg_bjk+'.npy')#[:,:jmax,:]
+print(cosmo_HI_bjk.shape)
+
+map_input_HI_need2pix=np.zeros((len(nu_ch), npix))
+map_input_fg_need2pix=np.zeros((len(nu_ch), npix))
+for nu in range(len(nu_ch)):
+	for j in range(cosmo_HI_bjk.shape[1]):
+		map_input_HI_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(cosmo_HI_bjk[nu,j],b_values,j)
+		map_input_fg_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(fg_bjk[nu,j],b_values,j)
+np.save(out_dir_maps_recon+f'maps_reconstructed_cosmo_HI_noise_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_input_HI_need2pix)
+np.save(out_dir_maps_recon+f'maps_reconstructed_input_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_input_fg_need2pix)
+del cosmo_HI_bjk; del fg_bjk
+
+
+#map_PCA_HI_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
+#map_PCA_fg_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
+#map_input_HI_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_cosmo_HI_noise_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
+#map_input_fg_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_input_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
 
 
 fg = np.load(path_fg+'.npy', allow_pickle=True)

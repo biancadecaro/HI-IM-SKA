@@ -22,9 +22,9 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 #print(sns.color_palette("husl", 15).as_hex())
 sns.palettes.color_palette()
 ###########################################################################3
-fg_comp='synch_ff_ps'
-beam_s = 'SKA_AA4'
-path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
+fg_comp='synch_ff_ps_pol'
+beam_s = '1.3deg_SKA_AA4'
+path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
@@ -74,7 +74,11 @@ plt.show()
 ############################# GMCA ##########################################
 
 ################   GMCA PARAMETERS   ##################
-num_sources   = 3   # number of sources to be estimated
+if fg_comp=='synch_ff_ps':
+    num_sources=3
+if fg_comp=='synch_ff_ps_pol':
+    num_sources=18
+print(f'Nfg={num_sources}')  # number of sources to be estimated
 mints = 0.1 # min threshold (what is sparse compared to noise?)
 nmax  = 100 # number of iterations (usually 100 is safe)
 L0    = 0   # switch between L0 norm (1) or L1 norm (0)
@@ -157,7 +161,7 @@ print(res_fg_maps.shape)
 
 
 
-#np.save(out_dir_output_GMCA+f'res_GMCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',res_fg_maps)
+#np.save(out_dir_output_GMCA+f'res_GMCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min_ch}_{max_ch}MHz_Nfg{num_sources}_nside{nside}.npy',res_fg_maps)
 
 print('.. ho calcolato res fg .. ')
 
@@ -173,7 +177,7 @@ plt.show()
 del need_tot_maps
 
 
-np.save(out_dir_output_GMCA+f'res_GMCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',res_HI_maps)
+np.save(out_dir_output_GMCA+f'res_GMCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min_ch}_{max_ch}MHz_Nfg{num_sources}_nside{nside}.npy',res_HI_maps)
 
 print('.. ho calcolato res HI .. ')
 
@@ -202,7 +206,7 @@ for j in range(Ae.shape[0]):
     leak_fg_maps[j,:,bad_v]=hp.UNSEEN
 
 
-np.save(out_dir_output_GMCA+f'leak_GMCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',leak_fg_maps)
+np.save(out_dir_output_GMCA+f'leak_GMCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min_ch}_{max_ch}MHz_Nfg{num_sources}_nside{nside}.npy',leak_fg_maps)
 
 fig = plt.figure()
 plt.suptitle(f'Frequency channel: {nu_ch[ich]} MHz, Nfg:{num_sources}, jmax:{jmax}, lmax:{lmax} ')
@@ -222,7 +226,7 @@ for j in range(Ae.shape[0]):
     leak_HI_maps[j] = np.ma.dot(Ae[j],Se_sph)
 
 del Ae; 
-np.save(out_dir_output_GMCA+f'leak_GMCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',leak_HI_maps)
+np.save(out_dir_output_GMCA+f'leak_GMCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min_ch}_{max_ch}MHz_Nfg{num_sources}_nside{nside}.npy',leak_HI_maps)
 
 fig = plt.figure()
 plt.suptitle(f'Frequency channel: {nu_ch[ich]} MHz, Nfg:{num_sources}, jmax:{jmax}, lmax:{lmax} ')

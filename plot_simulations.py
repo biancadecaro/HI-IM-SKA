@@ -17,7 +17,7 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 
 beam = 'SKA_AA4'
 fg_comp='synch_ff_ps'
-path_data_sims_tot = f'Sims/beam_SKA_AA4_no_mean_synch_ff_ps_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
+path_data_sims_tot = f'Sims/beam_SKA_AA4_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
@@ -116,4 +116,31 @@ plt.subplots_adjust(wspace=0.3, hspace=0.4, bottom=0.3, left=0.05)
 sub_ax = plt.axes([0.93, 0.367, 0.02, 0.46]) 
 fig.colorbar(im2, ax=axs, cax=sub_ax,location='right',orientation='vertical',label='T [mK]')
 #plt.savefig('Plots_sims/gnomview_HI_simulations_z.png')
+
+
+#######################################################
+beam = 'SKA_AA4'
+fg_comp_pol='synch_ff_ps_pol'
+path_data_sims_tot = f'Sims/beam_SKA_AA4_no_mean_sims_{fg_comp_pol}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
+with open(path_data_sims_tot+'.pkl', 'rb') as ff:
+        file_pol = pickle.load(ff)
+        ff.close()
+
+HI_maps_noise_freq_pol = file_pol['maps_sims_HI'] + file['maps_sims_noise']  #aggiungo il noise
+fg_maps_freq_pol = file_pol['maps_sims_fg']
+full_maps_freq_pol = file_pol['maps_sims_tot'] + file['maps_sims_noise']  #aggiungo il noise
+
+
+fig = plt.figure(figsize=(10, 7))
+fig.suptitle(f'BEAM SKA AA4 channel pol {ich}: {nu_ch[ich]} MHz',fontsize=20)
+fig.add_subplot(221) 
+hp.mollview(fg_maps_freq_pol[ich]/fg_maps_freq[ich]-1,title=f'Foregrounds pol - no pol',min=-0.5, max=0.5,cmap='viridis',hold=True)
+fig.add_subplot(222) 
+hp.mollview(HI_maps_noise_freq_pol[ich], cmap='viridis',title=f'HI signal + noise',min=0, max=1,hold=True)
+fig.add_subplot(223)
+hp.mollview(file_pol['maps_sims_noise'][ich]/file['maps_sims_noise'][ich]-1, cmap='viridis',title=f'noise pol - no pol',min=-0.5, max=0.5, hold=True)
+fig.add_subplot(224)
+hp.mollview(HI_maps_noise_freq_pol[ich]/HI_maps_noise_freq[ich]-1,min=-0.5, max=0.5, title=f'HI pol - HI',cmap='viridis',hold=True)
+
+
 plt.show()

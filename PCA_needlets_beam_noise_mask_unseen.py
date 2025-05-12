@@ -16,9 +16,9 @@ mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 
 ###########################################################################3
-fg_comp = 'synch_ff_ps'
-beam_s = 'SKA_AA4'
-path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
+fg_comp = 'synch_ff_ps_pol'
+beam_s = '1.3deg_SKA_AA4'
+path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
@@ -114,7 +114,10 @@ ax.set(xlim=[-10,num_freq+10],xticks=x_ticks,xlabel="eigenvalue number",ylabel="
 #plt.savefig(out_dir_output+f'eigenvalue_cov_need_no_mean_jmax{jmax}_lmax{lmax}_nside{nside}.png')
 plt.show()
 
-num_sources=3
+if fg_comp=='synch_ff_ps':
+    num_sources=3
+if fg_comp=='synch_ff_ps_pol':
+    num_sources=18
 
 Nfg = num_freq - num_sources
 print(f'Nfg:{num_sources}')
