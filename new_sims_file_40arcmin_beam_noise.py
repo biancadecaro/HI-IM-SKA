@@ -171,7 +171,7 @@ file_ud['frequencies'] = file_new['frequencies']
 components = list(file.keys())
 print(components)
 components.remove('frequencies')
-components.remove('pol_leakage')
+#components.remove('pol_leakage')
 
 #components.remove('gal_synch')
 #components.remove('gal_ff')#
@@ -179,6 +179,9 @@ components.remove('pol_leakage')
 
 fg_comp = 'synch_ff_ps'
 
+if 'pol_leakage' in components:
+	fg_comp = 'synch_ff_ps_pol'
+print(fg_comp)
 
 for c in components:
   print(c)

@@ -131,7 +131,7 @@ dir_w = 'wavelets_AIC/'
 if not os.path.exists(dir_w):
         os.makedirs(dir_w)
 
-fg_comp='synch_ff_ps_pol'
+fg_comp='synch_ff_ps'
 path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -173,6 +173,7 @@ bvalues = need_theory.b_values
 #ax1.legend(loc='right')
 
 nbands = bvalues.shape[0]  # number of bands
+print(nbands)
 lmax_bands = np.zeros(nbands, dtype=np.int32)   # bands effective ell max
 for j in range(0, nbands):
     lmax_bands[j] = max(np.where(bvalues[j,:] != 0.0)[0])
