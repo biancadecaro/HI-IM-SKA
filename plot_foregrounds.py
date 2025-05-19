@@ -194,6 +194,7 @@ num_freq_new=len(nu_ch_new)
 npix = np.shape(file_new['cosmological_signal'])[1]
 
 ich = int(num_freq_new/2)
+print(ich, nu_ch[ich])
 
 lmax=3*nside-1
 
@@ -339,3 +340,4 @@ fig.add_subplot(224)
 hp.mollview(pl_maps_beam[ich],  unit= 'T[mK]', min=-1, max=4, title=f'Polarization leakage',cmap='viridis', hold=True)
 plt.savefig(f'comp_HI_fg_input_beam_mean_lmax{lmax}_nside{nside}_ch{nu_ch_new[ich]}.png')
 plt.show()
+

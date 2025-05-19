@@ -9,6 +9,7 @@ import scipy.linalg as lng
 sns.set_theme(style = 'white')
 #sns.set_palette('husl',15)
 from matplotlib import colors
+import copy
 
 import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
@@ -53,6 +54,7 @@ nu_ch = np.linspace(min_ch, max_ch, num_ch)
 del min_ch;del max_ch
 
 nside = hp.get_nside(HI_maps_noise_freq[0])
+npix = hp.nside2npix(nside)
 lmax = 3*nside-1
 
 
@@ -143,4 +145,30 @@ fig.add_subplot(224)
 hp.mollview(HI_maps_noise_freq_pol[ich]/HI_maps_noise_freq[ich]-1,min=-0.5, max=0.5, title=f'HI pol - HI',cmap='viridis',hold=True)
 
 
+plt.show()
+
+############################################
+#######################################
+
+pix_mask = hp.query_strip(nside, theta1=np.pi*2/3, theta2=np.pi/3)
+print(pix_mask)
+mask_50 = np.zeros(npix)
+mask_50[pix_mask] =1
+fsky_50 = np.sum(mask_50)/hp.nside2npix(nside)
+
+fig=plt.figure()
+hp.mollview(mask_50, cmap='viridis', title=f'fsky={np.mean(mask_50):0.2f}', hold=True)
+#plt.savefig(f'Plots_sims/mask_apo3deg_fsky{np.mean(mask_40s):0.2f}_nside{nside}.png')
+
+bad_v = np.where(mask_50==0)
+
+full_maps_freq_mask = copy.deepcopy(full_maps_freq)
+
+for n in range(num_ch):
+		full_maps_freq_mask[n][bad_v] =  hp.UNSEEN
+		full_maps_freq_mask[n]=hp.remove_dipole(full_maps_freq_mask[n])
+
+
+hp.mollview(full_maps_freq_mask[ich], cmap='viridis', unit='T[mK]', min=-300, max=2000, title='')
+plt.savefig(f'obs_beam_SKA_AA4_mask)_fsky{fsky_50:0.2f}_ch{nu_ch[ich]}.png')
 plt.show()
