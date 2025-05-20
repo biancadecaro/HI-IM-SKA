@@ -33,7 +33,7 @@ if not os.path.exists(out_dir_plot):
 
 ################################################################
 
-fg_components='synch_ff_ps_pol'
+fg_components='synch_ff_ps'
 
 path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_components}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
 
@@ -386,21 +386,21 @@ plt.show()
 
 
 ####################################################################################
-##### confronto maschera non maschera - mashchera deconvolta #######################
+##### confronto maschera non maschera - maschera deconvolta #######################
 
 #### deconvoluzione
-f_0_mask = nm.NmtField(mask_50,[res_HI[0]] )
+f_0_mask = nm.NmtField(mask_50,[res_HI[0]], masked_on_input=True )
 b = nm.NmtBin.from_nside_linear(nside, 8)
 ell_mask= b.get_effective_ells()
 
 cl_GMCA_HI_mask_deconv = np.zeros((num_freq, len(ell_mask)))
 cl_GMCA_HI_mask_deconv_interp = np.zeros((num_freq, lmax_cl+1))
 
-cl_GMCA_HI_mask_0_deconv = np.zeros((num_freq, len(ell_mask)))
-cl_GMCA_HI_mask_0_deconv_interp = np.zeros((num_freq, lmax_cl+1))
+#cl_GMCA_HI_mask_0_deconv = np.zeros((num_freq, len(ell_mask)))
+#cl_GMCA_HI_mask_0_deconv_interp = np.zeros((num_freq, lmax_cl+1))
 
 for n in range(num_freq):
-    f_0_mask = nm.NmtField(mask_50,[res_HI[n]] )
+    f_0_mask = nm.NmtField(mask_50,[res_HI[n]] , masked_on_input=True)
     cl_GMCA_HI_mask_deconv[n] = nm.compute_full_master(f_0_mask, f_0_mask, b)[0]
     cl_GMCA_HI_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_GMCA_HI_mask_deconv[n])
     

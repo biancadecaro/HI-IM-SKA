@@ -435,10 +435,10 @@ plt.show()
 
 
 ####################################################################################
-##### confronto maschera non maschera - mashchera deconvolta #######################
+##### confronto maschera non maschera - maschera deconvolta #######################
 
 #### deconvoluzione
-f_0_mask = nm.NmtField(mask_50,[res_HI[0]] )
+f_0_mask = nm.NmtField(mask_50,[res_HI[0]])#, masked_on_input=True )
 b = nm.NmtBin.from_nside_linear(nside, 8)
 ell_mask= b.get_effective_ells()
 
@@ -449,19 +449,20 @@ ell_mask_0= b_0.get_effective_ells()
 cl_PCA_HI_mask_deconv = np.zeros((num_freq, len(ell_mask)))
 cl_PCA_HI_mask_deconv_interp = np.zeros((num_freq, lmax_cl+1))
 
-cl_PCA_HI_mask_0_deconv = np.zeros((num_freq, len(ell_mask)))
-cl_PCA_HI_mask_0_deconv_interp = np.zeros((num_freq, lmax_cl+1))
+#cl_PCA_HI_mask_0_deconv = np.zeros((num_freq, len(ell_mask)))
+#cl_PCA_HI_mask_0_deconv_interp = np.zeros((num_freq, lmax_cl+1))
 
 for n in range(num_freq):
-    f_0_mask = nm.NmtField(mask_50,[res_HI[n]] )
+    f_0_mask = nm.NmtField(mask_50,[res_HI[n]])#, masked_on_input=True )
     cl_PCA_HI_mask_deconv[n] = nm.compute_full_master(f_0_mask, f_0_mask, b)[0]
     cl_PCA_HI_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_PCA_HI_mask_deconv[n])
-    f_0_mask_0 = nm.NmtField(mask_50,[res_HI_mask_0[n]] )
-    cl_PCA_HI_mask_0_deconv[n] = nm.compute_full_master(f_0_mask_0, f_0_mask_0, b_0)[0]
-    cl_PCA_HI_mask_0_deconv_interp[n] = np.interp(ell, ell_mask_0, cl_PCA_HI_mask_0_deconv[n])
+    #f_0_mask_0 = nm.NmtField(mask_50,[res_HI_mask_0[n]] )
+    #cl_PCA_HI_mask_0_deconv[n] = nm.compute_full_master(f_0_mask_0, f_0_mask_0, b_0)[0]
+    #cl_PCA_HI_mask_0_deconv_interp[n] = np.interp(ell, ell_mask_0, cl_PCA_HI_mask_0_deconv[n])
 
+np.savetxt(out_dir_cl+f'cl_PCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_PCA_HI_mask_deconv)
 
-np.savetxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_PCA_HI_mask_0_deconv_interp)
+np.savetxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_PCA_HI_mask_deconv_interp)
 
 ################
 #

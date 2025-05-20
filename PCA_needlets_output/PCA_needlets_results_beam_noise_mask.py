@@ -18,7 +18,7 @@ sns.palettes.color_palette()
 import cython_mylibc as pippo
 ##########################################################################################
 
-beam_s = '1.3deg_SKA_AA4'
+beam_s = 'SKA_AA4'
 
 out_dir_plot = 'Plots_PCA_needlets/'
 dir_PCA = f'PCA_maps/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'# noise_mask0.39
@@ -28,7 +28,7 @@ if not os.path.exists(out_dir_maps_recon):
 
 
 fg_comp = 'synch_ff_ps_pol'
-beam = '1.3 deg'
+beam = 'SKA AA4'
 
 
 num_ch=105
@@ -285,7 +285,7 @@ else:
 frame2.set_ylabel(r'%$ C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} $-1')
 frame2.set_xlabel(r'$\ell$')
 frame1.set_xticks(np.arange(lmin,200+1, 10))
-plt.savefig(f'Plots_PCA_needlets/cl_std_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam_SKA_AA4_jmax{jmax}_lmax{lmax_cl}_Nfg{Nfg}_nside{nside}_mask0.5.png')
+plt.savefig(f'Plots_PCA_needlets/cl_std_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam_{beam_s}_jmax{jmax}_lmax{lmax_cl}_Nfg{Nfg}_nside{nside}_mask0.5.png')
 
 plt.show()
 

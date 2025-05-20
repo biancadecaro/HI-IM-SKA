@@ -341,3 +341,16 @@ hp.mollview(pl_maps_beam[ich],  unit= 'T[mK]', min=-1, max=4, title=f'Polarizati
 plt.savefig(f'comp_HI_fg_input_beam_mean_lmax{lmax}_nside{nside}_ch{nu_ch_new[ich]}.png')
 plt.show()
 
+
+fig = plt.figure(figsize=(15, 7))
+#fig.suptitle(f'channel: {nu_ch_new[ich]} MHz, Nside {nside}',fontsize=20)
+fig.add_subplot(141) 
+hp.mollview(synch_maps_beam[ich],  min=100, max=70000, norm='log',unit='T[mK]',cmap='viridis',title=f'Gal synchrotron', hold=True)
+fig.add_subplot(142) 
+hp.mollview(ff_maps_beam[ich], min=1, max=10000, unit='T[mK]',norm='log',cmap='viridis',title=f'Gal free-free',hold=True)
+fig.add_subplot(143)
+hp.mollview(ps_maps_beam[ich],  min=200, max=500,unit='T[mK]',title=f'Point sources',cmap='viridis', hold=True)
+fig.add_subplot(144)
+hp.mollview(pl_maps_beam[ich],  unit= 'T[mK]', min=-1, max=4, title=f'Polarization leakage',cmap='viridis', hold=True)
+plt.savefig(f'comp_HI_fg_input_beam_mean_lmax{lmax}_nside{nside}_ch{nu_ch_new[ich]}_1.png')
+plt.show()
