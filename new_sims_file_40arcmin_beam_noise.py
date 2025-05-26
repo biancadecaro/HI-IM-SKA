@@ -155,7 +155,7 @@ def noise_map(sigma,nside=512):
 ######################################################
 
 
-nside_out= 256
+nside_out= 128
 
 path_data = 'sim_PL05_from191030.hd5'
 file = h5py.File(path_data,'r')
