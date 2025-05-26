@@ -6,6 +6,24 @@ import matplotlib.pyplot as plt
 from needlets_analysis import analysis, theory
 import cython_mylibc as pippo
 import os
+import seaborn as sns
+sns.set_theme(style = 'white')
+from matplotlib import colors
+import matplotlib as mpl
+mpl.rc('xtick', direction='in', top=True, bottom = True)
+mpl.rc('ytick', direction='in', right=True, left = True)
+
+#print(sns.color_palette("husl", 15).as_hex())
+sns.palettes.color_palette()
+mpl.rcParams['font.size']=18
+plt.rcParams['lines.linewidth']  = 2.
+plt.rcParams['axes.labelsize']  =18
+plt.rcParams['xtick.major.width'] = 1
+plt.rcParams['ytick.major.width'] = 1
+plt.rcParams['xtick.minor.width'] = 1
+plt.rcParams['ytick.minor.width'] = 1
+plt.rcParams['savefig.dpi']=300
+#############################
 
 
 fg_comp = 'synch_ff_ps_pol'
@@ -139,6 +157,21 @@ ax1.set_ylabel(r'$w^{2}(\frac{\ell}{D^{j}})$')
 ax1.legend(loc='right')
 #plt.tight_layout()
 #plt.savefig(f'PCA_needlets_output/windows_function_jmax{jmax}_lmax{lmax}')
+
+fig, ax1  = plt.subplots(1,1,figsize=(7,5), dpi=100) 
+#plt.suptitle(r'$D = %1.2f $' %myanalysis.B +r'$ ,~j_{\mathrm{max}} =$'+str(jmax) + r'$ ,~\ell_{\mathrm{max}} =$'+str(lmax))
+pal = sns.color_palette("crest", n_colors=5)
+for i in range(0,jmax+1):
+	ax1.plot(need_theory.b_values[i]*need_theory.b_values[i], c=pal[i])#, label = 'j='+str(i) )
+ax1.set_xscale('log')
+#ax1.set_xlim([0.40, 350 ])
+ax1.set_xlabel(r'$\ell$')
+ax1.set_ylabel(r'$w^{2}(\frac{\ell}{D^{j}})$')
+#ax1.legend(loc='upper left', fontsize=9)
+#plt.grid(True)
+plt.tight_layout()
+plt.savefig(f'windows_function_jmax{jmax}_lmax{lmax}.png')
+plt.show()
 
 
 ell_binning=need_theory.ell_binning(lmax)

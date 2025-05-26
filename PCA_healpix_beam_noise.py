@@ -5,17 +5,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import seaborn as sns
-import scipy.linalg as lng
+import numpy.ma as ma
+import copy
+import pymaster as nm
 sns.set_theme(style = 'white')
 #sns.set_palette('husl',15)
+from matplotlib import colors
+sns.palettes.color_palette()
+c_pal = sns.color_palette().as_hex()
 
 import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 ###########################################################################
-
-out_dir= 'PCA_pixels_output/Maps_PCA/No_mean/Beam_theta40arcmin_noise/'
-out_dir_plot = 'PCA_pixels_output/Plots_PCA/No_mean/Beam_theta40arcmin_noise/'
+beam_s = 'SKA_AA4'
+out_dir= f'PCA_pixels_output/Maps_PCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+out_dir_plot = f'PCA_pixels_output/Plots_PCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 
 if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -23,9 +28,9 @@ if not os.path.exists(out_dir_plot):
         os.makedirs(out_dir_plot)
 
 ###################################################################################
-beam_s = 'theta40arcmin'
+
 fg_components='synch_ff_ps'
-path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_components}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
+path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_components}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
 
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -45,28 +50,19 @@ fg_maps_freq = file['maps_sims_fg']
 full_maps_freq = file['maps_sims_tot'] + file['maps_sims_noise']  #aggiungo il noise
 
 
-
-
-######################################################################################################
-ich = int(num_freq/2)
-
-fig=plt.figure()
-hp.mollview(file['maps_sims_noise'][ich], cmap='viridis', title=f'Input noise, channel:{nu_ch[ich]} MHz', hold=True)
-plt.show()
-
-#del file
-######################################################################################################
-
-
 npix = np.shape(HI_maps_freq)[1]
 nside = hp.get_nside(HI_maps_freq[0])
 lmax=3*nside-1
-num_sources = 3
+if fg_components=='synch_ff_ps':
+    num_sources=3
+if fg_components=='synch_ff_ps_pol':
+    num_sources=18
+print(num_sources)
 print(f'nside:{nside}, lmax:{lmax}, num_ch:{num_freq}, min_ch:{min(nu_ch)}, max_ch:{max(nu_ch)}, Nfg:{num_sources}')
 
+ich = int(num_freq/2)
 
 ######################################################################################
-print(full_maps_freq.shape)
 Cov_channels=np.cov(full_maps_freq)
 
 fig=plt.figure()
@@ -101,7 +97,6 @@ plt.ylabel('[MHz]')
 plt.colorbar()
 plt.show()
 
-np.save(out_dir+f'mixing_matrix_PCA_beam{beam_s}_{fg_components}_noise_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy', eigenvec_fg_Nfg)
 
 del eigenvec
 
@@ -150,13 +145,15 @@ res_HI = full_maps_freq - res_fg_maps
 
 ######################################################################################################
 
-np.save(out_dir+f'cosmo_HI_noise_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_lmax{lmax}_nside{nside}.npy',HI_maps_freq)
-np.save(out_dir+f'res_PCA_HI_noise{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy',res_HI)
-np.save(out_dir+f'fg_leak_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy',fg_leakage)
-np.save(out_dir+f'HI_leak_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy',HI_leakage)
-np.save(out_dir+f'fg_input_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_lmax{lmax}_nside{nside}.npy',fg_maps_freq)
+#np.save(out_dir+f'cosmo_HI_noise_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_lmax{lmax}_nside{nside}.npy',HI_maps_freq)
+#np.save(out_dir+f'res_PCA_HI_noise{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy',res_HI)
+#np.save(out_dir+f'fg_leak_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy',fg_leakage)
+#np.save(out_dir+f'HI_leak_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy',HI_leakage)
+#np.save(out_dir+f'fg_input_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_lmax{lmax}_nside{nside}.npy',fg_maps_freq)
 
 ##########################################################################################################
+
+
 
 fig = plt.figure(figsize=(10, 7))
 fig.suptitle(f'channel {ich}: {nu_ch[ich]} MHz',fontsize=20)
@@ -211,58 +208,75 @@ for i in range(num_freq):
     cl_fg_leak_Nfg[i]=hp.anafast(fg_leakage[i], lmax=lmax_cl)
     cl_HI_leak_Nfg[i]=hp.anafast(HI_leakage[i], lmax=lmax_cl)
 #
-np.savetxt(out_dir_cl+f'cl_input_HI_noise_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_lmax{lmax_cl}_nside{nside}.dat', cl_Hi)
-np.savetxt(out_dir_cl+f'cl_input_fg_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_lmax{lmax_cl}_nside{nside}.dat', cl_fg)
-np.savetxt(out_dir_cl+f'cl_PCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_Hi_recons_Nfg)
-np.savetxt(out_dir_cl+f'cl_leak_HI_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_HI_leak_Nfg)
-np.savetxt(out_dir_cl+f'cl_leak_fg_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_fg_leak_Nfg)
+#np.savetxt(out_dir_cl+f'cl_input_HI_noise_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_lmax{lmax_cl}_nside{nside}.dat', cl_Hi)
+#np.savetxt(out_dir_cl+f'cl_input_fg_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_lmax{lmax_cl}_nside{nside}.dat', cl_fg)
+#np.savetxt(out_dir_cl+f'cl_PCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_Hi_recons_Nfg)
+#np.savetxt(out_dir_cl+f'cl_leak_HI_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_HI_leak_Nfg)
+#np.savetxt(out_dir_cl+f'cl_leak_fg_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_fg_leak_Nfg)
 
 del res_HI; del HI_maps_freq; del fg_leakage; del HI_leakage;del fg_maps_freq
 
 ell = np.arange(0, lmax_cl+1)
 factor = ell*(ell+1)/(2*np.pi)
 
+
+fig = plt.figure(figsize=(10,7))
+frame1=fig.add_axes((.1,.3,.8,.6))
+plt.title(f'Channel:{nu_ch[ich]} MHz, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}')
+plt.plot(ell[2:], factor[2:]*cl_Hi[ich][2:],'k--', label='Cosmo HI+noise')
+plt.plot(ell[2:], factor[2:]*cl_Hi_recons_Nfg[ich][2:],'+',color=c_pal[0],mfc='none', label='PCA HI+noise')
+plt.xlim([0,200])
+plt.legend()
+frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi}C_{\ell}$')
+frame1.set_xlabel([])
+frame1.set_xticks(np.arange(1,200+1, 10))
+
+
+diff_cl_pca_cosmo = cl_Hi_recons_Nfg/cl_Hi -1 
+
+frame2=fig.add_axes((.1,.1,.8,.2))
+plt.plot(ell[2:], diff_cl_pca_cosmo[ich][2:]*100, color=c_pal[0])
+frame2.axhline(ls='--', c= 'k', alpha=0.3)
+frame2.set_xlim([0,200])
+frame2.set_ylim([-50,50])
+frame2.set_ylabel(r'%$ C_{\ell}^{\rm PCA} / C_{\ell}^{\rm cosmo} -1$')
+frame2.set_xlabel(r'$\ell$')
+frame1.set_xticks(np.arange(1,200+1, 10))
+#plt.tight_layout()
+plt.legend()
+
+#####
+
+fig = plt.figure(figsize=(10,7))
+frame1=fig.add_axes((.1,.3,.8,.6))
+plt.title(f'Mean over channel, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}')
+plt.plot(ell[2:], factor[2:]*np.mean(cl_Hi, axis=0)[2:],'k--', label='Cosmo HI+noise')
+plt.plot(ell[2:], factor[2:]*np.mean(cl_Hi_recons_Nfg, axis=0)[2:],'+',mfc='none', label='PCA HI+noise')
+plt.xlim([0,200])
+plt.legend()
+frame1.set_ylabel(r'$\langle \frac{\ell(\ell+1)}{2\pi}C_{\ell} \rangle $')
+frame1.set_xlabel([])
+frame1.set_xticks(np.arange(1,200+1, 10))
+
+
+frame2=fig.add_axes((.1,.1,.8,.2))
+plt.plot(ell[2:], np.mean(diff_cl_pca_cosmo, axis=0)[2:]*100)
+frame2.axhline(ls='--', c= 'k', alpha=0.3)
+frame2.set_xlim([0,200])
+frame2.set_ylim([-50,50])
+frame2.set_ylabel(r'%$ \langle C_{\ell}^{\rm PCA} / C_{\ell}^{\rm cosmo} -1 \rangle $')
+frame2.set_xlabel(r'$\ell$')
+frame1.set_xticks(np.arange(1,200+1, 10))
+#plt.tight_layout()
+
+
+
 fig=plt.figure()
-plt.suptitle('Mean over channels')
-plt.semilogy(ell[1:],factor[1:]*np.mean(cl_fg_leak_Nfg, axis=0)[1:],mfc='none', label='Fg leakage')
-plt.semilogy(ell[1:],factor[1:]*np.mean(cl_HI_leak_Nfg, axis=0)[1:],mfc='none', label='HI leakage')
+plt.suptitle('Mean over channels, leakage')
+plt.plot(ell[2:],factor[2:]*np.mean(cl_fg_leak_Nfg, axis=0)[2:],mfc='none', label='Fg leakage')
+plt.plot(ell[2:],factor[2:]*np.mean(cl_HI_leak_Nfg, axis=0)[2:],mfc='none', label='HI leakage')
 plt.xlabel(r'$\ell$')
 plt.ylabel(r'$ \frac{\ell*(\ell+1)}{2\pi} \langle C_{\ell} \rangle$')
 plt.xlim([0,200])
 plt.legend()
 plt.show()
-
-fig=plt.figure()
-plt.suptitle(f'Channel {nu_ch[ich]} MHz')
-plt.plot(ell[1:], factor[1:]*cl_Hi[ich][1:],mfc='none', label='Cosmo HI+noise')
-plt.plot(ell[1:], factor[1:]*cl_Hi_recons_Nfg[ich][1:],'+',mfc='none', label='PCA HI+noise')
-
-plt.xlabel(r'$\ell$')
-plt.ylabel(r'$ \frac{\ell(\ell+1)}{2\pi} C_{\ell} $')
-plt.xlim([15,200])
-plt.legend()
-plt.show()
-
-fig=plt.figure()
-plt.suptitle('Mean over channels')
-plt.plot(ell[1:], factor[1:]*np.mean(cl_Hi, axis=0)[1:],mfc='none', label='Cosmo HI+noise')
-plt.plot(ell[1:], factor[1:]*np.mean(cl_Hi_recons_Nfg, axis=0)[1:],'+',mfc='none', label='PCA HI+noise')
-plt.xlabel(r'$\ell$')
-plt.ylabel(r'$ \frac{\ell(\ell+1)}{2\pi} \langle C_{\ell} \rangle $')
-plt.xlim([0,200])
-plt.legend()
-plt.show()
-
-
-fig=plt.figure()
-plt.suptitle('Mean over channels')
-plt.plot(ell[1:], 100*np.mean((cl_Hi-cl_Hi_recons_Nfg)/cl_Hi, axis=0)[1:],'--',mfc='none')
-plt.xlabel(r'$\ell$')
-plt.ylabel(r'$\%\langle C_{\ell}^{\rm rec}/C_{\ell}^{\rm cosmo}-1 \rangle$')
-plt.axhline(y=0,c='k',ls='--',alpha=0.5)
-plt.xlim([0,200])
-plt.ylim([-50,50])
-#plt.tight_layout()
-plt.show()
-print(min(100*np.mean(cl_Hi_recons_Nfg/cl_Hi-1, axis=0)), max(100*np.mean(cl_Hi_recons_Nfg/cl_Hi-1, axis=0)))
-
