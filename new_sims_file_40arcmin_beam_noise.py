@@ -11,6 +11,7 @@ import h5py
 import numpy as np
 import healpy as hp
 import matplotlib.pyplot as plt
+import pickle
 
 c_light = 3.0*1e8  # m/s
 
@@ -171,7 +172,7 @@ file_ud['frequencies'] = file_new['frequencies']
 components = list(file.keys())
 print(components)
 components.remove('frequencies')
-#components.remove('pol_leakage')
+components.remove('pol_leakage')
 
 #components.remove('gal_synch')
 #components.remove('gal_ff')#
@@ -252,12 +253,12 @@ hp.mollview(file_sims_no_mean['maps_sims_fg'][ich],title=f'Foregrounds, freq={nu
 #plt.savefig('plots_PCA/maps_no_mean_fg_HI_obs_input.png')
 plt.show()
 
-#filename = f'Sims/no_mean_sims_{fg_comp}_{len(nu_ch_new)}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside_out}'
-#with open(filename+'.pkl', 'wb') as f:
-#    pickle.dump(file_sims_no_mean, f)
-#    f.close()
+filename = f'Sims/no_mean_sims_{fg_comp}_{len(nu_ch_new)}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside_out}'
+with open(filename+'.pkl', 'wb') as f:
+    pickle.dump(file_sims_no_mean, f)
+    f.close()
 
-
+print('ho salvato il file senza beam')
 ###########################################################################
 ######## Computing beam size using given survey specifics: ################
 ### initialise a dictionary with the instrument specifications
@@ -329,7 +330,7 @@ for nu in range(num_freq_new):
 		del alm_noise
 
 
-import pickle
+
 filename = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_comp}_noise_{len(nu_ch_new)}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_thick{delta_nu_out}MHz_lmax{lmax}_nside{nside_out}'
 with open(filename+'.pkl', 'wb') as ff:
 	pickle.dump(file_sims_beam, ff)
