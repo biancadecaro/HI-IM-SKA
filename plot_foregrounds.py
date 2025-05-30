@@ -3,11 +3,37 @@ import numpy as np
 import healpy as hp
 import matplotlib.pyplot as plt
 import cython_mylibc as pippo
+import seaborn as sns
+sns.set_theme(style = 'white')
+sns.palettes.color_palette()
+plt.rcParams['figure.figsize']=(11,7)
+plt.rcParams['axes.titlesize']=20
+plt.rcParams['lines.linewidth']  = 3.
+plt.rcParams['lines.markersize']=6
+plt.rcParams['axes.labelsize']  =20
+plt.rcParams['legend.fontsize']=20
+plt.rcParams['xtick.labelsize']=20
+plt.rcParams['ytick.labelsize']=20
+plt.rcParams['xtick.major.width'] = 1
+plt.rcParams['ytick.major.width'] = 1
+plt.rcParams['xtick.minor.width'] = 1
+plt.rcParams['ytick.minor.width'] = 1
+plt.rcParams['axes.formatter.use_mathtext']=True
+plt.rcParams['legend.columnspacing'] = 0.5
+plt.rcParams['savefig.dpi']=300
+
 
 from matplotlib import ticker
 formatter = ticker.ScalarFormatter(useMathText=True)
 formatter.set_scientific(True) 
 formatter.set_powerlimits((-1,1)) 
+
+
+import matplotlib as mpl
+mpl.rc('xtick', direction='in', top=False, bottom = True)
+mpl.rc('ytick', direction='in', right=False, left = True)
+
+c_pal = sns.color_palette().as_hex()
 ##########################################################
 c_light = 3.0*1e8  # m/s
 
@@ -38,6 +64,117 @@ def nu_ch_f(nu_ch_in,dnu_out):
 
 	return nu_ch_out
 
+## from vector to matrix and viceversa
+def alm2tab(alm,lmax):
+
+	size = np.size(alm)
+	tab  = np.zeros((lmax+1,lmax+1,2))
+
+	for r in range(0,size):
+		l,m = hp.sphtfunc.Alm.getlm(lmax,r)
+		tab[l,m,0] = np.real(alm[r])
+		tab[l,m,1] = np.imag(alm[r])
+
+	return tab
+
+def tab2alm(tab):
+
+	lmax = int(np.shape(tab)[0])-1
+	taille = int(lmax*(lmax+3)/2)+1
+	alm = np.zeros((taille,),dtype=complex)
+
+	for r in range(0,taille):
+		l,m = hp.sphtfunc.Alm.getlm(lmax,r)
+		alm[r] = complex(tab[l,m,0],tab[l,m,1])
+
+	return alm
+
+
+## getting the spherical harmonic coefficients
+## from a map
+def almtrans(map_in,lmax=None):
+
+	if lmax==None:
+		lmax = 3.*hp.get_nside(map_in)
+		print("lmax = ",lmax)
+
+	alm = hp.sphtfunc.map2alm(map_in,lmax=lmax)
+
+	tab = alm2tab(alm,lmax)
+
+	return tab
+
+
+## convolution:
+## multiplying the spherical harmonic coefficients
+def alm_product(tab,beam_l):
+	length=np.size(beam_l)
+	lmax = np.shape(tab)[0]
+
+	if lmax > length:
+		print("Filter length is too small")
+
+	for r in range(lmax):
+		tab[r,:,:] = beam_l[r]*tab[r,:,:]
+
+	return tab
+
+
+## from a_lm back to map
+def almrec(tab,nside):
+
+	alm = tab2alm(tab)
+	map_out = hp.alm2map(alm,nside)
+
+	return map_out
+
+def convolve(map_in,beam_l,lmax):
+	alm = almtrans(map_in,lmax=lmax)
+	tab = alm_product(alm,beam_l)
+	m = almrec(tab,nside=hp.get_nside(map_in))
+	return m
+
+
+## angle in radians of the FWHM
+def theta_FWHM(nu,dish_diam): # nu in MHz, dish_diam in m
+	return c_light*1e-6/nu/float(dish_diam) # rad
+
+## solid angle of beam in steradian 
+def Omega_beam(nu,dish_diam): # nu in MHz, dish_diam in m 
+	return np.pi/(4.*np.log(2))*theta_FWHM(nu,dish_diam)**2
+
+## how many beams to cover my survey area (fraction of sky)
+def N_beams(f_sky,nu,dish_diam): # nu in MHz, dish_diam in m 
+	return 4*np.pi*f_sky/Omega_beam(nu,dish_diam)
+
+
+####THERMAL NOISE#####
+
+def T_sky(nu): # K
+	return 60.*(300./nu)**2.55  # K
+
+def T_rcvr(nu,T_inst): # K
+	temp_sky = T_sky(nu)
+	return 0.1* temp_sky + T_inst
+
+def T_sys(nu,T_inst): # K
+	return T_rcvr(nu,T_inst) + T_sky(nu)
+
+## final sigma in mK 
+def sigma_N(nu,dnu,T_inst,f_sky,t_obs,Ndishes,dish_diam):
+	t_obs = t_obs * 3600 # hrs to s
+	dnu = dnu * 1.e6 # MHz to Hz
+
+	temp_sys = T_sys(nu,T_inst)  # in K
+	A = np.sqrt(N_beams(f_sky,nu,dish_diam)/dnu/t_obs/Ndishes)
+	
+	return temp_sys * A *1e3  # mK
+
+def noise_map(sigma,nside=512):
+	npixels = hp.nside2npix(nside)
+	m = np.random.normal(0.0, sigma, npixels)
+	return m
+
 ############################################################################################
 path_data = 'sim_PL05_from191030.hd5'
 file = h5py.File(path_data,'r')
@@ -52,6 +189,7 @@ file_new['frequencies'] = nu_ch_f(nu_ch,delta_nu_out)#np.array([nu_ch[i*delta_nu
 components = list(file.keys())
 print(components)
 components.remove('frequencies')
+
 #components.remove('pol_leakage')
 
 for c in components:
@@ -70,15 +208,45 @@ npix = np.shape(file_new['cosmological_signal'])[1]
 
 ich = int(num_freq_new/2)
 
-lmax=3*nside
+lmax=3*nside-1
 
+###########################################################################
+######## Computing beam size using given survey specifics: ################
+### initialise a dictionary with the instrument specifications
+### for noise and beam calculation
+dish_diam = 13.5  # m
+T_inst    = 20.0  # K
+f_sky     = 0.1   # Survey area (sky fraction)
+t_obs     = 4000. # hrs, observing time
+Ndishes   = 64.   # number of dishes
+specs_dict = {'dish_diam': dish_diam, 'T_inst': T_inst,
+			  'f_sky': f_sky, 't_obs': t_obs, 'Ndishes' : Ndishes}
+
+theta_FWMH_max = c_light*1e-6/np.min(nu_ch_new)/float(dish_diam) #radians
+theta_FWMH = c_light*1e-6/nu_ch_new/float(dish_diam) #radians
+
+print()
+
+#beam_worst = hp.gauss_beam(theta_FWMH_max, lmax=3*nside)
+
+
+################################## NOISE ################################################
+dnu = nu_ch_new[1]-nu_ch_new[0]
+
+sigma_noise = sigma_N(nu_ch_new,dnu,**specs_dict)
+
+noise = [noise_map(sigma,nside=nside) for sigma in sigma_noise]
+del sigma_noise
+
+#########################################################################################
+components.append('noise')
+file_new['noise']=noise
 
 synch_maps_no_mean = np.array([file_new['gal_synch'][i] -np.mean(file_new['gal_synch'][i],axis=0)  for i in range(num_freq_new)])
 ff_maps_no_mean = np.array([file_new['gal_ff'][i] -np.mean(file_new['gal_ff'][i],axis=0) for i in range(num_freq_new)])
 ps_maps_no_mean = np.array([file_new['point_sources'][i] -np.mean(file_new['point_sources'][i],axis=0) for i in range(num_freq_new)]) 
 HI_maps_no_mean = np.array([file_new['cosmological_signal'][i] -np.mean(file_new['cosmological_signal'][i],axis=0) for i in range(num_freq_new)]) 
 pl_maps_no_mean = np.array([file_new['pol_leakage'][i] -np.mean(file_new['pol_leakage'][i],axis=0) for i in range(num_freq_new)]) 
-
 
 del file_new
 
@@ -134,8 +302,36 @@ fig.add_subplot(144)
 hp.mollview(HI_maps_no_mean[ich],  unit= 'mK', min=0, max=1, title=f'Cosmological signal',cmap='viridis', hold=True)
 plt.savefig(f'comp_HI_fg_input_lmax{lmax}_nside{nside}_ch{nu_ch_new[ich]}.png')
 plt.show()
+####################################################
+#################### plot freq ####################
+file_no_mean = {'cosmological_signal':HI_maps_no_mean,'gal_ff':ff_maps_no_mean,'gal_synch':synch_maps_no_mean,'point_sources':ps_maps_no_mean, 'pol_leakage':pl_maps_no_mean, 'noise':noise}
 
+ls_dic = {'cosmological_signal':"-",'gal_ff':"--",'gal_synch':"-.",'point_sources':':', 'pol_leakage':(0, (1, 10)), 'noise':(0, (3, 10, 1, 10))}
+lab_dic = {'cosmological_signal':"21-cm signal",'gal_ff':"Gal free-free",'gal_synch':"Gal synchrotron",'point_sources':"Point sources", 'pol_leakage':"Pol leakage", 'noise':'Noise'}
+col_dic = {'cosmological_signal':c_pal[0],'gal_ff':c_pal[1],'gal_synch':c_pal[2],'point_sources':c_pal[3], 'pol_leakage': c_pal[4], 'noise':c_pal[5]}
 
+lat = 85#deg
+long = 132
+
+pix_dir = hp.ang2pix(nside=nside, theta=long, phi=lat, lonlat=True)
+
+print(f'pix_dir={pix_dir}')#, np.abs(HI_maps_beam_no_mean[0,pix_dir]), nu_ch_new.shape)
+
+fig, ax = plt.subplots(1,1)
+for c in components:
+	if c =='noise':
+		ax.plot(nu_ch_new,np.abs(file_no_mean[c][:,pix_dir]), color=col_dic[c], ls=ls_dic[c], label=lab_dic[c])
+		print(noise[:,pix_dir])
+	else:
+		ax.plot(nu_ch_new,np.abs(file_no_mean[c][:,pix_dir]), color=col_dic[c], ls=ls_dic[c], label=lab_dic[c])
+ax.set_xticks(np.arange(min(nu_ch_new), max(nu_ch_new), 20))
+#ax.set_xlabel(np.arange(min(nu_ch_new), max(nu_ch_new), 20))
+ax.set_yscale('log')
+#plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+ax.set_ylabel('|T| [mK]')
+ax.set_xlabel(r'$\nu$')
+plt.legend(ncols=1, loc='upper right')
+plt.show()
 
 #########################################################################
 ####################### MEXICAN NEEDLETS #################################
