@@ -389,7 +389,7 @@ plt.show()
 ##### confronto maschera non maschera - maschera deconvolta #######################
 
 #### deconvoluzione
-f_0_mask = nm.NmtField(mask_50,[res_HI[0]], masked_on_input=True )
+#f_0_mask = nm.NmtField(mask_50,[res_HI[0]], masked_on_input=True )
 b = nm.NmtBin.from_nside_linear(nside, 8)
 ell_mask= b.get_effective_ells()
 
@@ -400,13 +400,26 @@ cl_GMCA_HI_mask_deconv_interp = np.zeros((num_freq, lmax_cl+1))
 #cl_GMCA_HI_mask_0_deconv_interp = np.zeros((num_freq, lmax_cl+1))
 
 for n in range(num_freq):
-    f_0_mask = nm.NmtField(mask_50,[res_HI[n]] , masked_on_input=True)
+    f_0_mask = nm.NmtField(mask_50,[res_HI[n]] )#, masked_on_input=True)
     cl_GMCA_HI_mask_deconv[n] = nm.compute_full_master(f_0_mask, f_0_mask, b)[0]
     cl_GMCA_HI_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_GMCA_HI_mask_deconv[n])
     
 
 np.savetxt(out_dir_cl+f'cl_deconv_GMCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_GMCA_HI_mask_deconv_interp)
 
+
+
+fig = plt.figure(figsize=(10,7))
+#frame1=fig.add_axes((.1,.3,.8,.6))
+plt.title(f'Mean over channel, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}, fsky_50:{fsky_50}')
+plt.semilogy(ell[2:], factor[2:]*np.mean(cl_HI_cosmo_full, axis=0)[2:],'k--',mfc='none', label='Cosmo HI+noise full sky')
+plt.semilogy(ell[2:], factor[2:]*np.mean(cl_GMCA_HI_mask_deconv_interp, axis=0)[2:],'+',mfc='none', label='GMCA HI+noise')
+plt.xlim([0,200])
+plt.legend()
+plt.ylabel(r'$\langle \frac{\ell(\ell+1)}{2\pi}C_{\ell} \rangle $')
+plt.xlabel([])
+
+plt.show()
 ###############
 
 #cl_res_HI_no_mask = np.loadtxt(f'GMCA_pixels_output/Maps_GMCA/No_mean/Beam_theta40arcmin_noise/power_spectra_cls_from_healpix_maps/cl_GMCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat')
