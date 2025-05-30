@@ -18,7 +18,7 @@ sns.palettes.color_palette()
 import cython_mylibc as pippo
 ##########################################################################################
 
-beam_s = '1.3deg_SKA_AA4'
+beam_s = 'SKA_AA4'
 
 out_dir_plot = 'Plots_GMCA_needlets/'
 dir_GMCA = f'GMCA_maps/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'# noise_mask0.39
@@ -27,8 +27,8 @@ if not os.path.exists(out_dir_maps_recon):
 		os.makedirs(out_dir_maps_recon)
 
 
-fg_comp = 'synch_ff_ps_pol'
-beam = '1.3 deg SKA AA4'
+fg_comp = 'synch_ff_ps'
+beam = 'SKA AA4'
 
 
 num_ch=105

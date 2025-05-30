@@ -174,7 +174,7 @@ print(file_new['frequencies'], len(file_new['frequencies']))
 components = list(file.keys())
 print(components)
 components.remove('frequencies')
-#components.remove('pol_leakage')
+components.remove('pol_leakage')
 
 
 fg_comp = 'synch_ff_ps'
@@ -217,11 +217,46 @@ fg_maps_no_mean = np.array([fg_maps[i] -np.mean(fg_maps[i],axis=0) for i in rang
 #
 
 
+###########################################################################
+######## Computing beam size using given survey specifics: ################
+### initialise a dictionary with the instrument specifications
+### for noise and beam calculation
+dish_diam_MeerKat = 13.5 #m
+dish_diam_SKA = 15 # m
+Ndishes_MeerKAT = 64.
+Ndishes_SKA = 133.
+dish_diam = (Ndishes_MeerKAT*dish_diam_MeerKat+ Ndishes_SKA*dish_diam_SKA)/(Ndishes_MeerKAT+Ndishes_SKA) # m (effective)
+Omega_sur     = 20000   # Survey area deg2
+t_obs     = 10000. # hrs, observing time
+Ndishes   = Ndishes_MeerKAT + Ndishes_SKA  # number of dishes
+specs_dict = {'dish_diam': dish_diam,
+			  'Omega_sur': Omega_sur, 't_obs': t_obs, 'Ndishes' : Ndishes}
+
+theta_FWMH_max = c_light*1e-6/np.min(nu_ch_new)/float(dish_diam) #radians
+theta_FWMH = c_light*1e-6/nu_ch_new/float(dish_diam) #radians
+
+print()
+
+#beam_worst = hp.gauss_beam(theta_FWMH_max, lmax=3*nside)
+
+
+################################## NOISE ################################################
+dnu = nu_ch_new[1]-nu_ch_new[0]
+
+print(f'dnu={dnu} MHz')
+
+sigma_noise = sigma_N(nu_ch_new,dnu,**specs_dict)
+
+noise = [noise_map(sigma,nside=nside) for sigma in sigma_noise]
+del sigma_noise
+#########################################################################
+
 file_sims_no_mean = {}
 file_sims_no_mean['freq'] = nu_ch_new
 file_sims_no_mean['maps_sims_tot'] = obs_maps_no_mean
 file_sims_no_mean['maps_sims_fg'] = fg_maps_no_mean
 file_sims_no_mean['maps_sims_HI'] = HI_maps_no_mean
+file_sims_no_mean['maps_sims_noise'] = noise
 
 del obs_maps_no_mean; del fg_maps_no_mean; del HI_maps_no_mean
 
@@ -239,6 +274,10 @@ for nu in range(num_freq_new):
 		file_sims_no_mean['maps_sims_tot'][nu] = hp.alm2map(alm_obs, lmax=lmax, nside = nside)
 		file_sims_no_mean['maps_sims_tot'][nu] = hp.remove_dipole(file_sims_no_mean['maps_sims_tot'][nu])
 		del alm_obs
+		alm_noise = hp.map2alm(file_sims_no_mean['maps_sims_noise'][nu], lmax=lmax)
+		file_sims_no_mean['maps_sims_noise'][nu] = hp.alm2map(alm_noise, lmax=lmax, nside = nside)
+		file_sims_no_mean['maps_sims_noise'][nu] = hp.remove_dipole(file_sims_no_mean['maps_sims_noise'][nu])
+		del alm_noise
 
 ich =int(num_freq_new/2)
 
@@ -250,49 +289,16 @@ fig.add_subplot(222)
 hp.mollview(file_sims_no_mean['maps_sims_HI'][ich], cmap='viridis',title=f'HI signal, freq={nu_ch_new[ich]}',min=0, max=1,hold=True)
 fig.add_subplot(223)
 hp.mollview(file_sims_no_mean['maps_sims_fg'][ich],title=f'Foregrounds, freq={nu_ch_new[ich]}',cmap='viridis', hold=True)
+fig.add_subplot(224)
+hp.mollview(file_sims_no_mean['maps_sims_noise'][ich],title=f'Noise, freq={nu_ch_new[ich]}',cmap='viridis', hold=True)
 #plt.savefig('plots_PCA/maps_no_mean_fg_HI_obs_input.png')
 plt.show()
 
-#filename = f'Sims/no_mean_sims_{fg_comp}_noise_{len(nu_ch_new)}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_thick{dnu}MHz_lmax{lmax}_nside{nside}'
-#with open(filename+'.pkl', 'wb') as f:
-#    pickle.dump(file_sims_no_mean, f)
-#    f.close()
-#print('ho salvato il file senza beam')
-
-
-###########################################################################
-######## Computing beam size using given survey specifics: ################
-### initialise a dictionary with the instrument specifications
-### for noise and beam calculation
-dish_diam_MeerKat = 13.5 #m
-dish_diam_SKA = 15 # m
-Ndishes_MeerKAT = 64.
-Ndishes_SKA = 133.
-dish_diam = (Ndishes_MeerKAT*dish_diam_MeerKat+ Ndishes_SKA*dish_diam_SKA)/(Ndishes_MeerKAT+Ndishes_SKA) # m (effective)
-Omega_sur     = 20000   # Survey area deg2
-t_obs     = 10000. # hrs, observing time
-Ndishes   = Ndishes_MeerKAT + Ndishes_SKA  # number of dishes
-specs_dict = {'dish_diam': dish_diam,
-			  'Omega_sur': Omega_sur, 't_obs': t_obs, 'Ndishes' : Ndishes}
-
-theta_FWMH_max = c_light*1e-6/np.min(nu_ch_new)/float(dish_diam) #radians
-#theta_FWMH = c_light*1e-6/nu_ch_new/float(dish_diam) #radians
-
-
-print()
-
-#beam_worst = hp.gauss_beam(theta_FWMH_max, lmax=3*nside)
-
-
-################################## NOISE ################################################
-dnu = nu_ch_new[1]-nu_ch_new[0]
-
-print(f'dnu={dnu} MHz')
-
-sigma_noise = sigma_N(nu_ch_new,dnu,**specs_dict)
-
-noise = [noise_map(sigma,nside=nside) for sigma in sigma_noise]
-del sigma_noise
+filename = f'Sims/no_mean_sims_{fg_comp}_noise_{len(nu_ch_new)}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_thick{dnu}MHz_lmax{lmax}_nside{nside}'
+with open(filename+'.pkl', 'wb') as f:
+    pickle.dump(file_sims_no_mean, f)
+    f.close()
+print('ho salvato il file senza beam')
 
 #########################################################################################
 beam_worst = hp.gauss_beam(theta_FWMH_max, lmax=lmax)

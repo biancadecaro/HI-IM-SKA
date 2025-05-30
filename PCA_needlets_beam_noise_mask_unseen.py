@@ -5,19 +5,42 @@ import matplotlib.pyplot as plt
 import numpy.ma as ma
 import os
 import pickle
-
 import seaborn as sns
 sns.set_theme(style = 'white')
-sns.color_palette(n_colors=15)
-#sns.set_palette('husl',15)
-
+from matplotlib import colors
 import matplotlib as mpl
-mpl.rc('xtick', direction='in', top=True, bottom = True)
-mpl.rc('ytick', direction='in', right=True, left = True)
+mpl.rc('xtick', direction='in', top=False, bottom = True)
+mpl.rc('ytick', direction='in', right=False, left = True)
+
+#print(sns.color_palette("husl", 15).as_hex())
+sns.palettes.color_palette()
+import cython_mylibc as pippo
+
+plt.rcParams['figure.figsize']=(11,7)
+plt.rcParams['axes.titlesize']=20
+plt.rcParams['lines.linewidth']  = 3.
+plt.rcParams['lines.markersize']=6
+plt.rcParams['axes.labelsize']  =20
+plt.rcParams['legend.fontsize']=20
+plt.rcParams['xtick.labelsize']=20
+plt.rcParams['ytick.labelsize']=20
+plt.rcParams['xtick.major.width'] = 1
+plt.rcParams['ytick.major.width'] = 1
+plt.rcParams['xtick.minor.width'] = 1
+plt.rcParams['ytick.minor.width'] = 1
+plt.rcParams['axes.formatter.use_mathtext']=True
+plt.rcParams['savefig.dpi']=300
+
+
+
+from matplotlib import ticker
+formatter = ticker.ScalarFormatter(useMathText=True)
+formatter.set_scientific(True) 
+formatter.set_powerlimits((-1,1)) 
 
 ###########################################################################3
-fg_comp = 'synch_ff_ps_pol'
-beam_s = '1.3deg_SKA_AA4'
+fg_comp = 'synch_ff_ps'
+beam_s = 'SKA_AA4'
 path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -103,15 +126,15 @@ for j in range(eigenval.shape[0]):
 del Cov_channels
 
 
-fig = plt.figure(figsize=(8,4))
+fig = plt.figure()#(figsize=(8,4))
 for j in range(eigenval.shape[0]):
-    plt.semilogy(np.arange(1,num_freq+1),eigenval[j],'--o',mfc='none',markersize=5,label=f'j={j}')
+    plt.semilogy(np.arange(1,num_freq+1),eigenval[j],'--o',mfc='none',label=f'j={j}')#markersize=5,
 
-plt.legend(fontsize=12, ncols=2)
+plt.legend( ncols=2)
 x_ticks = np.arange(-10,num_freq+10, 10)
 ax = plt.gca()
-ax.set(xlim=[-10,num_freq+10],xticks=x_ticks,xlabel="eigenvalue number",ylabel="$\\lambda$",title='STANDARD NEED - Eigenvalues')
-#plt.savefig(out_dir_output+f'eigenvalue_cov_need_no_mean_jmax{jmax}_lmax{lmax}_nside{nside}.png')
+ax.set(xlim=[-10,num_freq+10],xticks=x_ticks,xlabel="eigenvalue number",ylabel="$\\lambda$",title='Eigenvalues')
+plt.savefig(f'Plots_paper/eigenvalue_cov_mask_unseen_need_no_mean_{fg_comp}_beam_{beam_s}_jmax{jmax}_lmax{lmax}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}_nside{nside}.png')
 plt.show()
 
 if fg_comp=='synch_ff_ps':

@@ -9,14 +9,39 @@ import seaborn as sns
 sns.set_theme(style = 'white')
 from matplotlib import colors
 import matplotlib as mpl
-mpl.rc('xtick', direction='in', top=True, bottom = True)
-mpl.rc('ytick', direction='in', right=True, left = True)
+mpl.rc('xtick', direction='in', top=False, bottom = True)
+mpl.rc('ytick', direction='in', right=False, left = True)
 
 #print(sns.color_palette("husl", 15).as_hex())
 sns.palettes.color_palette()
 import cython_mylibc as pippo
 
-mpl.rcParams['font.size']=18
+plt.rcParams['figure.figsize']=(11,7)
+plt.rcParams['axes.titlesize']=20
+plt.rcParams['lines.linewidth']  = 3.
+plt.rcParams['lines.markersize']=6
+plt.rcParams['axes.labelsize']  =20
+plt.rcParams['legend.fontsize']=20
+plt.rcParams['xtick.labelsize']=20
+plt.rcParams['ytick.labelsize']=20
+plt.rcParams['xtick.major.width'] = 1
+plt.rcParams['ytick.major.width'] = 1
+plt.rcParams['xtick.minor.width'] = 1
+plt.rcParams['ytick.minor.width'] = 1
+plt.rcParams['axes.formatter.use_mathtext']=True
+plt.rcParams['savefig.dpi']=300
+
+
+
+from matplotlib import ticker
+formatter = ticker.ScalarFormatter(useMathText=True)
+formatter.set_scientific(True) 
+formatter.set_powerlimits((-1,1)) 
+
+#print(sns.color_palette("husl", 15).as_hex())
+sns.palettes.color_palette()
+import cython_mylibc as pippo
+
 ##########################################################################################
 
 beam_s = 'SKA_AA4'
@@ -76,7 +101,7 @@ bad_v = np.where(mask_50==0)
 ############################################################################################
 ####################### NEEDLETS2HARMONICS #################################################
 
-b_values = pippo.mylibpy_needlets_std_init_b_values(B,jmax,lmax)
+#b_values = pippo.mylibpy_needlets_std_init_b_values(B,jmax,lmax)
 #with open(path_PCA_HI+'.pkl', 'rb') as f:
 #	res_PCA_HI = pickle.load(f)
 #	f.close()
@@ -121,6 +146,12 @@ map_input_HI_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_cosmo_HI_n
 map_input_fg_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_input_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
 
 
+map_PCA_HI_need2pix[:, bad_v]=hp.UNSEEN
+map_PCA_fg_need2pix[:, bad_v]=hp.UNSEEN 
+map_input_HI_need2pix[:, bad_v]=hp.UNSEEN
+map_input_fg_need2pix[:, bad_v]=hp.UNSEEN
+
+
 fg = np.load(path_fg+'.npy', allow_pickle=True)
 cosmo_HI = np.load(path_cosmo_HI+'.npy', allow_pickle=True)
 #cosmo_HI_fullsky = np.load(path_cosmo_HI_fullsky+'.npy')
@@ -133,7 +164,17 @@ hp.mollview(cosmo_HI[ich], min=0, max=1, title='Input HI+ noise', cmap='viridis'
 fig.add_subplot(312) 
 hp.mollview(map_input_HI_need2pix[ich], min=0, max=1, title='Need recons HI + noise', cmap= 'viridis', hold=True)
 fig.add_subplot(313) 
-hp.mollview(100*(map_input_HI_need2pix[ich]/cosmo_HI[ich]-1), min=-0.02, max=0.02, title='% Need recons HI/HI -1', cmap= 'viridis', hold=True)
+hp.mollview(100*(map_input_HI_need2pix[ich]/cosmo_HI[ich]-1), min=-0.2, max=0.2, title='% Need recons HI/HI -1', cmap= 'viridis', hold=True)
+
+
+fig=plt.figure(figsize=(10, 7))
+fig.suptitle(f'channel: {nu_ch[ich]} MHz, BEAM {beam}, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}',fontsize=20)
+fig.add_subplot(311)
+hp.mollview(fg[ich], title='Input fg', cmap='viridis', hold=True)
+fig.add_subplot(312) 
+hp.mollview(map_input_fg_need2pix[ich], title='Need recons fg', cmap= 'viridis', hold=True)
+fig.add_subplot(313) 
+hp.mollview(100*(map_input_fg_need2pix[ich]/cosmo_HI[ich]-1), min=-0.2, max=0.2, title='% Need recons fg/fg -1', cmap= 'viridis', hold=True)
 
 
 fig=plt.figure(figsize=(10, 7))
@@ -168,18 +209,18 @@ map2  = hp.gnomview(map_PCA_HI_need2pix[ich],rot=rot, coord='G', reso=reso,xsize
 
 map = [map0,map1,map2]
 
-fig, axs = plt.subplots(3,1, figsize=(6,12))
+fig, axs = plt.subplots(3,1, figsize=(8,15))
 cmap= 'viridis'
 images = []
 for ax, data in zip(axs.flat, map):
-    images.append(ax.imshow(data,cmap = cmap))
+	images.append(ax.imshow(data,cmap = cmap))
 
 titles = [f'Input HI + noise',f'Input HI + noise + foregrounds',f'Cleaned HI + noise']
 for a,title in zip(axs, titles):
 	a.set_title(title)
 	a.set_xlabel(r'$\theta$[deg]')
 	a.set_ylabel(r'$\theta$[deg]')
-plt.subplots_adjust(hspace=0.43, bottom=0.2, left=0.1, top=0.95)
+plt.subplots_adjust(hspace=0.53, bottom=0.2, left=0.1, top=0.95)
 #fig.suptitle(f'STD NEED, BEAM {beam}, channel: {nu_ch[ich]} MHz, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}',fontsize=19)
 #im0=axs[0].imshow(map0,cmap=cmap)
 #axs[0].set_title(f'Input HI + noise', fontsize=15)
@@ -197,7 +238,7 @@ norm = colors.Normalize(vmin=0, vmax=1)
 #plt.subplots_adjust(wspace=0.8, hspace=0.8, bottom=0.3, left=0.05, top=0.85)
 #sub_ax = plt.axes([0.91, 0.367, 0.02, 0.46]) 
 #fig.colorbar(im2, ax=axs, cax=sub_ax,location='right',orientation='horizontal',label='T [mK]')
-sub_ax = plt.axes([0.18, 0.1, 0.59, 0.02]) #left, bottom, width, height
+sub_ax = plt.axes([0.18, 0.1, 0.6, 0.02]) #left, bottom, width, height
 fig.colorbar(images[0],cax=sub_ax,orientation='horizontal',label='T [mK]')
 
 plt.savefig(f'Plots_PCA_needlets/gnomview_HI_HIfg_{fg_comp}_PCAHI_std_need_beam{beam_s}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.png')
@@ -214,11 +255,11 @@ map2  = hp.gnomview(map_PCA_HI_need2pix[ich],rot=rot, coord='G', reso=reso,xsize
 
 map = [map0,map1,map2]
 
-fig, axs = plt.subplots(1,3, figsize=(10,5))
+fig, axs = plt.subplots(1,3, figsize=(14,7))
 cmap= 'viridis'
 images = []
 for ax, data in zip(axs.flat, map):
-    images.append(ax.imshow(data,cmap = cmap))
+	images.append(ax.imshow(data,cmap = cmap))
 
 titles = [f'Input HI + noise',f'Input HI + noise + foregrounds',f'Cleaned HI + noise']
 for a,title in zip(axs, titles):
@@ -269,16 +310,19 @@ for n in range(len(nu_ch)):
 	#cl_diff_cosmo_PCA_HI_need2harm[n] = hp.anafast(cosmo_HI[n]-map_PCA_HI_need2pix[n], lmax=lmax_cl)
 
 #### deconvoluzione
-f_0_mask = nm.NmtField(mask_50,[map_PCA_HI_need2pix[0]] )
+#f_0_mask = nm.NmtField(mask_50,[map_PCA_HI_need2pix[0]] )
 b = nm.NmtBin.from_nside_linear(nside, 8)
 ell_mask= b.get_effective_ells()
 
-f_0_cosmo_mask = nm.NmtField(mask_50,[map_input_HI_need2pix[0]] )
+#f_0_cosmo_mask = nm.NmtField(mask_50,[cosmo_HI[0]] )
 b_cosmo = nm.NmtBin.from_nside_linear(nside, 8)
 ell_cosmo_mask= b_cosmo.get_effective_ells()
 
 cl_cosmo_HI_mask_deconv = np.zeros((num_ch, len(ell_mask)))
 cl_cosmo_HI_mask_deconv_interp = np.zeros((num_ch, lmax_cl+1))
+
+cl_cosmo_HI_mask_need2pix_deconv = np.zeros((num_ch, len(ell_mask)))
+cl_cosmo_HI_mask_need2pix_deconv_interp = np.zeros((num_ch, lmax_cl+1))
 
 cl_PCA_HI_mask_deconv = np.zeros((num_ch, len(ell_mask)))
 cl_PCA_HI_mask_deconv_interp = np.zeros((num_ch, lmax_cl+1))
@@ -289,14 +333,18 @@ for n in range(num_ch):
 	cl_PCA_HI_mask_deconv[n] = nm.compute_full_master(f_0_mask, f_0_mask, b)[0]
 	cl_PCA_HI_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_PCA_HI_mask_deconv[n])
 
-	f_0_cosmo_mask = nm.NmtField(mask_50,[map_input_HI_need2pix[n]] ) #qua
+	f_0_cosmo_mask = nm.NmtField(mask_50,[cosmo_HI[n]] ) #qua
 	cl_cosmo_HI_mask_deconv[n] = nm.compute_full_master(f_0_cosmo_mask, f_0_cosmo_mask, b_cosmo)[0]
 	cl_cosmo_HI_mask_deconv_interp[n] = np.interp(ell, ell_cosmo_mask, cl_cosmo_HI_mask_deconv[n])
-	
+
+	f_0_cosmo_need2pix_mask = nm.NmtField(mask_50,[map_input_HI_need2pix[n]] ) #qua
+	cl_cosmo_HI_mask_need2pix_deconv[n] = nm.compute_full_master(f_0_cosmo_need2pix_mask, f_0_cosmo_need2pix_mask, b_cosmo)[0]
+	cl_cosmo_HI_mask_need2pix_deconv_interp[n] = np.interp(ell, ell_cosmo_mask, cl_cosmo_HI_mask_need2pix_deconv[n])	
 
 np.savetxt(out_dir_cl+f'cl_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat', cl_PCA_HI_need2harm)
 np.savetxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat', cl_PCA_HI_mask_deconv_interp)
 np.savetxt(out_dir_cl+f'cl_deconv_cosmo_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat', cl_cosmo_HI_mask_deconv_interp)
+np.savetxt(out_dir_cl+f'cl_deconv_cosmo_recon_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat', cl_cosmo_HI_mask_need2pix_deconv_interp)
 
 
 del map_PCA_HI_need2pix; del cosmo_HI; del map_input_HI_need2pix; 
@@ -313,12 +361,12 @@ frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi} \langle C_{\ell} \rangle_{\rm ch}
 frame1.set_xlabel([])
 frame1.set_xticks(np.arange(lmin,200+1, 10))
 
-
+diff_cl_recons = cl_cosmo_HI_mask_need2pix_deconv_interp/cl_cosmo_HI_mask_deconv_interp-1
 diff_cl_need2sphe = cl_PCA_HI_mask_deconv_interp/cl_cosmo_HI_mask_deconv_interp-1
 
 frame2=fig.add_axes((.1,.1,.8,.2))
 plt.plot(ell[lmin:], diff_cl_need2sphe[ich][lmin:]*100,)
-
+plt.plot(ell[lmin:], diff_cl_recons[ich][lmin:]*100,label='recons')
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_xlim([lmin,200])
 if fg_comp=='synch_ff_ps_pol':
@@ -327,6 +375,7 @@ else:
 	frame2.set_ylim([-20,20])
 frame2.set_ylabel(r'%$ C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} $-1')
 frame2.set_xlabel(r'$\ell$')
+plt.legend()
 frame1.set_xticks(np.arange(lmin,200+1, 10))
 #plt.savefig(f'Plots_PCA_needlets/cl_std_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam_{beam_s}_jmax{jmax}_lmax{lmax_cl}_Nfg{Nfg}_nside{nside}_mask0.5.png')
 

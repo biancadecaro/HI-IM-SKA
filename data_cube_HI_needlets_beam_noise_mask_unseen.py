@@ -13,21 +13,33 @@ import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 
-#print(sns.color_palette("husl", 15).as_hex())
 sns.palettes.color_palette()
-mpl.rcParams['font.size']=18
-plt.rcParams['lines.linewidth']  = 2.
-plt.rcParams['axes.labelsize']  =18
+import cython_mylibc as pippo
+
+plt.rcParams['figure.figsize']=(11,7)
+plt.rcParams['axes.titlesize']=20
+plt.rcParams['lines.linewidth']  = 3.
+plt.rcParams['lines.markersize']=6
+plt.rcParams['axes.labelsize']  =20
+plt.rcParams['legend.fontsize']=20
+plt.rcParams['xtick.labelsize']=20
+plt.rcParams['ytick.labelsize']=20
 plt.rcParams['xtick.major.width'] = 1
 plt.rcParams['ytick.major.width'] = 1
 plt.rcParams['xtick.minor.width'] = 1
 plt.rcParams['ytick.minor.width'] = 1
+plt.rcParams['axes.formatter.use_mathtext']=True
 plt.rcParams['savefig.dpi']=300
+
+
+from matplotlib import ticker
+formatter = ticker.ScalarFormatter(useMathText=True)
+formatter.set_scientific(True) 
+formatter.set_powerlimits((-1,1)) 
 #############################
 
-
-fg_comp = 'synch_ff_ps_pol'
-beam_s= '1.3deg_SKA_AA4'
+fg_comp = 'synch_ff_ps'
+beam_s= 'SKA_AA4'
 path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
 	file = pickle.load(f)
@@ -164,13 +176,14 @@ pal = sns.color_palette("crest", n_colors=5)
 for i in range(0,jmax+1):
 	ax1.plot(need_theory.b_values[i]*need_theory.b_values[i], c=pal[i])#, label = 'j='+str(i) )
 ax1.set_xscale('log')
+
 #ax1.set_xlim([0.40, 350 ])
 ax1.set_xlabel(r'$\ell$')
 ax1.set_ylabel(r'$w^{2}(\frac{\ell}{D^{j}})$')
 #ax1.legend(loc='upper left', fontsize=9)
 #plt.grid(True)
 plt.tight_layout()
-plt.savefig(f'windows_function_jmax{jmax}_lmax{lmax}.png')
+plt.savefig(f'Plots_paper/windows_function_jmax{jmax}_lmax{lmax}.png')
 plt.show()
 
 
