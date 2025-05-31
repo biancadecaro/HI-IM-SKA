@@ -176,40 +176,60 @@ def noise_map(sigma,nside=512):
 	return m
 
 ############################################################################################
+nside_out= 128
+
 path_data = 'sim_PL05_from191030.hd5'
 file = h5py.File(path_data,'r')
 nu_ch = np.array(file['frequencies'])
 
 
 file_new={}
+file_ud={}
 
 delta_nu_out = 10
 file_new['frequencies'] = nu_ch_f(nu_ch,delta_nu_out)#np.array([nu_ch[i*delta_nu] for i in range(0,int(len(nu_ch)/delta_nu))])
+file_ud['frequencies'] = file_new['frequencies']
 
 components = list(file.keys())
 print(components)
 components.remove('frequencies')
-
 #components.remove('pol_leakage')
+
+
+fg_comp = 'synch_ff_ps'
+
+if 'pol_leakage' in components:
+	fg_comp = 'synch_ff_ps_pol'
+print(fg_comp)
 
 for c in components:
   print(c)
   file_new[c]=merging_maps(nu_ch,file_new['frequencies'],file[c], delta_nu_out )
+  file_ud[c] = hp.pixelfunc.ud_grade(map_in=file_new[c], nside_out=nside_out)
 
-print(len(file_new['frequencies']), hp.get_nside(file_new['cosmological_signal'][1]))
- 
-nside = hp.get_nside(file_new['cosmological_signal'][1])
+print(len(file_ud['frequencies']), hp.get_nside(file_ud['cosmological_signal'][1]))
 
-del file
+del file; del file_new
 
-nu_ch_new = np.array(file_new['frequencies'])
+nu_ch_new = np.array(file_ud['frequencies'])
 num_freq_new=len(nu_ch_new)
-npix = np.shape(file_new['cosmological_signal'])[1]
+npix = np.shape(file_ud['cosmological_signal'])[1]
+lmax = 3*nside_out-1
 
-ich = int(num_freq_new/2)
+obs_maps = np.zeros((num_freq_new,npix))
+fg_maps = np.zeros((num_freq_new,npix))
 
-lmax=3*nside-1
+for c in components:
+    print(c)
+    obs_maps += np.array(file_ud[c])
 
+for cc in components:
+    if cc=='cosmological_signal':
+      continue
+    print(cc)
+    fg_maps += np.array(file_ud[cc])
+
+ich =int(num_freq_new/2)
 ###########################################################################
 ######## Computing beam size using given survey specifics: ################
 ### initialise a dictionary with the instrument specifications
@@ -235,44 +255,44 @@ dnu = nu_ch_new[1]-nu_ch_new[0]
 
 sigma_noise = sigma_N(nu_ch_new,dnu,**specs_dict)
 
-noise = [noise_map(sigma,nside=nside) for sigma in sigma_noise]
+noise = np.array([noise_map(sigma,nside=nside_out) for sigma in sigma_noise])
 del sigma_noise
 
 #########################################################################################
 components.append('noise')
-file_new['noise']=noise
+file_ud['noise']=noise
 
-synch_maps_no_mean = np.array([file_new['gal_synch'][i] -np.mean(file_new['gal_synch'][i],axis=0)  for i in range(num_freq_new)])
-ff_maps_no_mean = np.array([file_new['gal_ff'][i] -np.mean(file_new['gal_ff'][i],axis=0) for i in range(num_freq_new)])
-ps_maps_no_mean = np.array([file_new['point_sources'][i] -np.mean(file_new['point_sources'][i],axis=0) for i in range(num_freq_new)]) 
-HI_maps_no_mean = np.array([file_new['cosmological_signal'][i] -np.mean(file_new['cosmological_signal'][i],axis=0) for i in range(num_freq_new)]) 
-pl_maps_no_mean = np.array([file_new['pol_leakage'][i] -np.mean(file_new['pol_leakage'][i],axis=0) for i in range(num_freq_new)]) 
+synch_maps_no_mean = np.array([file_ud['gal_synch'][i] -np.mean(file_ud['gal_synch'][i],axis=0)  for i in range(num_freq_new)])
+ff_maps_no_mean = np.array([file_ud['gal_ff'][i] -np.mean(file_ud['gal_ff'][i],axis=0) for i in range(num_freq_new)])
+ps_maps_no_mean = np.array([file_ud['point_sources'][i] -np.mean(file_ud['point_sources'][i],axis=0) for i in range(num_freq_new)]) 
+HI_maps_no_mean = np.array([file_ud['cosmological_signal'][i] -np.mean(file_ud['cosmological_signal'][i],axis=0) for i in range(num_freq_new)]) 
+pl_maps_no_mean = np.array([file_ud['pol_leakage'][i] -np.mean(file_ud['pol_leakage'][i],axis=0) for i in range(num_freq_new)]) 
 
-del file_new
+del file_ud
 
 for nu in range(num_freq_new):
 		alm_synch = hp.map2alm(synch_maps_no_mean[nu], lmax=lmax)
-		synch_maps_no_mean[nu] = hp.alm2map(alm_synch, lmax=lmax, nside = nside)
+		synch_maps_no_mean[nu] = hp.alm2map(alm_synch, lmax=lmax, nside = nside_out)
 		synch_maps_no_mean[nu] = hp.remove_dipole(synch_maps_no_mean[nu])
 		del alm_synch
 		
 		alm_ff = hp.map2alm(ff_maps_no_mean[nu], lmax=lmax)
-		ff_maps_no_mean[nu] = hp.alm2map(alm_ff, lmax=lmax, nside = nside)
+		ff_maps_no_mean[nu] = hp.alm2map(alm_ff, lmax=lmax, nside = nside_out)
 		ff_maps_no_mean[nu] = hp.remove_dipole(ff_maps_no_mean[nu])
 		del alm_ff
 		
 		alm_ps = hp.map2alm(ps_maps_no_mean[nu], lmax=lmax)
-		ps_maps_no_mean[nu] = hp.alm2map(alm_ps, lmax=lmax, nside = nside)
+		ps_maps_no_mean[nu] = hp.alm2map(alm_ps, lmax=lmax, nside = nside_out)
 		ps_maps_no_mean[nu] = hp.remove_dipole(ps_maps_no_mean[nu])
 		del alm_ps
 
 		alm_HI = hp.map2alm(HI_maps_no_mean[nu], lmax=lmax)
-		HI_maps_no_mean[nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside)
+		HI_maps_no_mean[nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside_out)
 		HI_maps_no_mean[nu] = hp.remove_dipole(HI_maps_no_mean[nu])
 		del alm_HI
 
 		alm_pl = hp.map2alm(pl_maps_no_mean[nu], lmax=lmax)
-		pl_maps_no_mean[nu] = hp.alm2map(alm_pl, lmax=lmax, nside = nside)
+		pl_maps_no_mean[nu] = hp.alm2map(alm_pl, lmax=lmax, nside = nside_out)
 		pl_maps_no_mean[nu] = hp.remove_dipole(pl_maps_no_mean[nu])
 		del alm_pl
 
@@ -291,7 +311,7 @@ for nu in range(num_freq_new):
 #plt.show()
 
 fig = plt.figure(figsize=(15, 7))
-fig.suptitle(f'channel: {nu_ch_new[ich]} MHz, Nside {nside}',fontsize=20)
+fig.suptitle(f'channel: {nu_ch_new[ich]} MHz, Nside {nside_out}',fontsize=20)
 fig.add_subplot(141) 
 hp.mollview(synch_maps_no_mean[ich],  min=-1e3, max=1e3,unit='mK',cmap='viridis',title=f'Gal synch', hold=True)
 fig.add_subplot(142) 
@@ -300,7 +320,7 @@ fig.add_subplot(143)
 hp.mollview(ps_maps_no_mean[ich],  min=-1e2, max=1e2,unit='mK',title=f'Point sources',cmap='viridis', hold=True)
 fig.add_subplot(144)
 hp.mollview(HI_maps_no_mean[ich],  unit= 'mK', min=0, max=1, title=f'Cosmological signal',cmap='viridis', hold=True)
-plt.savefig(f'comp_HI_fg_input_lmax{lmax}_nside{nside}_ch{nu_ch_new[ich]}.png')
+#plt.savefig(f'comp_HI_fg_input_lmax{lmax}_nside{nside_out}_ch{nu_ch_new[ich]}.png')
 plt.show()
 ####################################################
 #################### plot freq ####################
@@ -313,17 +333,17 @@ col_dic = {'cosmological_signal':c_pal[0],'gal_ff':c_pal[1],'gal_synch':c_pal[2]
 lat = 85#deg
 long = 132
 
-pix_dir = hp.ang2pix(nside=nside, theta=long, phi=lat, lonlat=True)
+pix_dir = hp.ang2pix(nside=nside_out, theta=long, phi=lat, lonlat=True)
 
 print(f'pix_dir={pix_dir}')#, np.abs(HI_maps_beam_no_mean[0,pix_dir]), nu_ch_new.shape)
 
 fig, ax = plt.subplots(1,1)
 for c in components:
-	if c =='noise':
-		ax.plot(nu_ch_new,np.abs(file_no_mean[c][:,pix_dir]), color=col_dic[c], ls=ls_dic[c], label=lab_dic[c])
-		print(noise[:,pix_dir])
-	else:
-		ax.plot(nu_ch_new,np.abs(file_no_mean[c][:,pix_dir]), color=col_dic[c], ls=ls_dic[c], label=lab_dic[c])
+	#if c =='noise':
+	#	ax.plot(nu_ch_new,np.abs(file_no_mean[c][:,pix_dir]), color=col_dic[c], ls=ls_dic[c], label=lab_dic[c])
+	#	print(noise[:,pix_dir])
+	#else:
+	ax.plot(nu_ch_new,np.abs(file_no_mean[c][:,pix_dir]), color=col_dic[c], ls=ls_dic[c], label=lab_dic[c])
 ax.set_xticks(np.arange(min(nu_ch_new), max(nu_ch_new), 20))
 #ax.set_xlabel(np.arange(min(nu_ch_new), max(nu_ch_new), 20))
 ax.set_yscale('log')
