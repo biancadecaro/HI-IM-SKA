@@ -6,6 +6,8 @@ Maps_needlets/
 Maps_mexican_needlets/
 PCA_needlets_output/PCA_maps/
 PCA_needlets_output/maps_reconstructed/
+PCA_mexican_needlets_output/PCA_maps/
+PCA_mexican_needlets_output/maps_reconstructed/
 PCA_pixels_output/Maps_PCA/
 Sims/
 sim_PL05_from191030.hd5
