@@ -3,6 +3,7 @@ GMCA_needlets_output/maps_reconstructed/
 GMCA_pixels_output/Maps_GMCA/
 HFI_Mask_GalPlane_2048_R1.10.fits
 Maps_needlets/
+Maps_mexican_needlets/
 PCA_needlets_output/PCA_maps/
 PCA_needlets_output/maps_reconstructed/
 PCA_pixels_output/Maps_PCA/
