@@ -10,8 +10,8 @@ import seaborn as sns
 sns.set_theme(style = 'white')
 from matplotlib import colors
 import matplotlib as mpl
-mpl.rc('xtick', direction='in', top=True, bottom = True)
-mpl.rc('ytick', direction='in', right=True, left = True)
+mpl.rc('xtick', direction='in', top=False, bottom = True)
+mpl.rc('ytick', direction='in', right=False, left = True)
 
 sns.palettes.color_palette()
 import cython_mylibc as pippo
@@ -78,7 +78,7 @@ del file
 npix = np.shape(HI_noise_maps_freq)[1]
 nside = hp.get_nside(HI_noise_maps_freq[0])
 lmax=3*nside-1#2*nside#
-jmax=4
+jmax=12
 
 	
 ######################################################################################
@@ -122,8 +122,6 @@ hp.mollview(full_maps_freq[ich]-fg_maps_freq[ich], title=f'Observation - Fg',cma
 plt.show()
 
 
-
-jmax=4
 out_dir = f'./Maps_needlets/No_mean/Beam_{beam_s}_noise_mask{fsky_50:0.2}_unseen/'
 if not os.path.exists(out_dir):
 	os.makedirs(out_dir)
@@ -172,7 +170,7 @@ ax1.legend(loc='right')
 
 fig, ax1  = plt.subplots(1,1,figsize=(7,5), dpi=100) 
 #plt.suptitle(r'$D = %1.2f $' %myanalysis.B +r'$ ,~j_{\mathrm{max}} =$'+str(jmax) + r'$ ,~\ell_{\mathrm{max}} =$'+str(lmax))
-pal = sns.color_palette("crest", n_colors=5)
+pal = sns.color_palette("crest", n_colors=jmax+1)
 for i in range(0,jmax+1):
 	ax1.plot(need_theory.b_values[i]*need_theory.b_values[i], c=pal[i])#, label = 'j='+str(i) )
 ax1.set_xscale('log')

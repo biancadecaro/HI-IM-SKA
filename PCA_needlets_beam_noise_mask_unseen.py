@@ -61,7 +61,7 @@ del file
 
 
 need_dir = f'Maps_needlets/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
-need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_105freq_900.5_1004.5MHz_jmax4_lmax767_B5.26_nside256.npy'
+need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_105freq_900.5_1004.5MHz_jmax12_lmax767_B1.74_nside256.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
 jmax=need_tot_maps.shape[1]-1
@@ -201,8 +201,8 @@ for j in range(eigenvec_fg_Nfg.shape[0]):
     res_HI_maps[j,:,:] = need_tot_maps[:,j,:] - res_fg_maps[j,:,:]
     res_HI_maps[j,:,bad_v]=hp.UNSEEN
 
-    hp.mollview(res_HI_maps[j][ich],min=0, max=0.39, cmap='viridis', title=f'j={j}')
-plt.show()
+    #hp.mollview(res_HI_maps[j][ich],min=0, max=0.39, cmap='viridis', title=f'j={j}')
+#plt.show()
 del need_tot_maps
 
 

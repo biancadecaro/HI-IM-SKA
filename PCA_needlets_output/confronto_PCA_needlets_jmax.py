@@ -1,100 +1,175 @@
 import healpy as hp
-from astropy import io
-import pickle
 import numpy as np
 import matplotlib.pyplot as plt
+import pymaster as nm
 import os
+import pickle
+
 import seaborn as sns
-import scipy.linalg as lng
 sns.set_theme(style = 'white')
-#sns.set_palette('husl',15)
-
+from matplotlib import colors
 import matplotlib as mpl
-mpl.rc('xtick', direction='in', top=True, bottom = True)
-mpl.rc('ytick', direction='in', right=True, left = True)
-###########################################################################
-beam_s = 'theta40arcmin'
-dir_PCA_beam = f'maps_reconstructed/No_mean/Beam_{beam_s}_noise/'
+mpl.rc('xtick', direction='in', top=False, bottom = True)
+mpl.rc('ytick', direction='in', right=False, left = True)
 
-dir_PCA_cl_beam = dir_PCA_beam+'cls_recons_need/'
+#print(sns.color_palette("husl", 15).as_hex())
+sns.palettes.color_palette()
+import cython_mylibc as pippo
 
+plt.rcParams['figure.figsize']=(11,7)
+plt.rcParams['axes.titlesize']=20
+plt.rcParams['lines.linewidth']  = 3.
+plt.rcParams['lines.markersize']=6
+plt.rcParams['axes.labelsize']  =20
+plt.rcParams['legend.fontsize']=20
+plt.rcParams['xtick.labelsize']=20
+plt.rcParams['ytick.labelsize']=20
+plt.rcParams['xtick.major.width'] = 1
+plt.rcParams['ytick.major.width'] = 1
+plt.rcParams['xtick.minor.width'] = 1
+plt.rcParams['ytick.minor.width'] = 1
+plt.rcParams['axes.formatter.use_mathtext']=True
+plt.rcParams['savefig.dpi']=300
+
+
+
+from matplotlib import ticker
+formatter = ticker.ScalarFormatter(useMathText=True)
+formatter.set_scientific(True) 
+formatter.set_powerlimits((-1,1)) 
+#############################################################################
+
+beam_s = 'SKA_AA4'
 fg_comp = 'synch_ff_ps'
-path_sims = f'/home/bianca/Documents/HI IM SKA/Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
+
+out_dir_maps_recon = f'maps_reconstructed/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+out_dir_cl = out_dir_maps_recon+'cls_recons_need/'
 
 
-with open(path_sims+'.pkl', 'rb') as f:
-        file = pickle.load(f)
-        f.close()
+num_ch=105
+min_ch = 900.5
+max_ch = 1004.5
+nu_ch = np.linspace(min_ch, max_ch, num_ch)
+ich=int(num_ch/2.)
 
-nu_ch= file['freq']
-del file
-num_freq = len(nu_ch)
+##############################
+c_light = 3.0*1e8
+dish_diam_MeerKat = 13.5 #m
+dish_diam_SKA = 15 # m
+Ndishes_MeerKAT = 64.
+Ndishes_SKA = 133.
+dish_diam = (Ndishes_MeerKAT*dish_diam_MeerKat+ Ndishes_SKA*dish_diam_SKA)/(Ndishes_MeerKAT+Ndishes_SKA) 
+theta_FWMH_max = c_light*1e-6/np.min(nu_ch)/float(dish_diam) #radians
+lmax_theta_worst = int(np.pi/theta_FWMH_max)
+###############################
 
-nu0 =1420
-print(f'working with {len(nu_ch)} channels, from {min(nu_ch)} to {max(nu_ch)} MHz')
-print(f'i.e. channels are {nu_ch[1]-nu_ch[0]} MHz thick')
-print(f'corresponding to the redshift range z: [{min(nu0/nu_ch -1.0):.2f} - {max(nu0/nu_ch -1.0):.2f}] ')
-#########################################################################################################
-nside =128
-lmax=3*nside-1
-lmax_cl=2*nside
-Nfg=3
-#####################################################################################################
-
-cl_cosmo_HI_beam = np.loadtxt(f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_{beam_s}_noise/power_spectra_cls_from_healpix_maps/cl_input_HI_noise_40_905.0_1295.0MHz_lmax256_nside128.dat')
-
-cl_PCA_HI_beam_jmax4 = np.loadtxt(f'maps_reconstructed/No_mean/Beam_{beam_s}_noise/cls_recons_need/cl_PCA_HI_noise_{fg_comp}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{Nfg}_jmax4_lmax{lmax_cl}_nside{nside}.dat')
-
-cl_PCA_HI_beam_jmax12 = np.loadtxt(f'maps_reconstructed/No_mean/Beam_{beam_s}_noise/cls_recons_need/cl_PCA_HI_noise_{fg_comp}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{Nfg}_jmax12_lmax{lmax_cl}_nside{nside}.dat')
-
-cl_PCA_HI_beam_sph = np.loadtxt(f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_{beam_s}_noise/power_spectra_cls_from_healpix_maps/cl_PCA_HI_noise_{fg_comp}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat')
+nside=256
+npix= hp.nside2npix(nside)
+jmax_4=4
+jmax_12=12
+lmax= 3*nside-1
+if fg_comp=='synch_ff_ps':
+	Nfg=3
+if fg_comp=='synch_ff_ps_pol':
+	Nfg=18
 
 
-ich = int(num_freq/2)
+cl_cosmo_HI=np.loadtxt(out_dir_cl+f'cl_deconv_cosmo_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax_4}_lmax{2*nside}_nside{nside}.dat')
+
+cl_PCA_HI_4=np.loadtxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax_4}_lmax{2*nside}_nside{nside}.dat')
+
+cl_PCA_HI_12=np.loadtxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax_12}_lmax{2*nside}_nside{nside}.dat')
 
 #####################################################################################################################
 
-ell = np.arange(0, lmax_cl+1)
-factor = ell*(ell+1)/(2*np.pi)
+lmax_cl = 2*nside
+ell=np.arange(lmax_cl+1)
+factor=ell*(ell+1)/(2*np.pi)
+lmin = 3
 
-diff_PCA_beam_jmax4 = cl_PCA_HI_beam_jmax4/cl_cosmo_HI_beam -1
+lmax_plot= lmax_theta_worst
+print(lmax_plot)
 
-diff_PCA_beam_jmax12 = cl_PCA_HI_beam_jmax12/cl_cosmo_HI_beam -1
+fig = plt.figure()
+frame1=fig.add_axes((.1,.3,.8,.6))
+plt.title(r'$\nu$='+f'{nu_ch[ich]} MHz')
+plt.plot(ell[lmin:],factor[lmin:]*cl_cosmo_HI[ich][lmin:],'k--',label='Cosmo HI + noise')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_4[ich][lmin:],  label=r'Need-PCA HI + noise, $j_{\rm max}$=4')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_12[ich][lmin:],  label=r'Need-PCA HI + noise, $j_{\rm max}$=12')
 
-diff_PCA_beam_sph = cl_PCA_HI_beam_sph/cl_cosmo_HI_beam -1
-
-################## diff tra i due ################################
-
-fig=plt.figure()
-plt.suptitle('Rel diff , mean over channels')
-plt.plot(ell[2:], 100*np.mean(diff_PCA_beam_jmax4, axis=0)[2:],'--.',mfc='none', label='jmax=4')
-plt.plot(ell[2:], 100*np.mean(diff_PCA_beam_jmax12, axis=0)[2:],'--.',mfc='none', label='jmax=12')
-plt.plot(ell[2:], 100*np.mean(diff_PCA_beam_sph, axis=0)[2:],'--.',c='k',mfc='none', label='=sph')
-
-plt.xlim([0,200])
-plt.ylim([-20,20])
-plt.xlabel(r'$\ell$')
-plt.ylabel(r'$\%\langle C_{ell}^{4}/C_{ell}^{12} -1 \rangle$')
-plt.axhline(y=0,c='k',ls='--',alpha=0.5)
+plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+plt.xlim([lmin,lmax_plot])
 plt.legend()
-plt.tight_layout()
+frame1.set_ylabel(r'$  \ell(\ell+1)/2\pi~ C_{\ell} $ [mK$^{2}$]')
+frame1.set_xlabel([])
+frame1.set_xticks(np.arange(lmin,lmax_plot+1, 10), labels=[])
+#frame1.yaxis.set_major_formatter(formatter) 
+
+diff_cl_std = cl_PCA_HI_4/cl_cosmo_HI-1
+diff_cl_mex = cl_PCA_HI_12/cl_cosmo_HI-1
+
+frame2=fig.add_axes((.1,.1,.8,.2))
+plt.plot(ell[lmin:], diff_cl_std[ich][lmin:]*100,label=r'$j_{\rm max}$=4')
+plt.plot(ell[lmin:], diff_cl_mex[ich][lmin:]*100,label=r'$j_{\rm max}$=12')
+
+frame2.axhline(ls='--', c= 'k', alpha=0.3)
+frame2.set_xlim([lmin,lmax_plot])
+if fg_comp=='synch_ff_ps_pol':
+	frame2.set_ylim([-50,50])
+else:
+	frame2.set_ylim([-50,50])
+frame2.set_ylabel(r'%$ C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} $-1')
+frame2.set_xlabel(r'$\ell$')
+#frame2.yaxis.set_major_formatter(formatter) 
+frame2.set_xticks(np.arange(lmin,lmax_plot+1, 10))
+plt.legend(loc='upper right')
+plt.savefig(f'../PCA_needlets_output/Plots_paper/comparison_cl_std_jmax_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam_{beam_s}_jmax{jmax_4}_jmax{jmax_12}_Nfg{Nfg}_nside{nside}_mask0.5.png')
 
 
-fig=plt.figure()
-plt.suptitle(f'Rel diff, channel: {nu_ch[ich]} MHz')
-plt.plot(ell[2:], 100*diff_PCA_beam_jmax4[ich][2:],'--.',mfc='none', label='jmax=4')
-plt.plot(ell[2:], 100*diff_PCA_beam_jmax12[ich][2:],'--.',mfc='none', label='jmax=12')
-plt.plot(ell[2:], 100*diff_PCA_beam_sph[ich][2:],'--.',c='k',mfc='none', label='=sph')
+#plt.show()
+####################
 
-plt.xlim([0,200])
-plt.ylim([-20,20])
-plt.xlabel(r'$\ell$')
-plt.ylabel(r'$\%C_{ell}^{4}/C_{ell}^{12} -1 $')
-plt.axhline(y=0,c='k',ls='--',alpha=0.5)
+
+fig = plt.figure()
+frame1=fig.add_axes((.1,.3,.8,.6))
+plt.title(f'Mean over frequency channels')
+plt.plot(ell[lmin:],factor[lmin:]*cl_cosmo_HI.mean(axis=0)[lmin:],'k--',label='Cosmo HI + noise')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_4.mean(axis=0)[lmin:],  label=r'Need-PCA HI + noise, $j_{\rm max}$=4')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_12.mean(axis=0)[lmin:],  label=r'Need-PCA HI + noise, $j_{\rm max}$=12')
+
+plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+plt.xlim([lmin,lmax_plot])
 plt.legend()
-plt.tight_layout()
+frame1.set_ylabel(r'$  \ell(\ell+1)/2\pi~ \langle C_{\ell} \rangle_{\rm ch}$ [mK$^{2}$]')
+frame1.set_xlabel([])
+frame1.set_xticks(np.arange(lmin,lmax_plot+1, 10), labels=[])
+#frame1.yaxis.set_major_formatter(formatter) 
 
+diff_cl_std = cl_PCA_HI_4/cl_cosmo_HI-1
+diff_cl_mex = cl_PCA_HI_12/cl_cosmo_HI-1
 
+frame2=fig.add_axes((.1,.1,.8,.2))
+plt.plot(ell[lmin:], diff_cl_std.mean(axis=0)[lmin:]*100,label=r'$j_{\rm max}$=4')
+plt.plot(ell[lmin:], diff_cl_mex.mean(axis=0)[lmin:]*100,label=r'$j_{\rm max}$=12')
+
+frame2.axhline(ls='--', c= 'k', alpha=0.3)
+frame2.set_xlim([lmin,lmax_plot])
+if fg_comp=='synch_ff_ps_pol':
+	frame2.set_ylim([-50,50])
+else:
+	frame2.set_ylim([-50,50])
+frame2.set_ylabel(r'%$ \langle C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} -1\rangle_{\rm ch}$')
+frame2.set_xlabel(r'$\ell$')
+#frame2.yaxis.set_major_formatter(formatter) 
+frame2.set_xticks(np.arange(lmin,lmax_plot+1, 10))
+plt.legend(loc='upper right')
+plt.savefig(f'../PCA_needlets_output/Plots_paper/comparison_cl_std_jmax_need_mean_ch_{fg_comp}_noise_beam_{beam_s}_jmax{jmax_4}_jmax{jmax_12}_Nfg{Nfg}_nside{nside}_mask0.5.png')
+
+fig = plt.figure()
+plt.plot(ell[lmin:], (diff_cl_mex/diff_cl_std-1).mean(axis=0)[lmin:])
+plt.axhline(ls='--', c= 'k', alpha=0.3)
+plt.xlim([lmin,lmax_plot])
+plt.ylim([-5,5])
+plt.ylabel('% diff of the diff')
+plt.xlabel(r'$\ell$')
 plt.show()
-
-#del diff_PCA_beam; del cl_PCA_HI

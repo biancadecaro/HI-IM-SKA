@@ -62,7 +62,7 @@ min_ch = 900.5
 max_ch = 1004.5
 nside=256
 npix= hp.nside2npix(nside)
-jmax=4
+jmax=12
 lmax= 3*nside-1
 if fg_comp=='synch_ff_ps':
 	Nfg=3
@@ -101,7 +101,7 @@ bad_v = np.where(mask_50==0)
 ############################################################################################
 ####################### NEEDLETS2HARMONICS #################################################
 
-#b_values = pippo.mylibpy_needlets_std_init_b_values(B,jmax,lmax)
+b_values = pippo.mylibpy_needlets_std_init_b_values(B,jmax,lmax)
 #with open(path_PCA_HI+'.pkl', 'rb') as f:
 #	res_PCA_HI = pickle.load(f)
 #	f.close()
@@ -486,37 +486,35 @@ del diff_cl_need2sphe; #del diff_cl_need2sphe_cosmo_recons
 print(' sto ricostruendo il leakage')
 
 #need_HI_leak=np.load(path_leak_HI+'.npy')
-#with open(path_leak_HI+'.pkl', 'rb') as f:
-#	need_HI_leak = pickle.load(f)
-#	f.close()
-#del f
+with open(path_leak_HI+'.pkl', 'rb') as f:
+	need_HI_leak = pickle.load(f)
+	f.close()
+del f
+map_leak_HI_need2pix=np.zeros((len(nu_ch), npix))
+for nu in range(len(nu_ch)):
+    #map_leak_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(need_HI_leak[:,nu],B, lmax)
+    for j in range(need_HI_leak.shape[0]):
+        map_leak_HI_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(need_HI_leak[j,nu],b_values,j)
+    #map_leak_HI_need2pix[nu] = hp.remove_dipole(map_leak_HI_need2pix[nu])
+np.save(out_dir_maps_recon+f'maps_reconstructed_leak_HI_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_HI_need2pix)
+del need_HI_leak
 
-#map_leak_HI_need2pix=np.zeros((len(nu_ch), npix))
-#for nu in range(len(nu_ch)):
-#    #map_leak_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(need_HI_leak[:,nu],B, lmax)
-#    for j in range(need_HI_leak.shape[0]):
-#        map_leak_HI_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(need_HI_leak[j,nu],b_values,j)
-#    #map_leak_HI_need2pix[nu] = hp.remove_dipole(map_leak_HI_need2pix[nu])
-#np.save(out_dir_maps_recon+f'maps_reconstructed_leak_HI_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_HI_need2pix)
-
-#del need_HI_leak
-#
-##need_fg_leak=np.load(path_leak_Fg+'.npy')
-#with open(path_leak_Fg+'.pkl', 'rb') as f:
-#	need_fg_leak = pickle.load(f)
-#	f.close()	
-#map_leak_fg_need2pix=np.zeros((len(nu_ch), npix))
-#for nu in range(len(nu_ch)):
-#    for j in range(need_fg_leak.shape[0]):
-#        map_leak_fg_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(need_fg_leak[j,nu],b_values,j)
-#    #map_leak_fg_need2pix[nu] = hp.remove_dipole(map_leak_fg_need2pix[nu])
-#    #map_leak_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(need_fg_leak[:,nu],B, lmax)
-#del need_fg_leak
-#np.save(out_dir_maps_recon+f'maps_reconstructed_leak_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_fg_need2pix)
+#need_fg_leak=np.load(path_leak_Fg+'.npy')
+with open(path_leak_Fg+'.pkl', 'rb') as f:
+	need_fg_leak = pickle.load(f)
+	f.close()	
+map_leak_fg_need2pix=np.zeros((len(nu_ch), npix))
+for nu in range(len(nu_ch)):
+    for j in range(need_fg_leak.shape[0]):
+        map_leak_fg_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(need_fg_leak[j,nu],b_values,j)
+    #map_leak_fg_need2pix[nu] = hp.remove_dipole(map_leak_fg_need2pix[nu])
+    #map_leak_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(need_fg_leak[:,nu],B, lmax)
+del need_fg_leak
+np.save(out_dir_maps_recon+f'maps_reconstructed_leak_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_fg_need2pix)
 
 
-map_leak_HI_need2pix = np.load(out_dir_maps_recon+f'maps_reconstructed_leak_HI_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
-map_leak_fg_need2pix = np.load(out_dir_maps_recon+f'maps_reconstructed_leak_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
+#map_leak_HI_need2pix = np.load(out_dir_maps_recon+f'maps_reconstructed_leak_HI_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
+#map_leak_fg_need2pix = np.load(out_dir_maps_recon+f'maps_reconstructed_leak_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
 
 fig = plt.figure(figsize=(10, 7))
 fig.suptitle(f'channel: {nu_ch[ich]} MHz, BEAM {beam}, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}',fontsize=20)
