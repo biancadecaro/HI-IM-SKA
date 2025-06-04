@@ -365,7 +365,7 @@ pl_maps_beam_no_mean = np.array([pl_maps_beam[i] -np.mean(pl_maps_beam[i],axis=0
 file_beam_no_mean = {'cosmological_signal':HI_maps_beam_no_mean,'gal_ff':ff_maps_beam_no_mean,'gal_synch':synch_maps_beam_no_mean,'point_sources':ps_maps_beam_no_mean, 'pol_leakage':pl_maps_beam_no_mean, 'noise':noise_maps_beam}
 
 
-ls_dic = {'cosmological_signal':"-",'gal_ff':"--",'gal_synch':"-.",'point_sources':':', 'pol_leakage':(0, (1, 10)), 'noise':(0, (3, 10, 1, 10))}
+ls_dic = {'cosmological_signal':"-",'gal_ff':"--",'gal_synch':"-.",'point_sources':':', 'pol_leakage':(0, (3, 1, 1, 1)), 'noise':(0, (3, 10, 1, 10))}
 lab_dic = {'cosmological_signal':"21-cm signal",'gal_ff':"Gal free-free",'gal_synch':"Gal synchrotron",'point_sources':"Point sources", 'pol_leakage':"Pol leakage", 'noise':'Noise'}
 col_dic = {'cosmological_signal':c_pal[0],'gal_ff':c_pal[1],'gal_synch':c_pal[2],'point_sources':c_pal[3], 'pol_leakage': c_pal[4], 'noise':c_pal[5]}
 
@@ -386,8 +386,8 @@ col_dic = {'cosmological_signal':c_pal[0],'gal_ff':c_pal[1],'gal_synch':c_pal[2]
 
 ##############################################################################
 ################# proviamo a fare il plot per frequenza#######################
-lat = 85#deg
-long = 132
+lat = -5#deg
+long = 0
 
 pix_dir = hp.ang2pix(nside=nside, theta=long, phi=lat, lonlat=True)
 
@@ -466,7 +466,7 @@ for c in components:
 	plt.plot(ell[2:], factor[2:]*cl_comp_beam[c][ich][2:], ls=ls_dic[c], color=col_dic[c],label=lab_dic[c])
 plt.yscale('log')
 plt.ylim([1e-7, 1e7])
-plt.xlim([0,lmax_cl_plot])
+plt.xlim([0,lmax_fwmh_max])
 plt.ylabel(r'$\frac{\ell(\ell+1)}{2\pi} C_{\ell}$ [mK$^2$]')
 plt.xlabel(r'$\ell$')
 plt.legend(ncols=1, loc='upper right')
@@ -501,10 +501,10 @@ plt.title(r'$\nu \in $'+f'[{nu_ch[0]}, {nu_ch[-1]}] MHz')
 for c in components:
 
 	plt.fill_between(ell[2:],factor[2:]*cl_comp_beam[c][0][2:],factor[2:]*cl_comp_beam[c][-1][2:], alpha=0.7,label=lab_dic[c] )
-plt.axvline(x=lmax_fwmh_max, color='k', ls='--', alpha=0.5, label = r'$\ell_{\rm beam}$=%d'%lmax_fwmh_max)
+#plt.axvline(x=lmax_fwmh_max, color='k', ls='--', alpha=0.5, label = r'$\ell_{\rm beam}$=%d'%lmax_fwmh_max)
 plt.yscale('log')
 plt.ylim([1e-7, 1e7])
-plt.xlim([0,lmax_cl_plot])
+plt.xlim([0,lmax_fwmh_max])
 plt.ylabel(r'$\frac{\ell(\ell+1)}{2\pi} C_{\ell}$ [mK$^2$]')
 plt.xlabel(r'$\ell$')
 plt.legend(ncols=1, loc='upper right')

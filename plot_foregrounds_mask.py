@@ -332,7 +332,7 @@ for c in components:
 		cl_comp_beam_deconv[c][nu] = np.interp(ell, ell_mask, cl_comp_beam[c][nu])
 del cl_comp_beam
 
-ls_dic = {'cosmological_signal':"-",'gal_ff':"--",'gal_synch':"-.",'point_sources':':', 'pol_leakage':(0, (1, 10)), 'noise':(0, (3, 10, 1, 10))}
+ls_dic = {'cosmological_signal':"-",'gal_ff':"--",'gal_synch':"-.",'point_sources':':', 'pol_leakage':(0, (3, 1, 1, 1)), 'noise':(0, (3, 10, 1, 10))}
 lab_dic = {'cosmological_signal':"21-cm signal",'gal_ff':"Gal free-free",'gal_synch':"Gal synchrotron",'point_sources':"Point sources", 'pol_leakage':"Pol leakage", 'noise':'Noise'}
 col_dic = {'cosmological_signal':c_pal[0],'gal_ff':c_pal[1],'gal_synch':c_pal[2],'point_sources':c_pal[3], 'pol_leakage': c_pal[4], 'noise':c_pal[5]}
 
@@ -357,10 +357,10 @@ plt.title(r'$\nu \in $'+f'[{nu_ch[0]}, {nu_ch[-1]}] MHz, '+r'f$_{\rm sky}$=50%')
 for c in components:
 
 	plt.fill_between(ell[2:],factor[2:]*cl_comp_beam_deconv[c][0][2:],factor[2:]*cl_comp_beam_deconv[c][-1][2:], alpha=0.7,label=lab_dic[c] )
-plt.axvline(x=lmax_fwmh_max, color='k', ls='--', alpha=0.5, label = r'$\ell_{\rm beam}$=%d'%lmax_fwmh_max)
+#plt.axvline(x=lmax_fwmh_max, color='k', ls='--', alpha=0.5, label = r'$\ell_{\rm beam}$=%d'%lmax_fwmh_max)
 plt.yscale('log')
 plt.ylim([1e-7, 1e7])
-plt.xlim([0,lmax_cl_plot])
+plt.xlim([0,lmax_fwmh_max])
 plt.ylabel(r'$\frac{\ell(\ell+1)}{2\pi} C_{\ell}$ [mK$^2$]')
 plt.xlabel(r'$\ell$')
 plt.legend(ncols=1, loc='upper right')

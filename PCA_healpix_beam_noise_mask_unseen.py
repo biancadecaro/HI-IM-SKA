@@ -18,7 +18,7 @@ import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 ###########################################################################
-beam_s = 'SKA_AA4'
+beam_s = '1.3deg_SKA_AA4'
 out_dir= f'PCA_pixels_output/Maps_PCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 out_dir_plot = f'PCA_pixels_output/Plots_PCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 
@@ -30,7 +30,7 @@ if not os.path.exists(out_dir_plot):
 ###################################################################################
 
 fg_components='synch_ff_ps'
-path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_components}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
+path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_components}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -61,7 +61,7 @@ lmax=3*nside-1
 if fg_components=='synch_ff_ps':
     num_sources=3
 if fg_components=='synch_ff_ps_pol':
-    num_sources=18
+    num_sources=3#18#6
 print(num_sources)
 print(f'nside:{nside}, lmax:{lmax}, num_ch:{num_freq}, min_ch:{min(nu_ch)}, max_ch:{max(nu_ch)}, Nfg:{num_sources}')
 
@@ -72,11 +72,6 @@ print(pix_mask)
 mask_50 = np.zeros(npix)
 mask_50[pix_mask] =1
 fsky_50 = np.sum(mask_50)/hp.nside2npix(nside)
-
-fig=plt.figure()
-hp.mollview(mask_50, cmap='viridis', title=f'fsky={np.mean(mask_50):0.2f}', hold=True)
-#plt.savefig(f'Plots_sims/mask_apo3deg_fsky{np.mean(mask_40s):0.2f}_nside{nside}.png')
-plt.show()
 
 #######################################################################################
 full_maps_freq_mask_0 = np.zeros((num_freq, npix))
@@ -156,8 +151,8 @@ for n in range(num_freq):
 #hp.mollview(mask_prova, cmap= 'viridis')
 #del HI_maps_freq_mask; del fg_maps_freq_mask
 
-hp.mollview(full_maps_freq_masked[0], cmap='viridis', title='masked ma')
-plt.show()
+#hp.mollview(full_maps_freq_masked[0], cmap='viridis', title='masked ma')
+#plt.show()
 
 Cov_channels=ma.cov(full_maps_freq_masked)
 corr_coeff = ma.corrcoef(full_maps_freq_masked)
@@ -283,8 +278,8 @@ res_HI_mask_0 = full_maps_freq_mask_0 - res_fg_maps_mask_0
 
 HI_maps_freq_mask.dump(out_dir+f'cosmo_HI_noise_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_lmax{lmax}_nside{nside}.npy')
 res_HI.dump(out_dir+f'res_PCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy')
-fg_leakage.dump(out_dir+f'leak_PCA_fg_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy')
-HI_leakage.dump(out_dir+f'leak_PCA_HI_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy')
+#fg_leakage.dump(out_dir+f'leak_PCA_fg_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy')
+#HI_leakage.dump(out_dir+f'leak_PCA_HI_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy')
 fg_maps_freq_mask.dump(out_dir+f'fg_input_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_lmax{lmax}_nside{nside}.npy')
 
 
@@ -438,16 +433,16 @@ plt.show()
 ##### confronto maschera non maschera - maschera deconvolta #######################
 
 #### deconvoluzione
-f_0_mask = nm.NmtField(mask_50,[res_HI[0]])#, masked_on_input=True )
+#f_0_mask = nm.NmtField(mask_50,[res_HI[0]])#, masked_on_input=True )
 b = nm.NmtBin.from_nside_linear(nside, 8)
 ell_mask= b.get_effective_ells()
 
-f_0_mask_0 = nm.NmtField(mask_50,[res_HI_mask_0[0]] )
-b_0 = nm.NmtBin.from_nside_linear(nside, 8)
-ell_mask_0= b_0.get_effective_ells()
 
 cl_PCA_HI_mask_deconv = np.zeros((num_freq, len(ell_mask)))
 cl_PCA_HI_mask_deconv_interp = np.zeros((num_freq, lmax_cl+1))
+
+cl_cosmo_HI_mask_deconv = np.zeros((num_freq, len(ell_mask)))
+cl_cosmo_HI_mask_deconv_interp = np.zeros((num_freq, lmax_cl+1))
 
 #cl_PCA_HI_mask_0_deconv = np.zeros((num_freq, len(ell_mask)))
 #cl_PCA_HI_mask_0_deconv_interp = np.zeros((num_freq, lmax_cl+1))
@@ -456,6 +451,10 @@ for n in range(num_freq):
     f_0_mask = nm.NmtField(mask_50,[res_HI[n]])#, masked_on_input=True )
     cl_PCA_HI_mask_deconv[n] = nm.compute_full_master(f_0_mask, f_0_mask, b)[0]
     cl_PCA_HI_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_PCA_HI_mask_deconv[n])
+    
+    f_0_cosmo_mask = nm.NmtField(mask_50,[HI_maps_freq_mask[n]] ) #qua
+    cl_cosmo_HI_mask_deconv[n] = nm.compute_full_master(f_0_cosmo_mask, f_0_cosmo_mask, b)[0]
+    cl_cosmo_HI_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_cosmo_HI_mask_deconv[n])
     #f_0_mask_0 = nm.NmtField(mask_50,[res_HI_mask_0[n]] )
     #cl_PCA_HI_mask_0_deconv[n] = nm.compute_full_master(f_0_mask_0, f_0_mask_0, b_0)[0]
     #cl_PCA_HI_mask_0_deconv_interp[n] = np.interp(ell, ell_mask_0, cl_PCA_HI_mask_0_deconv[n])
@@ -464,8 +463,75 @@ np.savetxt(out_dir_cl+f'cl_PCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_
 
 np.savetxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_PCA_HI_mask_deconv_interp)
 
+
+ell=np.arange(lmax_cl+1)
+factor=ell*(ell+1)/(2*np.pi)
+
+
+fig = plt.figure(figsize=(10,7))
+frame1=fig.add_axes((.1,.3,.8,.6))
+plt.title(f'CLs: channel:{nu_ch[ich]} MHzlmax:{lmax}, Nfg:{num_sources}')
+plt.plot(ell[2:],factor[2:]*cl_cosmo_HI_mask_deconv_interp[ich][2:], label='Cosmo HI + noise')
+plt.plot(ell[2:],factor[2:]*cl_PCA_HI_mask_deconv_interp[ich][2:],'+', mfc='none', label='PCA HI + noise')
+plt.ylabel(r'$\frac{\ell(\ell+1)}{2\pi}  C_{\ell} $')
+plt.xlim([0,200])
+plt.legend()
+frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi} e C_{\ell} $')
+frame1.set_xlabel([])
+frame1.set_xticks(np.arange(1,200+1, 30))
+
+diff_cl_need2sphe = cl_PCA_HI_mask_deconv_interp/cl_cosmo_HI_mask_deconv_interp-1
+frame2=fig.add_axes((.1,.1,.8,.2))
+plt.plot(ell[2:], diff_cl_need2sphe[ich][2:]*100, label='% PCA_HI/input_HI -1')
+frame2.axhline(ls='--', c= 'k', alpha=0.3)
+frame2.set_xlim([0,200])
+frame2.set_ylim([-10,10])
+frame2.set_ylabel(r'%$  diff$')
+frame2.set_xlabel(r'$\ell$')
+frame2.set_xticks(np.arange(1,200+1, 30))
+#plt.tight_layout()
+plt.legend()
+#plt.savefig(out_dir_plot+f'cls_need2pix_jmax{jmax}_lmax{lmax}_nside{nside}_Nfg{Nfg}.png')
+plt.show()
+
+
+fig = plt.figure(figsize=(10,7))
+frame1=fig.add_axes((.1,.3,.8,.6))
+plt.title(f'NEEDLETS CLs: mean over channels, lmax:{lmax}, Nfg:{num_sources}')
+plt.plot(ell[2:], factor[2:]*cl_cosmo_HI_mask_deconv_interp.mean(axis=0)[2:], label = f'Cosmo HI + noise')
+plt.plot(ell[2:], factor[2:]*cl_PCA_HI_mask_deconv_interp.mean(axis=0)[2:],'+',mfc='none', label = f'PCA HI + noise')
+plt.xlim([0,200])
+plt.legend()
+frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi} \langle C_{\ell} \rangle_{\rm ch}$')
+frame1.set_xlabel([])
+frame1.set_xticks(np.arange(1,200+1, 30))
+
+frame2=fig.add_axes((.1,.1,.8,.2))
+plt.plot(ell[2:], diff_cl_need2sphe.mean(axis=0)[2:]*100, label='% PCA_HI/input_HI -1')
+frame2.axhline(ls='--', c= 'k', alpha=0.3)
+frame2.set_xlim([0,200])
+frame2.set_ylim([-10,10])
+frame2.set_ylabel(r'%$ \langle diff \rangle_{\rm ch}$')
+frame2.set_xlabel(r'$\ell$')
+frame2.set_xticks(np.arange(1,200+1, 30))
+#plt.tight_layout()
+plt.legend()
+#plt.savefig(out_dir_plot+f'cls_need2pix_jmax{jmax}_lmax{lmax}_nside{nside}_Nfg{Nfg}.png')
+
+plt.show()
+
 ################
-#
+
+cl_PCA_HI_mask_deconv_interp_18=np.loadtxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg18_lmax{lmax_cl}_nside{nside}.dat')
+fig = plt.figure(figsize=(10,7))
+plt.title(f'NEEDLETS CLs: mean over channels, lmax:{lmax}, Nfg:{num_sources}')
+plt.plot(ell[2:], factor[2:]*cl_cosmo_HI_mask_deconv_interp.mean(axis=0)[2:], label = f'Cosmo HI + noise')
+plt.plot(ell[2:], factor[2:]*cl_PCA_HI_mask_deconv_interp.mean(axis=0)[2:],'+',mfc='none', label = f'PCA HI + noise Nfg=3')
+plt.plot(ell[2:], factor[2:]*cl_PCA_HI_mask_deconv_interp_18.mean(axis=0)[2:],'+',mfc='none', label = f'PCA HI + noise Nfg=18')
+plt.xlim([0,200])
+plt.legend()
+
+plt.show()
 #cl_res_HI_no_mask = np.loadtxt(f'PCA_pixels_output/Maps_PCA/No_mean/Beam_theta40arcmin_noise/power_spectra_cls_from_healpix_maps/cl_PCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat')
 #
 #diff_cl_PCA_mask_full = cl_Hi_recons_Nfg/cl_res_HI_no_mask -1 

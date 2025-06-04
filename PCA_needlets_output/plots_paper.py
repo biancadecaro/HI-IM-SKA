@@ -30,6 +30,7 @@ plt.rcParams['xtick.minor.width'] = 1
 plt.rcParams['ytick.minor.width'] = 1
 plt.rcParams['axes.formatter.use_mathtext']=True
 plt.rcParams['savefig.dpi']=300
+plt.rcParams['legend.columnspacing']=0.5
 
 
 
@@ -37,6 +38,8 @@ from matplotlib import ticker
 formatter = ticker.ScalarFormatter(useMathText=True)
 formatter.set_scientific(True) 
 formatter.set_powerlimits((-1,1)) 
+
+c_pal = sns.color_palette().as_hex()
 #############################################################################
 
 beam_s = 'SKA_AA4'
@@ -62,14 +65,14 @@ theta_FWMH_max = c_light*1e-6/np.min(nu_ch)/float(dish_diam) #radians
 lmax_theta_worst = int(np.pi/theta_FWMH_max)
 ###############################
 
-nside=256
+nside=128
 npix= hp.nside2npix(nside)
 jmax=4
 lmax= 3*nside-1
 if fg_comp=='synch_ff_ps':
 	Nfg=3
 if fg_comp=='synch_ff_ps_pol':
-	Nfg=18
+	Nfg3,Nfg18=3,18
 B = pippo.mylibpy_jmax_lmax2B(jmax, lmax)
 
 cl_cosmo_HI=np.loadtxt(out_dir_cl+f'cl_deconv_cosmo_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{2*nside}_nside{nside}.dat')
@@ -89,7 +92,7 @@ print(lmax_plot)
 
 fig = plt.figure()
 frame1=fig.add_axes((.1,.3,.8,.6))
-plt.title(r'$\nu$='+f'{nu_ch[ich]} MHz')
+plt.title(r'$\nu$='+f'{nu_ch[ich]} MHz, '+r'N$_{\rm fg}$='+f'{Nfg}')
 plt.plot(ell[lmin:],factor[lmin:]*cl_cosmo_HI[ich][lmin:],'k--',label='Cosmo HI + noise')
 #plt.plot(ell[lmin:],factor[lmin:]*cl_cosmo_recon_HI[ich][lmin:],'k--',label='Cosmo HI + noise recons')
 plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI[ich][lmin:],  label='PCA HI + noise')
@@ -101,19 +104,16 @@ frame1.set_xlabel([])
 frame1.set_xticks(np.arange(lmin,lmax_plot+1, 10), labels=[])
 #frame1.yaxis.set_major_formatter(formatter) 
 
-diff_cl_need2sphe = cl_PCA_HI/cl_cosmo_HI-1
+diff_cl = cl_PCA_HI/cl_cosmo_HI-1
 diff_cl_need2sphe_recon = cl_PCA_HI/cl_cosmo_recon_HI-1
 
 frame2=fig.add_axes((.1,.1,.8,.2))
 #plt.plot(ell[lmin:], diff_cl_need2sphe_recon[ich][lmin:]*100,label='recons')
-plt.plot(ell[lmin:], diff_cl_need2sphe[ich][lmin:]*100,)
+plt.plot(ell[lmin:], diff_cl[ich][lmin:]*100,)
 
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_xlim([lmin,lmax_plot])
-if fg_comp=='synch_ff_ps_pol':
-	frame2.set_ylim([-50,50])
-else:
-	frame2.set_ylim([-50,50])
+frame2.set_ylim([-20,20])
 frame2.set_ylabel(r'%$ C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} $-1')
 frame2.set_xlabel(r'$\ell$')
 #frame2.yaxis.set_major_formatter(formatter) 
@@ -125,7 +125,7 @@ plt.savefig(f'Plots_paper/cl_std_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam_{beam_
 
 fig = plt.figure()
 frame1=fig.add_axes((.1,.3,.8,.6))
-plt.title(f'Mean over frequency channels')
+plt.title(f'Mean over frequency channels, '+r'N$_{\rm fg}$='+f'{Nfg}')
 plt.plot(ell[lmin:], factor[lmin:]*cl_cosmo_HI.mean(axis=0)[lmin:],'k--',label = f'Cosmo HI + noise')
 #plt.plot(ell[lmin:],factor[lmin:]*cl_cosmo_recon_HI.mean(axis=0)[lmin:],'k--',label='Cosmo HI + noise recons')
 plt.plot(ell[lmin:], factor[lmin:]*cl_PCA_HI.mean(axis=0)[lmin:], label = f'PCA HI + noise')
@@ -139,13 +139,10 @@ frame1.set_xticks(np.arange(lmin,lmax_plot+1, 10), labels=[])
 
 frame2=fig.add_axes((.1,.1,.8,.2))
 #plt.plot(ell[lmin:], diff_cl_need2sphe_recon.mean(axis=0)[lmin:]*100,label='recons')
-plt.plot(ell[lmin:], diff_cl_need2sphe.mean(axis=0)[lmin:]*100)
+plt.plot(ell[lmin:], diff_cl.mean(axis=0)[lmin:]*100)
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_xlim([lmin,lmax_plot])
-if fg_comp=='synch_ff_ps_pol':
-	frame2.set_ylim([-50,50])
-else:
-	frame2.set_ylim([-50,50])
+frame2.set_ylim([-20,20])
 frame2.set_ylabel(r'%$ \langle C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} -1\rangle_{\rm ch}$')
 frame2.set_xlabel(r'$\ell$')
 #frame2.yaxis.set_major_formatter(formatter) 
@@ -163,8 +160,26 @@ plt.legend(ncols=2, loc='upper left', frameon=False,columnspacing=1.)
 plt.ylabel(r'%$ C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} $-1')
 plt.xlabel(r'$\ell$')
 
+#################
+### prova plot media #####
+st_dev_mean_PCA = np.std(cl_PCA_HI, axis=0)/np.sqrt(num_ch)
+st_dev_mean_cosmo = np.std(cl_cosmo_HI, axis=0)/np.sqrt(num_ch)
+fig = plt.figure()
+plt.title(f'Mean over frequency channels')
+plt.plot(ell[lmin:], factor[lmin:]*cl_cosmo_HI.mean(axis=0)[lmin:],'k--',label = f'Cosmo HI + noise')
+plt.plot(ell[lmin:], factor[lmin:]*cl_PCA_HI.mean(axis=0)[lmin:], label = f'PCA HI + noise')
+plt.fill_between(x=ell[lmin:],y1= factor[lmin:]*(cl_cosmo_HI.mean(axis=0)[lmin:]-st_dev_mean_cosmo[lmin:]), y2=factor[lmin:]*(cl_cosmo_HI.mean(axis=0)[lmin:]+st_dev_mean_cosmo[lmin:]), color='k', alpha=0.3 )
+plt.fill_between(x=ell[lmin:],y1= factor[lmin:]*(cl_PCA_HI.mean(axis=0)[lmin:]-st_dev_mean_PCA[lmin:]), y2=factor[lmin:]*(cl_PCA_HI.mean(axis=0)[lmin:]+st_dev_mean_PCA[lmin:]), alpha=0.3 )
 
-
+#plt.errorbar(ell[lmin:], factor[lmin:]*cl_cosmo_HI.mean(axis=0)[lmin:], yerr=factor[lmin:]*st_dev_mean_cosmo[lmin:], label = f'Cosmo HI + noise')
+#plt.errorbar(ell[lmin:], factor[lmin:]*cl_PCA_HI.mean(axis=0)[lmin:], yerr=factor[lmin:]*st_dev_mean_PCA[lmin:], label = f'PCA HI + noise')
+plt.xlim([lmin,lmax_plot])
+plt.legend()
+plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+plt.ylabel(r'$  \ell(\ell+1)/2\pi~ \langle C_{\ell} \rangle_{\rm ch}$ [mK$^{2}$]')
+plt.xlabel(r'$\ell$')
+plt.xticks(np.arange(lmin,lmax_plot+1, 10))
+plt.show()
 #plt.show()
 ###################################################################################################################################
 ###################################################################################################################################
@@ -177,16 +192,71 @@ out_dir_cl = out_dir_maps_recon+'cls_recons_need/'
 if fg_comp=='synch_ff_ps':
 	Nfg=3
 if fg_comp=='synch_ff_ps_pol':
-	Nfg=18
+	Nfg18, Nfg3, Nfg6 =18, 3, 6
 
-cl_PCA_HI_pol=np.loadtxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{2*nside}_nside{nside}.dat')
+cl_PCA_HI_pol_18=np.loadtxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg18}_jmax{jmax}_lmax{2*nside}_nside{nside}.dat')
+cl_PCA_HI_pol_3=np.loadtxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_jmax{jmax}_lmax{2*nside}_nside{nside}.dat')
+cl_PCA_HI_pol_6=np.loadtxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg6}_jmax{jmax}_lmax{2*nside}_nside{nside}.dat')
+
+###################################################################
+####  comparison with standard PCA ##############################
+out_dir_cl_std = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/power_spectra_cls_from_healpix_maps/'
+cl_standard_PCA_HI_pol_18=np.loadtxt(out_dir_cl_std+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg18}_lmax{2*nside}_nside{nside}.dat')
+cl_standard_PCA_HI_pol_3=np.loadtxt(out_dir_cl_std+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_lmax{2*nside}_nside{nside}.dat')
+cl_standard_PCA_HI_pol_6=np.loadtxt(out_dir_cl_std+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg6}_lmax{2*nside}_nside{nside}.dat')
+#####################################################################
+fig = plt.figure()
+frame1=fig.add_axes((.1,.3,.8,.6))
+plt.title(f'Mean over frequency channels, with pol leakage, '+r'N$_{\rm fg}$='+f'{Nfg}')
+plt.plot(ell[lmin:], factor[lmin:]*cl_cosmo_HI.mean(axis=0)[lmin:],'k--',label = f'Cosmo HI + noise')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_3.mean(axis=0)[lmin:], c=c_pal[0], label=r'Need-PCA, $N_{\rm fg}$=3')
+plt.plot(ell[lmin:],factor[lmin:]*cl_standard_PCA_HI_pol_3.mean(axis=0)[lmin:], ls='--',c=c_pal[0], label=r'PCA HI, $N_{\rm fg}$=3')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_6.mean(axis=0)[lmin:], c=c_pal[1], label=r'Need-PCA, $N_{\rm fg}$=6')
+plt.plot(ell[lmin:],factor[lmin:]*cl_standard_PCA_HI_pol_6.mean(axis=0)[lmin:], ls='--',c=c_pal[1], label=r'PCA, $N_{\rm fg}$=6')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_18.mean(axis=0)[lmin:], c=c_pal[2],  label=r'Need-PCA, $N_{\rm fg}$=18')
+plt.plot(ell[lmin:],factor[lmin:]*cl_standard_PCA_HI_pol_18.mean(axis=0)[lmin:], ls='--',c=c_pal[2],  label=r'PCA, $N_{\rm fg}$=18')
+plt.xlim([lmin,lmax_plot])
+plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+plt.legend(ncols=2)
+frame1.set_ylabel(r'$  \ell(\ell+1)/2\pi~ \langle C_{\ell} \rangle_{\rm ch}$ [mK$^{2}$]')
+frame1.set_xlabel([])
+frame1.set_xticks(np.arange(lmin,lmax_plot+1, 10), labels=[])
+#frame1.yaxis.set_major_formatter(formatter) 
+
+diff_cl_pol_3 = cl_PCA_HI_pol_3/cl_cosmo_HI-1
+diff_cl_pol_6 = cl_PCA_HI_pol_6/cl_cosmo_HI-1
+diff_cl_pol_18 = cl_PCA_HI_pol_18/cl_cosmo_HI-1
+
+
+diff_std_PCA_cl_pol_3 = cl_standard_PCA_HI_pol_3/cl_cosmo_HI-1
+diff_std_PCA_cl_pol_6 = cl_standard_PCA_HI_pol_6/cl_cosmo_HI-1
+diff_std_PCA_cl_pol_18 = cl_standard_PCA_HI_pol_18/cl_cosmo_HI-1
+
+frame2=fig.add_axes((.1,.1,.8,.2))
+plt.plot(ell[lmin:], diff_cl_pol_3.mean(axis=0)[lmin:]*100, c=c_pal[0], label=r'Need-PCA, $N_{\rm fg}$=3')
+plt.plot(ell[lmin:], diff_std_PCA_cl_pol_3.mean(axis=0)[lmin:]*100,ls='--', c=c_pal[0], label=r'PCA, $N_{\rm fg}$=3')
+plt.plot(ell[lmin:], diff_cl_pol_6.mean(axis=0)[lmin:]*100, c=c_pal[1], label=r'Need-PCA, $N_{\rm fg}$=6')
+plt.plot(ell[lmin:], diff_std_PCA_cl_pol_6.mean(axis=0)[lmin:]*100,ls='--',c=c_pal[1], label=r'PCA HI, $N_{\rm fg}$=6')
+plt.plot(ell[lmin:], diff_cl_pol_18.mean(axis=0)[lmin:]*100, c=c_pal[2], label=r'Need-PCA, $N_{\rm fg}$=18')
+plt.plot(ell[lmin:], diff_std_PCA_cl_pol_18.mean(axis=0)[lmin:]*100,ls='--', c=c_pal[2], label=r'PCA HI, $N_{\rm fg}$=18')
+frame2.axhline(ls='--', c= 'k', alpha=0.3)
+frame2.set_xlim([lmin,lmax_plot])
+frame2.set_ylim([-20,20])
+frame2.set_ylabel(r'%$ \langle C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} -1\rangle_{\rm ch}$')
+frame2.set_xlabel(r'$\ell$')
+#frame2.yaxis.set_major_formatter(formatter) 
+frame2.set_xticks(np.arange(lmin,lmax_plot+1, 10))
+
+plt.savefig(f'Plots_paper/comparison_cl_PCA_standard_need_mean_ch_{fg_comp}_noise_beam_{beam_s}_jmax{jmax}_Nfg3_Nfg6_Nfg18_nside{nside}_mask0.5.png')
 
 #####################################################################
 fig = plt.figure()
 frame1=fig.add_axes((.1,.3,.8,.6))
 plt.title(r'$\nu$='+f'{nu_ch[ich]} MHz, with pol leakage')
 plt.plot(ell[lmin:],factor[lmin:]*cl_cosmo_HI[ich][lmin:],'k--',label='Cosmo HI + noise')
-plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol[ich][lmin:],  label='PCA HI + noise')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_3[ich][lmin:], c=c_pal[0], label=r'PCA HI + noise, $N_{\rm fg}$=3')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_6[ich][lmin:], c=c_pal[1], label=r'PCA HI + noise, $N_{\rm fg}$=6')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_18[ich][lmin:], c=c_pal[2],  label=r'PCA HI + noise, $N_{\rm fg}$=18')
 plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 plt.xlim([lmin,lmax_plot])
 plt.legend()
@@ -196,22 +266,24 @@ frame1.set_xticks(np.arange(lmin,lmax_plot+1, 10), labels=[])
 #frame1.yaxis.set_major_formatter(formatter) 
 
 
-diff_cl_need2sphe_pol = cl_PCA_HI_pol/cl_cosmo_HI-1
+diff_cl_pol_3 = cl_PCA_HI_pol_3/cl_cosmo_HI-1
+diff_cl_pol_6 = cl_PCA_HI_pol_6/cl_cosmo_HI-1
+diff_cl_pol_18 = cl_PCA_HI_pol_18/cl_cosmo_HI-1
 
 frame2=fig.add_axes((.1,.1,.8,.2))
-plt.plot(ell[lmin:], diff_cl_need2sphe[ich][lmin:]*100,)
+plt.plot(ell[lmin:], diff_cl_pol_3[ich][lmin:]*100, c=c_pal[0], label=r'PCA HI + noise, $N_{\rm fg}$=3')
+plt.plot(ell[lmin:], diff_cl_pol_6[ich][lmin:]*100, c=c_pal[1], label=r'PCA HI + noise, $N_{\rm fg}$=6')
+plt.plot(ell[lmin:], diff_cl_pol_18[ich][lmin:]*100, c=c_pal[2], label=r'PCA HI + noise, $N_{\rm fg}$=18')
+
 
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_xlim([lmin,lmax_plot])
-if fg_comp=='synch_ff_ps_pol':
-	frame2.set_ylim([-50,50])
-else:
-	frame2.set_ylim([-50,50])
+frame2.set_ylim([-20,20])
 frame2.set_ylabel(r'%$ C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} $-1')
 frame2.set_xlabel(r'$\ell$')
 #frame2.yaxis.set_major_formatter(formatter) 
 frame2.set_xticks(np.arange(lmin,lmax_plot+1, 10))
-plt.savefig(f'Plots_paper/cl_std_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam_{beam_s}_jmax{jmax}_Nfg{Nfg}_nside{nside}_mask0.5.png')
+plt.savefig(f'Plots_paper/cl_std_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam_{beam_s}_jmax{jmax}_Nfg{Nfg3}_{Nfg6}_{Nfg18}_nside{nside}_mask0.5.png')
 
 #plt.show()
 
@@ -219,7 +291,9 @@ fig = plt.figure()
 frame1=fig.add_axes((.1,.3,.8,.6))
 plt.title(f'Mean over frequency channels, with pol leakage')
 plt.plot(ell[lmin:], factor[lmin:]*cl_cosmo_HI.mean(axis=0)[lmin:],'k--',label = f'Cosmo HI + noise')
-plt.plot(ell[lmin:], factor[lmin:]*cl_PCA_HI_pol.mean(axis=0)[lmin:], mfc='none', label = f'PCA HI + noise')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_3.mean(axis=0)[lmin:], c=c_pal[0], label=r'PCA HI + noise, $N_{\rm fg}$=3')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_6.mean(axis=0)[lmin:], c=c_pal[1], label=r'PCA HI + noise, $N_{\rm fg}$=6')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_18.mean(axis=0)[lmin:], c=c_pal[2],  label=r'PCA HI + noise, $N_{\rm fg}$=18')
 plt.xlim([lmin,lmax_plot])
 plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 plt.legend()
@@ -229,21 +303,71 @@ frame1.set_xticks(np.arange(lmin,lmax_plot+1, 10), labels=[])
 #frame1.yaxis.set_major_formatter(formatter) 
 
 frame2=fig.add_axes((.1,.1,.8,.2))
-plt.plot(ell[lmin:], diff_cl_need2sphe_pol.mean(axis=0)[lmin:]*100)
+plt.plot(ell[lmin:], diff_cl_pol_3.mean(axis=0)[lmin:]*100, c=c_pal[0], label=r'PCA HI + noise, $N_{\rm fg}$=3')
+plt.plot(ell[lmin:], diff_cl_pol_6.mean(axis=0)[lmin:]*100, c=c_pal[1], label=r'PCA HI + noise, $N_{\rm fg}$=6')
+plt.plot(ell[lmin:], diff_cl_pol_18.mean(axis=0)[lmin:]*100, c=c_pal[2], label=r'PCA HI + noise, $N_{\rm fg}$=18')
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_xlim([lmin,lmax_plot])
-if fg_comp=='synch_ff_ps_pol':
-	frame2.set_ylim([-50,50])
-else:
-	frame2.set_ylim([-50,50])
+frame2.set_ylim([-20,20])
 frame2.set_ylabel(r'%$ \langle C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} -1\rangle_{\rm ch}$')
 frame2.set_xlabel(r'$\ell$')
 #frame2.yaxis.set_major_formatter(formatter) 
 frame2.set_xticks(np.arange(lmin,lmax_plot+1, 10))
-plt.savefig(f'Plots_paper/cl_std_need_mean_ch_{fg_comp}_noise_beam_{beam_s}_jmax{jmax}_Nfg{Nfg}_nside{nside}_mask0.5.png')
+plt.savefig(f'Plots_paper/cl_std_need_mean_ch_{fg_comp}_noise_beam_{beam_s}_jmax{jmax}_Nfg{Nfg3}_{Nfg6}_{Nfg18}_nside{nside}_mask0.5.png')
+
+#plt.show()
+###########################################################################################
+fig = plt.figure()
+frame1=fig.add_axes((.1,.3,.8,.6))
+plt.title(r'$\nu$='+f'{nu_ch[ich]} MHz, with pol leakage, '+r'N$_{\rm fg}$='+f'{Nfg3}')
+plt.plot(ell[lmin:],factor[lmin:]*cl_cosmo_HI[ich][lmin:],'k--',label='Cosmo HI + noise')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_3[ich][lmin:], c=c_pal[0], label=r'PCA HI + noise')
+plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+plt.xlim([lmin,lmax_plot])
+plt.legend()
+frame1.set_ylabel(r'$  \ell(\ell+1)/2\pi~ C_{\ell} $ [mK$^{2}$]')
+frame1.set_xlabel([])
+frame1.set_xticks(np.arange(lmin,lmax_plot+1, 10), labels=[])
+#frame1.yaxis.set_major_formatter(formatter) 
+
+frame2=fig.add_axes((.1,.1,.8,.2))
+plt.plot(ell[lmin:], diff_cl_pol_3[ich][lmin:]*100, c=c_pal[0], label=r'PCA HI + noise')
+
+
+frame2.axhline(ls='--', c= 'k', alpha=0.3)
+frame2.set_xlim([lmin,lmax_plot])
+frame2.set_ylim([-20,20])
+frame2.set_ylabel(r'%$ C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} $-1')
+frame2.set_xlabel(r'$\ell$')
+#frame2.yaxis.set_major_formatter(formatter) 
+frame2.set_xticks(np.arange(lmin,lmax_plot+1, 10))
+plt.savefig(f'Plots_paper/cl_std_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam_{beam_s}_jmax{jmax}_Nfg{Nfg3}_nside{nside}_mask0.5.png')
 
 #plt.show()
 
+fig = plt.figure()
+frame1=fig.add_axes((.1,.3,.8,.6))
+plt.title(f'Mean over frequency channels, with pol leakage, '+r'N$_{\rm fg}$='+f'{Nfg3}')
+plt.plot(ell[lmin:], factor[lmin:]*cl_cosmo_HI.mean(axis=0)[lmin:],'k--',label = f'Cosmo HI + noise')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_3.mean(axis=0)[lmin:], c=c_pal[0], label=r'PCA HI + noise')
+plt.xlim([lmin,lmax_plot])
+plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+plt.legend()
+frame1.set_ylabel(r'$  \ell(\ell+1)/2\pi~ \langle C_{\ell} \rangle_{\rm ch}$ [mK$^{2}$]')
+frame1.set_xlabel([])
+frame1.set_xticks(np.arange(lmin,lmax_plot+1, 10), labels=[])
+#frame1.yaxis.set_major_formatter(formatter) 
+
+frame2=fig.add_axes((.1,.1,.8,.2))
+plt.plot(ell[lmin:], diff_cl_pol_3.mean(axis=0)[lmin:]*100, c=c_pal[0], label=r'PCA HI + noise')
+frame2.axhline(ls='--', c= 'k', alpha=0.3)
+frame2.set_xlim([lmin,lmax_plot])
+frame2.set_ylim([-20,20])
+frame2.set_ylabel(r'%$ \langle C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} -1\rangle_{\rm ch}$')
+frame2.set_xlabel(r'$\ell$')
+#frame2.yaxis.set_major_formatter(formatter) 
+frame2.set_xticks(np.arange(lmin,lmax_plot+1, 10))
+plt.savefig(f'Plots_paper/cl_std_need_mean_ch_{fg_comp}_noise_beam_{beam_s}_jmax{jmax}_Nfg{Nfg3}_nside{nside}_mask0.5.png')
 
 #################################################################################################################
 ###################################### costant beam #############################################################
@@ -253,20 +377,10 @@ fg_comp = 'synch_ff_ps'
 out_dir_maps_recon = f'maps_reconstructed/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 out_dir_cl = out_dir_maps_recon+'cls_recons_need/'
 
-num_ch=105
-min_ch = 900.5
-max_ch = 1004.5
-nu_ch = np.linspace(min_ch, max_ch, num_ch)
-#ich=int(num_ch/2.)
-
-nside=256
-npix= hp.nside2npix(nside)
-jmax=4
-lmax= 3*nside-1
 if fg_comp=='synch_ff_ps':
 	Nfg=3
 if fg_comp=='synch_ff_ps_pol':
-	Nfg=18
+	Nfg3,Nfg18=3,18
 B = pippo.mylibpy_jmax_lmax2B(jmax, lmax)
 
 cl_cosmo_HI_1p3deg=np.loadtxt(out_dir_cl+f'cl_deconv_cosmo_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{2*nside}_nside{nside}.dat')
@@ -282,7 +396,7 @@ lmin = 3
 
 fig = plt.figure()
 frame1=fig.add_axes((.1,.3,.8,.6))
-plt.title(r'$\theta_{\rm FMWH}=1.3$ deg, $\nu$='+f'{nu_ch[ich]} MHz')
+plt.title(r'$\theta_{\rm FMWH}=1.3$ deg, $\nu$='+f'{nu_ch[ich]} MHz,'+r'N$_{\rm fg}$='+f'{Nfg}')
 plt.plot(ell[lmin:],factor[lmin:]*cl_cosmo_HI_1p3deg[ich][lmin:],'k--',label='Cosmo HI + noise')
 plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_1p3deg[ich][lmin:],  label='PCA HI + noise')
 plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
@@ -294,17 +408,14 @@ frame1.set_xticks(np.arange(lmin,lmax_plot+1, 10), labels=[])
 #frame1.yaxis.set_major_formatter(formatter) 
 
 
-diff_cl_need2sphe_1p3deg = cl_PCA_HI_1p3deg/cl_cosmo_HI_1p3deg-1
+diff_cl_1p3deg = cl_PCA_HI_1p3deg/cl_cosmo_HI_1p3deg-1
 
 frame2=fig.add_axes((.1,.1,.8,.2))
-plt.plot(ell[lmin:], diff_cl_need2sphe_1p3deg[ich][lmin:]*100,)
+plt.plot(ell[lmin:], diff_cl_1p3deg[ich][lmin:]*100,)
 
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_xlim([lmin,lmax_plot])
-if fg_comp=='synch_ff_ps_pol':
-	frame2.set_ylim([-50,50])
-else:
-	frame2.set_ylim([-50,50])
+frame2.set_ylim([-20,20])
 frame2.set_ylabel(r'%$ C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} $-1')
 frame2.set_xlabel(r'$\ell$')
 frame2.set_xticks(np.arange(lmin,lmax_plot+1, 10))
@@ -314,7 +425,7 @@ plt.savefig(f'Plots_paper/cl_std_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam_{beam_
 
 fig = plt.figure()
 frame1=fig.add_axes((.1,.3,.8,.6))
-plt.title(r'$\theta_{\rm FMWH}=1.3$ deg, '+f'Mean over frequency channels')
+plt.title(r'$\theta_{\rm FMWH}=1.3$ deg, '+f'Mean over frequency channels, '+r'N$_{\rm fg}$='+f'{Nfg}')
 plt.plot(ell[lmin:], factor[lmin:]*cl_cosmo_HI_1p3deg.mean(axis=0)[lmin:],'k--',label = f'Cosmo HI + noise')
 plt.plot(ell[lmin:], factor[lmin:]*cl_PCA_HI_1p3deg.mean(axis=0)[lmin:], mfc='none', label = f'PCA HI + noise')
 plt.xlim([lmin,lmax_plot])
@@ -326,13 +437,10 @@ frame1.set_xticks(np.arange(lmin,lmax_plot+1, 10), labels=[])
 #frame1.yaxis.set_major_formatter(formatter) 
 
 frame2=fig.add_axes((.1,.1,.8,.2))
-plt.plot(ell[lmin:], diff_cl_need2sphe_1p3deg.mean(axis=0)[lmin:]*100)
+plt.plot(ell[lmin:], diff_cl_1p3deg.mean(axis=0)[lmin:]*100)
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_xlim([lmin,lmax_plot])
-if fg_comp=='synch_ff_ps_pol':
-	frame2.set_ylim([-50,50])
-else:
-	frame2.set_ylim([-50,50])
+frame2.set_ylim([-20,20])
 frame2.set_ylabel(r'%$ \langle C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} -1\rangle_{\rm ch}$')
 frame2.set_xlabel(r'$\ell$')
 #frame2.yaxis.set_major_formatter(formatter) 
@@ -346,20 +454,21 @@ plt.savefig(f'Plots_paper/cl_std_need_mean_ch_{fg_comp}_noise_beam_{beam_s}_jmax
 beam_s = '1.3deg_SKA_AA4'
 fg_comp = 'synch_ff_ps_pol'
 
-out_dir_maps_recon = f'maps_reconstructed/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
-out_dir_cl = out_dir_maps_recon+'cls_recons_need/'
-
 if fg_comp=='synch_ff_ps':
 	Nfg=3
 if fg_comp=='synch_ff_ps_pol':
-	Nfg=18
+	Nfg3,Nfg18=3,18
 
-cl_PCA_HI_1p3deg_pol=np.loadtxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{2*nside}_nside{nside}.dat')
+out_dir_maps_recon = f'maps_reconstructed/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+out_dir_cl = out_dir_maps_recon+'cls_recons_need/'
+
+cl_PCA_HI_1p3deg_pol=np.loadtxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_jmax{jmax}_lmax{2*nside}_nside{nside}.dat')
+cl_standard_PCA_HI_1p3deg_pol_3=np.loadtxt(out_dir_cl_std+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_lmax{2*nside}_nside{nside}.dat')
 
 #####################################################################
 fig = plt.figure()
 frame1=fig.add_axes((.1,.3,.8,.6))
-plt.title(r'$\theta_{\rm FMWH}=1.3$ deg, $\nu$='+f'{nu_ch[ich]} MHz, with pol leakage')
+plt.title(r'$\theta_{\rm FMWH}=1.3$ deg, $\nu$='+f'{nu_ch[ich]} MHz, with pol leakage, '+r'N$_{\rm fg}$='+f'{Nfg3}')
 plt.plot(ell[lmin:],factor[lmin:]*cl_cosmo_HI_1p3deg[ich][lmin:],'k--',label='Cosmo HI + noise')
 plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_1p3deg_pol[ich][lmin:],  label='PCA HI + noise')
 plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
@@ -370,27 +479,24 @@ frame1.set_xlabel([])
 frame1.set_xticks(np.arange(lmin,lmax_plot+1, 10), labels=[])
 #frame1.yaxis.set_major_formatter(formatter) 
 
-diff_cl_need2sphe_1p3deg_pol = cl_PCA_HI_1p3deg_pol/cl_cosmo_HI_1p3deg-1
+diff_cl_1p3deg_pol = cl_PCA_HI_1p3deg_pol/cl_cosmo_HI_1p3deg-1
 
 frame2=fig.add_axes((.1,.1,.8,.2))
-plt.plot(ell[lmin:], diff_cl_need2sphe_1p3deg_pol[ich][lmin:]*100,)
+plt.plot(ell[lmin:], diff_cl_1p3deg_pol[ich][lmin:]*100,)
 
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_xlim([lmin,lmax_plot])
-if fg_comp=='synch_ff_ps_pol':
-	frame2.set_ylim([-50,50])
-else:
-	frame2.set_ylim([-50,50])
+frame2.set_ylim([-20,20])
 frame2.set_ylabel(r'%$ C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} $-1')
 frame2.set_xlabel(r'$\ell$')
 #frame2.yaxis.set_major_formatter(formatter) 
 frame2.set_xticks(np.arange(lmin,lmax_plot+1, 10))
-plt.savefig(f'Plots_paper/cl_std_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam_{beam_s}_jmax{jmax}_Nfg{Nfg}_nside{nside}_mask0.5.png')
+plt.savefig(f'Plots_paper/cl_std_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam_{beam_s}_jmax{jmax}_Nfg{Nfg3}_nside{nside}_mask0.5.png')
 
 
 fig = plt.figure()
 frame1=fig.add_axes((.1,.3,.8,.6))
-plt.title(r'$\theta_{\rm FMWH}=1.3$ deg, '+f'Mean over frequency channels, with pol leakage')
+plt.title(r'$\theta_{\rm FMWH}=1.3$ deg, '+f'Mean over frequency channels, with pol leakage, '+r'N$_{\rm fg}$='+f'{Nfg}')
 plt.plot(ell[lmin:], factor[lmin:]*cl_cosmo_HI_1p3deg.mean(axis=0)[lmin:],'k--',label = f'Cosmo HI + noise')
 plt.plot(ell[lmin:], factor[lmin:]*cl_PCA_HI_1p3deg_pol.mean(axis=0)[lmin:], mfc='none', label = f'PCA HI + noise')
 plt.xlim([lmin,lmax_plot])
@@ -402,20 +508,42 @@ frame1.set_xticks(np.arange(lmin,lmax_plot+1, 10), labels=[])
 #frame1.yaxis.set_major_formatter(formatter) 
 
 frame2=fig.add_axes((.1,.1,.8,.2))
-plt.plot(ell[lmin:], diff_cl_need2sphe_1p3deg_pol.mean(axis=0)[lmin:]*100)
+plt.plot(ell[lmin:], diff_cl_1p3deg_pol.mean(axis=0)[lmin:]*100)
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_xlim([lmin,lmax_plot])
-if fg_comp=='synch_ff_ps_pol':
-	frame2.set_ylim([-50,50])
-else:
-	frame2.set_ylim([-50,50])
+frame2.set_ylim([-20,20])
 frame2.set_ylabel(r'%$ \langle C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} -1\rangle_{\rm ch}$')
 frame2.set_xlabel(r'$\ell$')
 #frame2.yaxis.set_major_formatter(formatter) 
 frame2.set_xticks(np.arange(lmin,lmax_plot+1, 10))
-plt.savefig(f'Plots_paper/cl_std_need_mean_ch_{fg_comp}_noise_beam_{beam_s}_jmax{jmax}_Nfg{Nfg}_nside{nside}_mask0.5.png')
+plt.savefig(f'Plots_paper/cl_std_need_mean_ch_{fg_comp}_noise_beam_{beam_s}_jmax{jmax}_Nfg{Nfg3}_nside{nside}_mask0.5.png')
+##############################################################################
+fig = plt.figure()
+frame1=fig.add_axes((.1,.3,.8,.6))
+plt.title(r'$\theta_{\rm FMWH}=1.3$ deg, '+f'Mean over frequency channels, with pol leakage, '+r'N$_{\rm fg}$='+f'{Nfg}')
+plt.plot(ell[lmin:], factor[lmin:]*cl_cosmo_HI_1p3deg.mean(axis=0)[lmin:],'k--',label = f'Cosmo HI + noise')
+plt.plot(ell[lmin:], factor[lmin:]*cl_PCA_HI_1p3deg_pol.mean(axis=0)[lmin:], mfc='none', c=c_pal[0],label = f'Need-PCA HI + noise')
+plt.plot(ell[lmin:], factor[lmin:]*cl_standard_PCA_HI_1p3deg_pol_3.mean(axis=0)[lmin:], mfc='none', c=c_pal[1],label = f'PCA HI + noise')
+plt.xlim([lmin,lmax_plot])
+plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+plt.legend()
+frame1.set_ylabel(r'$  \ell(\ell+1)/2\pi~ \langle C_{\ell} \rangle_{\rm ch}$ [mK$^{2}$]')
+frame1.set_xlabel([])
+frame1.set_xticks(np.arange(lmin,lmax_plot+1, 10), labels=[])
+#frame1.yaxis.set_major_formatter(formatter) 
 
+diff_cl_std_1p3deg_pol = cl_standard_PCA_HI_1p3deg_pol_3/cl_cosmo_HI_1p3deg-1
 
+frame2=fig.add_axes((.1,.1,.8,.2))
+plt.plot(ell[lmin:], diff_cl_1p3deg_pol.mean(axis=0)[lmin:]*100,c=c_pal[0],label = f'Need-PCA HI + noise')
+plt.plot(ell[lmin:], diff_cl_std_1p3deg_pol.mean(axis=0)[lmin:]*100,c=c_pal[1],label = f'PCA HI + noise')
+frame2.axhline(ls='--', c= 'k', alpha=0.3)
+frame2.set_xlim([lmin,lmax_plot])
+frame2.set_ylim([-20,20])
+frame2.set_ylabel(r'%$ \langle C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} -1\rangle_{\rm ch}$')
+frame2.set_xlabel(r'$\ell$')
+#frame2.yaxis.set_major_formatter(formatter) 
+frame2.set_xticks(np.arange(lmin,lmax_plot+1, 10))
 
 #######################################################################################################################
 ################################## confronto beam #############################################
@@ -424,8 +552,8 @@ plt.savefig(f'Plots_paper/cl_std_need_mean_ch_{fg_comp}_noise_beam_{beam_s}_jmax
 
 fig, ax = plt.subplots(1,1)
 plt.title(r'$\nu$='+f'{nu_ch[0]} MHz')
-ax.plot(ell[lmin:], diff_cl_need2sphe[0][lmin:]*100, label = 'Frequency-dependent beam')
-ax.plot(ell[lmin:], diff_cl_need2sphe_1p3deg[0][lmin:]*100, label = r'$\theta_{\rm FMWH}=$ 1.3 deg')
+ax.plot(ell[lmin:], diff_cl[0][lmin:]*100, label = 'Frequency-dependent beam')
+ax.plot(ell[lmin:], diff_cl_1p3deg[0][lmin:]*100, label = r'$\theta_{\rm FMWH}=$ 1.3 deg')
 ax.axhline(ls='--', c= 'k', alpha=0.3)
 ax.set_xlim([lmin, lmax_plot+1])
 ax.set_ylim([-50,50])
@@ -438,8 +566,8 @@ plt.legend()
 
 fig, ax = plt.subplots(1,1)
 plt.title(f'Mean over frequency channels')
-ax.plot(ell[lmin:], diff_cl_need2sphe.mean(axis=0)[lmin:]*100, label = 'Frequency-dependent beam')
-ax.plot(ell[lmin:], diff_cl_need2sphe_1p3deg.mean(axis=0)[lmin:]*100, label = r'$\theta_{\rm FMWH}=$ 1.3 deg')
+ax.plot(ell[lmin:], diff_cl.mean(axis=0)[lmin:]*100, label = 'Frequency-dependent beam')
+ax.plot(ell[lmin:], diff_cl_1p3deg.mean(axis=0)[lmin:]*100, label = r'$\theta_{\rm FMWH}=$ 1.3 deg')
 ax.axhline(ls='--', c= 'k', alpha=0.3)
 ax.set_xlim([lmin, lmax_plot+1])
 ax.set_ylim([-50,50])
@@ -452,8 +580,8 @@ plt.savefig(f'Plots_paper/diff_beam_need_mean_ch_synch_ff_ps_noise_jmax{jmax}_Nf
 
 fig, ax = plt.subplots(1,1)
 plt.title(f'Mean over frequency channels, with pol leakage')
-ax.plot(ell[lmin:], diff_cl_need2sphe_pol.mean(axis=0)[lmin:]*100, label = 'Frequency-dependent beam')
-ax.plot(ell[lmin:], diff_cl_need2sphe_1p3deg_pol.mean(axis=0)[lmin:]*100, label = r'$\theta_{\rm FMWH}=$ 1.3 deg')
+ax.plot(ell[lmin:], diff_cl_pol_3.mean(axis=0)[lmin:]*100, label = 'Frequency-dependent beam')
+ax.plot(ell[lmin:], diff_cl_1p3deg_pol.mean(axis=0)[lmin:]*100, label = r'$\theta_{\rm FMWH}=$ 1.3 deg')
 ax.axhline(ls='--', c= 'k', alpha=0.3)
 ax.set_xlim([lmin, lmax_plot+1])
 ax.set_ylim([-50,50])
@@ -462,7 +590,7 @@ ax.set_xlabel(r'$\ell$')
 ax.set_xticks(np.arange(lmin,lmax_plot+1, 10))
 plt.legend()
 
-plt.savefig(f'Plots_paper/diff_beam_need_mean_ch_synch_ff_ps_pol_noise_jmax{jmax}_Nfg18_nside{nside}_mask0.5.png')
+plt.savefig(f'Plots_paper/diff_beam_need_mean_ch_synch_ff_ps_pol_noise_jmax{jmax}_Nfg{Nfg}_nside{nside}_mask0.5.png')
 
 
 plt.show()

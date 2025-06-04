@@ -39,9 +39,9 @@ formatter.set_scientific(True)
 formatter.set_powerlimits((-1,1)) 
 
 ###########################################################################3
-fg_comp = 'synch_ff_ps'
+fg_comp = 'synch_ff_ps_pol'
 beam_s = 'SKA_AA4'
-path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
+path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
@@ -61,7 +61,7 @@ del file
 
 
 need_dir = f'Maps_needlets/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
-need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_105freq_900.5_1004.5MHz_jmax12_lmax767_B1.74_nside256.npy'
+need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_105freq_900.5_1004.5MHz_jmax12_lmax383_B1.64_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
 jmax=need_tot_maps.shape[1]-1
@@ -85,10 +85,7 @@ mask_50 = np.zeros(npix)
 mask_50[pix_mask] =1
 fsky_50 = np.sum(mask_50)/hp.nside2npix(nside)
 
-fig=plt.figure()
-hp.mollview(mask_50, cmap='viridis', title=f'fsky={np.mean(mask_50):0.2f}', hold=True)
-#plt.savefig(f'Plots_sims/mask_apo3deg_fsky{np.mean(mask_40s):0.2f}_nside{nside}.png')
-plt.show()
+
 ########################################################################
 bad_v = np.where(mask_50==0)
 
@@ -102,10 +99,6 @@ need_tot_maps_masked=ma.zeros(need_tot_maps.shape)
 for n in range(num_freq):
     for jj in range(jmax+1):
         need_tot_maps_masked[n,jj]  =ma.MaskedArray(need_tot_maps[n,jj], mask=mask)#np.isnan(full_maps_freq_mask[n])
-
-
-hp.mollview(need_tot_maps_masked[0,3], cmap='viridis', title='masked ma')
-plt.show()
 
 
 Cov_channels = np.zeros((jmax+1,num_freq, num_freq))
@@ -140,7 +133,7 @@ plt.show()
 if fg_comp=='synch_ff_ps':
     num_sources=3
 if fg_comp=='synch_ff_ps_pol':
-    num_sources=18
+    num_sources=3#6#18
 
 Nfg = num_freq - num_sources
 print(f'Nfg:{num_sources}')
@@ -244,10 +237,10 @@ for j in range(eigenvec_fg_Nfg.shape[0]):
     leak_fg_maps[j,:,bad_v]=hp.UNSEEN
 
 
-filename = out_dir_output_PCA+f'leak_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_nside{nside}'
-with open(filename+'.pkl', 'wb') as ff:
-    pickle.dump(leak_fg_maps, ff)
-    ff.close()
+#filename = out_dir_output_PCA+f'leak_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_nside{nside}'
+#with open(filename+'.pkl', 'wb') as ff:
+#    pickle.dump(leak_fg_maps, ff)
+#    ff.close()
 
 #leak_fg_maps.dump(out_dir_output_PCA+f'leak_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy')
 #np.save(out_dir_output_PCA+f'leak_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',leak_fg_maps)
@@ -279,10 +272,10 @@ for j in range(eigenvec_fg_Nfg.shape[0]):
 del eigenvec_fg_Nfg; 
 
 
-filename = out_dir_output_PCA+f'leak_PCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_nside{nside}'
-with open(filename+'.pkl', 'wb') as fff:
-    pickle.dump(leak_HI_maps, fff)
-    fff.close()
+#filename = out_dir_output_PCA+f'leak_PCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_nside{nside}'
+#with open(filename+'.pkl', 'wb') as fff:
+#    pickle.dump(leak_HI_maps, fff)
+#    fff.close()
 
 #leak_HI_maps.dump(out_dir_output_PCA+f'leak_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy')
 #np.save(out_dir_output_PCA+f'leak_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',leak_HI_maps)

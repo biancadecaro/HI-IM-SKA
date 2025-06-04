@@ -24,7 +24,7 @@ sns.palettes.color_palette()
 ###########################################################################3
 fg_comp='synch_ff_ps'
 beam_s = 'SKA_AA4'
-path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
+path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
@@ -41,7 +41,7 @@ nu_ch= file['freq']
 del file
 
 need_dir = f'Maps_needlets/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
-need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_105freq_900.5_1004.5MHz_jmax4_lmax767_B5.26_nside256.npy'
+need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_105freq_900.5_1004.5MHz_jmax4_lmax383_B4.42_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
 jmax=need_tot_maps.shape[1]-1
@@ -65,11 +65,6 @@ mask_50 = np.zeros(npix)
 mask_50[pix_mask] =1
 fsky_50 = np.sum(mask_50)/hp.nside2npix(nside)
 
-fig=plt.figure()
-hp.mollview(mask_50, cmap='viridis', title=f'fsky={np.mean(mask_50):0.2f}', hold=True)
-#plt.savefig(f'Plots_sims/mask_apo3deg_fsky{np.mean(mask_40s):0.2f}_nside{nside}.png')
-plt.show()
-
 #############################################################################
 ############################# GMCA ##########################################
 
@@ -77,7 +72,7 @@ plt.show()
 if fg_comp=='synch_ff_ps':
     num_sources=3
 if fg_comp=='synch_ff_ps_pol':
-    num_sources=18
+    num_sources=3#18
 print(f'Nfg={num_sources}')  # number of sources to be estimated
 mints = 0.1 # min threshold (what is sparse compared to noise?)
 nmax  = 100 # number of iterations (usually 100 is safe)
@@ -97,8 +92,7 @@ for n in range(num_freq):
         need_tot_maps_masked[n,jj]  =ma.MaskedArray(need_tot_maps[n,jj], mask=mask)#np.isnan(full_maps_freq_mask[n])
 
 
-hp.mollview(need_tot_maps_masked[0,3], cmap='viridis', title='masked ma')
-plt.show()
+
 ##############################################################################
 
 # initial guess for the mixing matrix?
@@ -115,13 +109,8 @@ whitening = False; epsi = 1e-3
 Ae = np.zeros((jmax+1, num_freq,num_sources))
 for j in range(Ae.shape[0]): 
     Ae[j] = g4i.ma_run_GMCA(need_tot_maps_masked[:,j,:],AInit,num_sources,mints,nmax,L0,ColFixed,whitening,epsi)
-    fig=plt.figure()
-    plt.suptitle(f'j={j}')
-    plt.imshow(Ae[j],cmap='crest')
-    plt.colorbar()
-plt.show()
 
-np.save(out_dir_output_GMCA+f'Ae_mixing_matrix_{num_freq}_Nfg{num_sources}_jmax{jmax}_lmax{lmax}_nside{nside}', Ae)
+#np.save(out_dir_output_GMCA+f'Ae_mixing_matrix_{num_freq}_Nfg{num_sources}_jmax{jmax}_lmax{lmax}_nside{nside}', Ae)
 #Ae = np.load(out_dir_output_GMCA+f'Ae_mixing_matrix_{num_freq}_Nfg{num_sources}_jmax{jmax}_lmax{lmax}_nside{nside}.npy')
 #############################################################################
 # gal freefree spectral index for reference
@@ -161,7 +150,7 @@ print(res_fg_maps.shape)
 
 
 
-#np.save(out_dir_output_GMCA+f'res_GMCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min_ch}_{max_ch}MHz_Nfg{num_sources}_nside{nside}.npy',res_fg_maps)
+np.save(out_dir_output_GMCA+f'res_GMCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min_ch}_{max_ch}MHz_Nfg{num_sources}_nside{nside}.npy',res_fg_maps)
 
 print('.. ho calcolato res fg .. ')
 

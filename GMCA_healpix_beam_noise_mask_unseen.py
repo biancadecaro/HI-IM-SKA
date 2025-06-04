@@ -22,7 +22,7 @@ import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 ################################################################
-beam_s = 'SKA_AA4'
+beam_s = '1.3deg_SKA_AA4'
 out_dir= f'GMCA_pixels_output/Maps_GMCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 out_dir_plot = f'GMCA_pixels_output/Plots_GMCA_healpix/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 
@@ -33,9 +33,9 @@ if not os.path.exists(out_dir_plot):
 
 ################################################################
 
-fg_components='synch_ff_ps'
+fg_components='synch_ff_ps_pol'
 
-path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_components}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
+path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_components}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -62,7 +62,7 @@ lmax=3*nside-1
 if fg_components=='synch_ff_ps':
     num_sources=3
 if fg_components=='synch_ff_ps_pol':
-    num_sources=18
+    num_sources=3
 print(num_sources)
 print(f'nside:{nside}, lmax:{lmax}, num_ch:{num_freq}, min_ch:{min(nu_ch)}, max_ch:{max(nu_ch)}, Nfg:{num_sources}')
 
@@ -74,10 +74,7 @@ mask_50 = np.zeros(npix)
 mask_50[pix_mask] =1
 fsky_50 = np.sum(mask_50)/hp.nside2npix(nside)
 
-fig=plt.figure()
-hp.mollview(mask_50, cmap='viridis', title=f'fsky_50={np.mean(mask_50):0.2f}', hold=True)
-#plt.savefig(f'Plots_sims/mask_apo3deg_fsky{np.mean(mask_40s):0.2f}_nside{nside}.png')
-plt.show()
+
 #######################################################################################
 bad_v = np.where(mask_50==0)
 
@@ -136,8 +133,8 @@ for n in range(num_freq):
         full_maps_freq_masked[n]  =ma.MaskedArray(full_maps_freq_mask[n], mask=mask)#np.isnan(full_maps_freq_mask[n])
 
 
-hp.mollview(full_maps_freq_masked[0], cmap='viridis', title='masked ma')
-plt.show()
+#hp.mollview(full_maps_freq_masked[0], cmap='viridis', title='masked ma')
+#plt.show()
 
 
 ######################################################################################################
@@ -182,11 +179,11 @@ whitening = False; epsi = 1e-3
 
 # estimated mixing matrix:
 Ae = g4i.ma_run_GMCA(full_maps_freq_masked,AInit,num_sources,mints,nmax,L0,ColFixed,whitening,epsi)
-fig=plt.figure()
-plt.suptitle('mixing matrix')
-plt.imshow(Ae,cmap='crest')
-plt.colorbar()
-plt.show()
+#fig=plt.figure()
+#plt.suptitle('mixing matrix')
+#plt.imshow(Ae,cmap='crest')
+#plt.colorbar()
+#plt.show()
 #np.save(out_dir+f'Ae_mixing_matrix_{num_freq}_Nfg{num_sources}_lmax{lmax}_nside{nside}', Ae)
 
 #####################################################################################
@@ -242,9 +239,9 @@ res_HI[:,bad_v]=hp.UNSEEN
 
 HI_maps_freq_mask.dump(out_dir+f'cosmo_HI_noise_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_lmax{lmax}_nside{nside}.npy')
 res_HI.dump(out_dir+f'res_PCA_HI_noise{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy')
-fg_leakage.dump(out_dir+f'fg_leak_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy')
-HI_leakage.dump(out_dir+f'HI_leak_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy')
-fg_maps_freq.dump(out_dir+f'fg_input_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_lmax{lmax}_nside{nside}.npy')
+#fg_leakage.dump(out_dir+f'fg_leak_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy')
+#HI_leakage.dump(out_dir+f'HI_leak_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax}_nside{nside}.npy')
+fg_maps_freq_mask.dump(out_dir+f'fg_input_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_lmax{lmax}_nside{nside}.npy')
 
 
 #np.save(out_dir+f'cosmo_HI_noise_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_lmax{lmax}_nside{nside}.npy',HI_maps_freq)
