@@ -99,6 +99,7 @@ plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_12[ich][lmin:],  label=r'Need-PCA HI
 
 plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 plt.xlim([lmin,lmax_plot])
+plt.ylim([-5e-4,6e-3])
 plt.legend()
 frame1.set_ylabel(r'$  \ell(\ell+1)/2\pi~ C_{\ell} $ [mK$^{2}$]')
 frame1.set_xlabel([])
@@ -115,15 +116,15 @@ plt.plot(ell[lmin:], diff_cl_mex[ich][lmin:]*100)
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_xlim([lmin,lmax_plot])
 if fg_comp=='synch_ff_ps_pol':
-	frame2.set_ylim([-20,20])
+	frame2.set_ylim([-30,2])
 else:
-	frame2.set_ylim([-20,20])
-frame2.set_ylabel(r'%$ C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} $-1')
+	frame2.set_ylim([-30,2])
+frame2.set_ylabel(r'$\Delta$ [%]')
 frame2.set_xlabel(r'$\ell$')
 #frame2.yaxis.set_major_formatter(formatter) 
 frame2.set_xticks(np.arange(lmin,lmax_plot+1, 20))
 #plt.legend(loc='upper right')
-plt.savefig(f'../PCA_needlets_output/Plots_paper/comparison_cl_std_jmax_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam_{beam_s}_jmax{jmax_4}_jmax{jmax_12}_Nfg{Nfg}_nside{nside}_mask0.5.png')
+plt.savefig(f'../PCA_needlets_output/Plots_paper/comparison_cl_std_jmax_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam_{beam_s}_jmax{jmax_4}_jmax{jmax_12}_Nfg{Nfg}_nside{nside}_mask0.5.png', bbox_inches='tight')
 
 
 #plt.show()
@@ -139,6 +140,7 @@ plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_12.mean(axis=0)[lmin:],  label=r'Nee
 
 plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 plt.xlim([lmin,lmax_plot])
+plt.ylim([-5e-4,6e-3])
 plt.legend()
 frame1.set_ylabel(r'$  \ell(\ell+1)/2\pi~ \langle C_{\ell} \rangle_{\rm ch}$ [mK$^{2}$]')
 frame1.set_xlabel([])
@@ -155,15 +157,15 @@ plt.plot(ell[lmin:], diff_cl_mex.mean(axis=0)[lmin:]*100)
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_xlim([lmin,lmax_plot])
 if fg_comp=='synch_ff_ps_pol':
-	frame2.set_ylim([-20,20])
+	frame2.set_ylim([-30,2])
 else:
-	frame2.set_ylim([-20,20])
-frame2.set_ylabel(r'%$ \langle C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} -1\rangle_{\rm ch}$')
+	frame2.set_ylim([-30,2])
+frame2.set_ylabel(r'$ \langle \Delta\rangle_{\rm ch}$ [%]')
 frame2.set_xlabel(r'$\ell$')
 #frame2.yaxis.set_major_formatter(formatter) 
 frame2.set_xticks(np.arange(lmin,lmax_plot+1, 20))
 #plt.legend(loc='upper right')
-plt.savefig(f'../PCA_needlets_output/Plots_paper/comparison_cl_std_jmax_need_mean_ch_{fg_comp}_noise_beam_{beam_s}_jmax{jmax_4}_jmax{jmax_12}_Nfg{Nfg}_nside{nside}_mask0.5.png')
+plt.savefig(f'../PCA_needlets_output/Plots_paper/comparison_cl_std_jmax_need_mean_ch_{fg_comp}_noise_beam_{beam_s}_jmax{jmax_4}_jmax{jmax_12}_Nfg{Nfg}_nside{nside}_mask0.5.png', bbox_inches='tight')
 
 fig = plt.figure()
 plt.plot(ell[lmin:], (diff_cl_mex/diff_cl_std-1).mean(axis=0)[lmin:])

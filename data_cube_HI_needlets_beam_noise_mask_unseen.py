@@ -22,6 +22,7 @@ plt.rcParams['lines.linewidth']  = 3.
 plt.rcParams['lines.markersize']=6
 plt.rcParams['axes.labelsize']  =20
 plt.rcParams['legend.fontsize']=20
+plt.rcParams['font.size'] = 20
 plt.rcParams['xtick.labelsize']=20
 plt.rcParams['ytick.labelsize']=20
 plt.rcParams['xtick.major.width'] = 1
@@ -38,7 +39,7 @@ formatter.set_scientific(True)
 formatter.set_powerlimits((-1,1)) 
 #############################
 
-fg_comp = 'synch_ff_ps_pol'
+fg_comp = 'synch_ff_ps'
 beam_s= 'SKA_AA4'
 path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
@@ -78,7 +79,7 @@ del file
 npix = np.shape(HI_noise_maps_freq)[1]
 nside = hp.get_nside(HI_noise_maps_freq[0])
 lmax=3*nside-1#2*nside#
-jmax=12
+jmax=4
 
 	
 ######################################################################################
@@ -193,7 +194,7 @@ for i in range(0,jmax+1):
     ell_range = ell_binning[i][ell_binning[i]!=0]
     plt.plot(ell_range, i*ell_range/ell_range, label= f'j={i}')
     plt.text(ell_range[0], i, r'$\ell_{min}=%d,\,\ell_{max}=%d$'%(ell_range[0],ell_range[-1]))
-
+ax.set_yticks([])
 ax.set_xlabel(r'$\ell$')
 ax.legend(loc='right', ncol=2)
 #plt.tight_layout()

@@ -18,7 +18,7 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 
 beam = 'SKA_AA4'
 fg_comp='synch_ff_ps'
-path_data_sims_tot = f'Sims/beam_{beam}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
+path_data_sims_tot = f'Sims/beam_{beam}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
@@ -123,7 +123,7 @@ fig.colorbar(im2, ax=axs, cax=sub_ax,location='right',orientation='vertical',lab
 #######################################################
 beam = 'SKA_AA4'
 fg_comp_pol='synch_ff_ps_pol'
-path_data_sims_tot = f'Sims/beam_SKA_AA4_no_mean_sims_{fg_comp_pol}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
+path_data_sims_tot = f'Sims/beam_SKA_AA4_no_mean_sims_{fg_comp_pol}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as ff:
         file_pol = pickle.load(ff)
         ff.close()
@@ -170,5 +170,5 @@ for n in range(num_ch):
 
 
 hp.mollview(full_maps_freq_mask[ich], cmap='viridis', unit='T[mK]', min=-300, max=2000, title='')
-plt.savefig(f'obs_beam_SKA_AA4_mask)_fsky{fsky_50:0.2f}_ch{nu_ch[ich]}.png')
+plt.savefig(f'obs_beam_SKA_AA4_mask_fsky{fsky_50:0.2f}_ch{nu_ch[ich]}_nside{nside}.png')
 plt.show()

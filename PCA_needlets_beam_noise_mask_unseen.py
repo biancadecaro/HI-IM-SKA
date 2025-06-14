@@ -39,7 +39,7 @@ formatter.set_scientific(True)
 formatter.set_powerlimits((-1,1)) 
 
 ###########################################################################3
-fg_comp = 'synch_ff_ps_pol'
+fg_comp = 'synch_ff_ps'
 beam_s = 'SKA_AA4'
 path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
@@ -61,7 +61,7 @@ del file
 
 
 need_dir = f'Maps_needlets/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
-need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_105freq_900.5_1004.5MHz_jmax12_lmax383_B1.64_nside128.npy'
+need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_105freq_900.5_1004.5MHz_jmax4_lmax383_B4.42_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
 jmax=need_tot_maps.shape[1]-1
@@ -119,14 +119,15 @@ for j in range(eigenval.shape[0]):
 del Cov_channels
 
 
-fig = plt.figure()#(figsize=(8,4))
+fig = plt.figure(figsize=(12,6))
 for j in range(eigenval.shape[0]):
-    plt.semilogy(np.arange(1,num_freq+1),eigenval[j],'--o',mfc='none',label=f'j={j}')#markersize=5,
+    plt.semilogy(np.arange(1,num_freq+1),eigenval[j][::-1],'--o',mfc='none',label=f'j={j}')#markersize=5,
 
 plt.legend( ncols=2)
 x_ticks = np.arange(-10,num_freq+10, 10)
 ax = plt.gca()
 ax.set(xlim=[-10,num_freq+10],xticks=x_ticks,xlabel="eigenvalue number",ylabel="$\\lambda$",title='Eigenvalues')
+plt.tight_layout()
 plt.savefig(f'Plots_paper/eigenvalue_cov_mask_unseen_need_no_mean_{fg_comp}_beam_{beam_s}_jmax{jmax}_lmax{lmax}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}_nside{nside}.png')
 plt.show()
 
@@ -242,7 +243,7 @@ for j in range(eigenvec_fg_Nfg.shape[0]):
 #    pickle.dump(leak_fg_maps, ff)
 #    ff.close()
 
-#leak_fg_maps.dump(out_dir_output_PCA+f'leak_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy')
+leak_fg_maps.dump(out_dir_output_PCA+f'leak_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_nside{nside}.npy')
 #np.save(out_dir_output_PCA+f'leak_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',leak_fg_maps)
 
 fig = plt.figure()
@@ -277,7 +278,7 @@ del eigenvec_fg_Nfg;
 #    pickle.dump(leak_HI_maps, fff)
 #    fff.close()
 
-#leak_HI_maps.dump(out_dir_output_PCA+f'leak_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy')
+leak_HI_maps.dump(out_dir_output_PCA+f'leak_PCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_nside{nside}.npy')
 #np.save(out_dir_output_PCA+f'leak_PCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{int(min(nu_ch))}_{int(max(nu_ch))}MHz_Nfg{num_sources}_nside{nside}.npy',leak_HI_maps)
 
 fig = plt.figure()

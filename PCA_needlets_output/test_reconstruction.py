@@ -21,13 +21,15 @@ mpl.rcParams['font.size']=18
 
 beam_s = 'SKA_AA4'
 fg_comp = 'synch_ff_ps'
-path_data_sims_tot = f'../Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax767_nside256'
+path_data_sims_tot = f'../Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
 	file = pickle.load(f)
 	f.close()
 nu_ch= file['freq']
 HI_noise_maps_freq = file['maps_sims_HI'] + file['maps_sims_noise']
-del __file__
+
+fg_maps_freq = file['maps_sims_fg']
+del file
 out_dir_maps_recon = './'
 if not os.path.exists(out_dir_maps_recon):
 		os.makedirs(out_dir_maps_recon)
@@ -37,7 +39,7 @@ min_ch = min(nu_ch)
 max_ch = max(nu_ch)
 nside=hp.get_nside(HI_noise_maps_freq[0])
 npix= hp.nside2npix(nside)
-jmax=4
+jmax=12
 lmax= 3*nside-1
 if fg_comp=='synch_ff_ps':
 	Nfg=3
@@ -59,6 +61,8 @@ bad_v = np.where(mask_50==0)
 for n in range(num_ch):
 		HI_noise_maps_freq[n][bad_v] =  hp.UNSEEN
 		HI_noise_maps_freq[n]=hp.remove_dipole(HI_noise_maps_freq[n])
+		fg_maps_freq[n][bad_v] =  hp.UNSEEN
+		fg_maps_freq[n]=hp.remove_dipole(fg_maps_freq[n])
 
 
 j_test=2
@@ -76,9 +80,13 @@ b_values = pippo.mylibpy_needlets_std_init_b_values(B,jmax,lmax)
 need_analysis_HI = analysis.NeedAnalysis(jmax, lmax, out_dir_maps_recon, HI_noise_maps_freq)
 
 fname_HI=f'test_bjk_maps_HI_noise_{beam_s}_jmax{jmax}_lmax{lmax}_nside{nside}'
+fname_fg=f'test_bjk_maps_fg_{beam_s}_jmax{jmax}_lmax{lmax}_nside{nside}'
 betajk_HI = np.zeros((num_ch, jmax+1, npix))
+betajk_fg = np.zeros((num_ch, jmax+1, npix))
 for nu in range(num_ch):        
 	betajk_HI[nu] = pippo.mylibpy_needlets_f2betajk_healpix_harmonic(HI_noise_maps_freq[nu], B, jmax,lmax )
+	betajk_fg[nu] = pippo.mylibpy_needlets_f2betajk_healpix_harmonic(fg_maps_freq[nu], B, jmax,lmax )
+
 #np.save(out_dir_maps_recon+fname_HI,map_HI_need_output)
 #betajk_HI[:,:,bad_v]=hp.UNSEEN
 
@@ -88,10 +96,14 @@ hp.mollview(betajk_HI[ich, j_test], cmap='viridis', title=f'HI, j={j_test}, freq
 
 ###################################################################
 map_recons_HI=np.zeros((len(nu_ch), npix))
+map_recons_fg=np.zeros((len(nu_ch), npix))
 for nu in range(len(nu_ch)):
 	for j in range(betajk_HI.shape[1]):
 		map_recons_HI[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(betajk_HI[nu,j],b_values,j)
+		map_recons_fg[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(betajk_fg[nu,j],b_values,j)
+
 map_recons_HI[:,bad_v]=hp.UNSEEN		
+map_recons_fg[:,bad_v]=hp.UNSEEN		
 #############################################################################
 
 fig=plt.figure(figsize=(10, 7))
@@ -104,6 +116,17 @@ fig.add_subplot(313)
 hp.mollview(100*(map_recons_HI[ich]/HI_noise_maps_freq[ich]-1), min=-0.2, max=0.2, title='% Need recons HI/HI -1', cmap= 'viridis', hold=True)
 
 ######################################################################################
+fig=plt.figure(figsize=(10, 7))
+fig.suptitle(f'channel: {nu_ch[ich]} MHz, BEAM {beam_s}, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}',fontsize=20)
+fig.add_subplot(311)
+hp.mollview(fg_maps_freq[ich],  title='Input fg', cmap='viridis', hold=True)
+fig.add_subplot(312) 
+hp.mollview(map_recons_fg[ich], title='Need recons fg + noise', cmap= 'viridis', hold=True)
+fig.add_subplot(313) 
+hp.mollview(100*(map_recons_fg[ich]/fg_maps_freq[ich]-1), min=-0.2, max=0.2, title='% Need recons fg/fg -1', cmap= 'viridis', hold=True)
+
+############################################################################################
+
 lmax_cl= 2*nside
 
 ell_cl = np.arange(lmax_cl+1)

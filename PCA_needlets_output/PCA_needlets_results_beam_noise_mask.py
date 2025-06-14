@@ -6,6 +6,7 @@ import os
 import pickle
 
 import seaborn as sns
+sns.color_palette()
 sns.set_theme(style = 'white')
 from matplotlib import colors
 import matplotlib as mpl
@@ -60,7 +61,7 @@ min_ch = 900.5
 max_ch = 1004.5
 nside=128
 npix= hp.nside2npix(nside)
-jmax=12
+jmax=4
 lmax= 3*nside-1
 if fg_comp=='synch_ff_ps':
 	Nfg=3
@@ -74,8 +75,8 @@ path_cosmo_HI = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_{beam_s}_noise_mask
 #path_cosmo_HI_fullsky = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_{beam_s}_noise/cosmo_HI_noise_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
 
 path_fg = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/fg_input_{fg_comp}_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
-#path_leak_Fg = dir_PCA+f'leak_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
-#path_leak_HI = dir_PCA+f'leak_PCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
+path_leak_Fg = dir_PCA+f'leak_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
+path_leak_HI = dir_PCA+f'leak_PCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 path_cosmo_HI_bjk = f'../Maps_needlets/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/bjk_maps_HI_noise_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
 path_input_fg_bjk = f'../Maps_needlets/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/bjk_maps_fg_{fg_comp}_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
 
@@ -100,48 +101,50 @@ bad_v = np.where(mask_50==0)
 ####################### NEEDLETS2HARMONICS #################################################
 
 b_values = pippo.mylibpy_needlets_std_init_b_values(B,jmax,lmax)
-with open(path_PCA_HI+'.pkl', 'rb') as f:
-	res_PCA_HI = pickle.load(f)
-	f.close()
-del f
-with open(path_PCA_fg+'.pkl', 'rb') as f:
-	res_PCA_fg = pickle.load(f)
-	f.close()	
-res_PCA_HI[:,:,bad_v] = hp.UNSEEN
-res_PCA_fg[:,:,bad_v] = hp.UNSEEN
+#with open(path_PCA_HI+'.pkl', 'rb') as f:
+#	res_PCA_HI = pickle.load(f)
+#	f.close()
+#del f
+#with open(path_PCA_fg+'.pkl', 'rb') as f:
+#	res_PCA_fg = pickle.load(f)
+#	f.close()	
+#res_PCA_HI[:,:,bad_v] = hp.UNSEEN
+#res_PCA_fg[:,:,bad_v] = hp.UNSEEN
+#
+#print(res_PCA_HI.shape)
+#
+#map_PCA_HI_need2pix=np.zeros((len(nu_ch), npix))
+#map_PCA_fg_need2pix=np.zeros((len(nu_ch), npix))
+#
+#
+#for nu in range(len(nu_ch)):
+#    map_PCA_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_fg[:,nu],B, lmax)
+#    map_PCA_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_HI[:,nu],B, lmax)
+#np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_HI_need2pix)
+#np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_fg_need2pix)
+#
+#del res_PCA_HI; del res_PCA_fg
+#
+#cosmo_HI_bjk = np.load(path_cosmo_HI_bjk+'.npy')#[:,:jmax,:]
+#fg_bjk = np.load(path_input_fg_bjk+'.npy')#[:,:jmax,:]
+#
+#print(cosmo_HI_bjk.shape)
+#
+#map_input_HI_need2pix=np.zeros((len(nu_ch), npix))
+#map_input_fg_need2pix=np.zeros((len(nu_ch), npix))
+#for nu in range(len(nu_ch)):
+#	for j in range(cosmo_HI_bjk.shape[1]):
+#		map_input_HI_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(cosmo_HI_bjk[nu,j],b_values,j)
+#		map_input_fg_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(fg_bjk[nu,j],b_values,j)
+#np.save(out_dir_maps_recon+f'maps_reconstructed_cosmo_HI_noise_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_input_HI_need2pix)
+#np.save(out_dir_maps_recon+f'maps_reconstructed_input_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_input_fg_need2pix)
+#del cosmo_HI_bjk; del fg_bjk
+#
 
-print(res_PCA_HI.shape)
-map_PCA_HI_need2pix=np.zeros((len(nu_ch), npix))
-map_PCA_fg_need2pix=np.zeros((len(nu_ch), npix))
-
-
-for nu in range(len(nu_ch)):
-    map_PCA_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_fg[:,nu],B, lmax)
-    map_PCA_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(res_PCA_HI[:,nu],B, lmax)
-np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_HI_need2pix)
-np.save(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_PCA_fg_need2pix)
-
-del res_PCA_HI; del res_PCA_fg
-
-cosmo_HI_bjk = np.load(path_cosmo_HI_bjk+'.npy')#[:,:jmax,:]
-fg_bjk = np.load(path_input_fg_bjk+'.npy')#[:,:jmax,:]
-print(cosmo_HI_bjk.shape)
-
-map_input_HI_need2pix=np.zeros((len(nu_ch), npix))
-map_input_fg_need2pix=np.zeros((len(nu_ch), npix))
-for nu in range(len(nu_ch)):
-	for j in range(cosmo_HI_bjk.shape[1]):
-		map_input_HI_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(cosmo_HI_bjk[nu,j],b_values,j)
-		map_input_fg_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(fg_bjk[nu,j],b_values,j)
-np.save(out_dir_maps_recon+f'maps_reconstructed_cosmo_HI_noise_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_input_HI_need2pix)
-np.save(out_dir_maps_recon+f'maps_reconstructed_input_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_input_fg_need2pix)
-del cosmo_HI_bjk; del fg_bjk
-
-
-#map_PCA_HI_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
-#map_PCA_fg_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
-#map_input_HI_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_cosmo_HI_noise_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
-#map_input_fg_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_input_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
+map_PCA_HI_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy', allow_pickle=True)
+map_PCA_fg_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_PCA_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy', allow_pickle=True)
+map_input_HI_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_cosmo_HI_noise_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy', allow_pickle=True)
+map_input_fg_need2pix=np.load(out_dir_maps_recon+f'maps_reconstructed_input_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy', allow_pickle=True)
 
 
 map_PCA_HI_need2pix[:, bad_v]=hp.UNSEEN
@@ -154,7 +157,19 @@ fg = np.load(path_fg+'.npy', allow_pickle=True)
 cosmo_HI = np.load(path_cosmo_HI+'.npy', allow_pickle=True)
 #cosmo_HI_fullsky = np.load(path_cosmo_HI_fullsky+'.npy')
 
-hp.mollview(fg[ich], cmap='viridis', title='fg input')
+
+
+fig=plt.figure(figsize=(10, 7))
+fig.suptitle(f'channel: {nu_ch[ich]} MHz, BEAM {beam}, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}',fontsize=20)
+fig.add_subplot(221)
+hp.mollview(map_PCA_HI_need2pix[ich], min=0, max=1, title='PCA HI+ noise', cmap='viridis', hold=True)
+fig.add_subplot(222) 
+hp.mollview(map_PCA_fg_need2pix[ich], min=0, max=10000, title='PCA fg', cmap= 'viridis', hold=True)
+fig.add_subplot(223) 
+hp.mollview(map_input_HI_need2pix[ich], min=0, max=1, title='Input HI + noise', cmap= 'viridis', hold=True)
+fig.add_subplot(224) 
+hp.mollview(map_input_fg_need2pix[ich], min=0, max=10000, title='Input fg', cmap= 'viridis', hold=True)
+
 
 
 fig=plt.figure(figsize=(10, 7))
@@ -198,9 +213,11 @@ hp.gnomview(100*(map_input_fg_need2pix[ich]/fg[ich]-1), rot=[-22,21], coord='G',
 #hp.gnomview(cosmo_HI[ich]-map_PCA_HI_need2pix[ich], rot=[-22,21],coord='G', reso=hp.nside2resol(nside, arcmin=True), min=-0.2, max=0.2, title='% HI - PCA', cmap= 'viridis', hold=True)
 ##plt.tight_layout()
 #plt.show()
-
-rot = [-56,87]
-ysize=150
+lon=10 #deg
+lat=77 #deg
+rot = [lon, lat, 0.]
+#rot = [-56,87]
+ysize=70
 xsize=2*ysize
 reso = hp.nside2resol(nside, arcmin=True)
 map0  = hp.gnomview(cosmo_HI[ich],rot=rot, coord='G', reso=reso,xsize=xsize,ysize=ysize, min=0, max=1,return_projected_map=True, no_plot=True)
@@ -245,23 +262,34 @@ fig.colorbar(images[0],cax=sub_ax,orientation='horizontal',label='T [mK]')
 
 ###################################################################################
 ########### orizzontale##############
-rot = [-56,87]
-xsize=150
-ysize=2*ysize
+map_res = cosmo_HI-map_PCA_HI_need2pix
+lon=0 #deg
+lat=67 #deg
+rot = [lon, lat, 0.]
+xsize=70
+ysize=2*xsize
 reso = hp.nside2resol(nside, arcmin=True)
-map0  = hp.gnomview(cosmo_HI[ich],rot=rot, coord='G', reso=reso,xsize=xsize,ysize=ysize, min=0, max=1,return_projected_map=True, no_plot=True)
-map1  = hp.gnomview(cosmo_HI[ich]+fg[ich],rot=rot, coord='G', reso=reso,xsize=xsize,ysize=ysize, min=-1e3, max=1e3,return_projected_map=True, no_plot=True)
-map2  = hp.gnomview(map_PCA_HI_need2pix[ich],rot=rot, coord='G', reso=reso,xsize=xsize,ysize=ysize, min=0, max=1,return_projected_map=True, no_plot=True)
+map0  = hp.gnomview(cosmo_HI[ich],rot=rot,reso=reso,xsize=xsize,ysize=ysize, min=0, max=1,return_projected_map=True, no_plot=True)
+#map1  = hp.gnomview(cosmo_HI[ich]+fg[ich],rot=rot, coord='G', reso=reso,xsize=xsize,ysize=ysize, min=-1e3, max=1e3,return_projected_map=True, no_plot=True)
+map2  = hp.gnomview(map_PCA_HI_need2pix[ich],rot=rot, reso=reso,xsize=xsize,ysize=ysize, min=0, max=1,return_projected_map=True, no_plot=True)
+map3  = hp.gnomview(map_res[ich],rot=rot,  reso=reso,xsize=xsize,ysize=ysize, min=-0.5, max=0.5,return_projected_map=True, no_plot=True)
 
-map = [map0,map1,map2]
+std_patch = np.std(map3)
+print(f'std_patch={std_patch:.3f}, dimension:{xsize*reso/60.:0.2f}X{ysize*reso/60.:0.2f} deg ')
 
-fig, axs = plt.subplots(1,3, figsize=(14,7))
+
+map = [map0,map2,map3]
+#map = [map0,map1,map2,map3]
+
+fig, axs = plt.subplots(1,3, figsize=(17,7))
 cmap= 'viridis'
 images = []
 for ax, data in zip(axs.flat, map):
 	images.append(ax.imshow(data,cmap = cmap))
 
-titles = [f'Input HI + noise',f'Input HI + noise + foregrounds',f'Cleaned HI + noise']
+#titles = [f'Input HI + noise',f'Input HI + noise + foregrounds',f'Cleaned HI + noise', f'Residuals']
+titles = [f'Input HI + noise',f'Cleaned HI + noise', f'Residuals']
+
 for a,title in zip(axs, titles):
 	a.set_title(title)
 	a.set_xlabel(r'$\theta$[deg]')
@@ -270,14 +298,14 @@ plt.subplots_adjust(wspace=0.01, bottom=0.2, left=0.05)
 norm = colors.Normalize(vmin=0, vmax=1)
 sub_ax = plt.axes([0.9, 0.2, 0.02, 0.7]) 
 fig.colorbar(images[0],cax=sub_ax,orientation='vertical',label='T [mK]')
-#plt.savefig(f'Plots_PCA_needlets/gnomview_vertical_HI_HIfg_{fg_comp}_PCAHI_std_need_beam{beam_s}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.png')
+plt.savefig(f'Plots_PCA_needlets/gnomview_vertical_HI_resid_{fg_comp}_PCAHI_std_need_beam{beam_s}_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.png')
 
-plt.show()
+
 ####################################################################################
 fig = plt.figure(figsize=(10, 7))
 fig.suptitle(f'STD NEED, BEAM {beam}, channel: {nu_ch[ich]} MHz, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}',fontsize=19)
 fig.add_subplot(221) 
-hp.mollview(100*(np.abs(map_PCA_fg_need2pix[ich]/map_input_fg_need2pix[ich]-1)), min=0, max=10,  title= '(Res fg/fg-1)%',cmap='viridis',unit='%', hold= True)
+hp.mollview(100*(np.abs(map_PCA_fg_need2pix[ich]/fg[ich]-1)), min=0, max=10,  title= '(Res fg/fg-1)%',cmap='viridis',unit='%', hold= True)
 fig.add_subplot(222) 
 hp.mollview(cosmo_HI[ich],min=0, max=1, title= 'Cosmo HI + noise',cmap='viridis', hold=True)
 fig.add_subplot(223) 
@@ -379,7 +407,8 @@ plt.legend()
 frame1.set_xticks(np.arange(lmin,200+1, 10))
 #plt.savefig(f'Plots_PCA_needlets/cl_std_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam_{beam_s}_jmax{jmax}_lmax{lmax_cl}_Nfg{Nfg}_nside{nside}_mask0.5.png')
 
-plt.show()
+#plt.show()
+plt.close('all')
 
 fig = plt.figure(figsize=(10,7))
 frame1=fig.add_axes((.1,.3,.8,.6))
@@ -483,77 +512,100 @@ del diff_cl_need2sphe; #del diff_cl_need2sphe_cosmo_recons
 
 #######################################################################
 ############################ LEAKAGE ##################################
-#print(' sto ricostruendo il leakage')
-#
-##need_HI_leak=np.load(path_leak_HI+'.npy')
+print(' sto ricostruendo il leakage')
+
+need_HI_leak=np.load(path_leak_HI+'.npy', allow_pickle=True)
 #with open(path_leak_HI+'.pkl', 'rb') as f:
 #	need_HI_leak = pickle.load(f)
 #	f.close()
 #del f
-#map_leak_HI_need2pix=np.zeros((len(nu_ch), npix))
-#for nu in range(len(nu_ch)):
-#    #map_leak_HI_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(need_HI_leak[:,nu],B, lmax)
-#    for j in range(need_HI_leak.shape[0]):
-#        map_leak_HI_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(need_HI_leak[j,nu],b_values,j)
-#    #map_leak_HI_need2pix[nu] = hp.remove_dipole(map_leak_HI_need2pix[nu])
-#np.save(out_dir_maps_recon+f'maps_reconstructed_leak_HI_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_HI_need2pix)
-#del need_HI_leak
-#
-##need_fg_leak=np.load(path_leak_Fg+'.npy')
+need_HI_leak[:,:,bad_v] = hp.UNSEEN
+
+map_leak_HI_need2pix=np.zeros((len(nu_ch), npix))
+for nu in range(len(nu_ch)):
+
+    for j in range(need_HI_leak.shape[0]):
+        map_leak_HI_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(need_HI_leak[j,nu],b_values,j)
+
+np.save(out_dir_maps_recon+f'maps_reconstructed_leak_HI_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_HI_need2pix)
+del need_HI_leak
+
+need_fg_leak=np.load(path_leak_Fg+'.npy', allow_pickle=True)
 #with open(path_leak_Fg+'.pkl', 'rb') as f:
 #	need_fg_leak = pickle.load(f)
 #	f.close()	
-#map_leak_fg_need2pix=np.zeros((len(nu_ch), npix))
-#for nu in range(len(nu_ch)):
-#    for j in range(need_fg_leak.shape[0]):
-#        map_leak_fg_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(need_fg_leak[j,nu],b_values,j)
-#    #map_leak_fg_need2pix[nu] = hp.remove_dipole(map_leak_fg_need2pix[nu])
-#    #map_leak_fg_need2pix[nu] = pippo.mylibpy_needlets_betajk2f_healpix_harmonic(need_fg_leak[:,nu],B, lmax)
-#del need_fg_leak
-#np.save(out_dir_maps_recon+f'maps_reconstructed_leak_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_fg_need2pix)
-#
-#
-##map_leak_HI_need2pix = np.load(out_dir_maps_recon+f'maps_reconstructed_leak_HI_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
-##map_leak_fg_need2pix = np.load(out_dir_maps_recon+f'maps_reconstructed_leak_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
-#
-#fig = plt.figure(figsize=(10, 7))
-#fig.suptitle(f'channel: {nu_ch[ich]} MHz, BEAM {beam}, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}',fontsize=20)
-#fig.add_subplot(211) 
-#hp.mollview(map_leak_HI_need2pix[ich],min=0, max=1, title= 'Leakage HI',cmap='viridis', hold=True)
-#fig.add_subplot(212) 
-#hp.mollview(map_leak_fg_need2pix[ich],min=0, max=1, title= 'Leakage Fg',cmap='viridis', hold= True)
-##plt.tight_layout()
-#plt.show()
-#
-#######################################################################
-#
-#cl_leak_HI = np.zeros((len(nu_ch), lmax_cl+1))
-#cl_leak_fg = np.zeros((len(nu_ch), lmax_cl+1))
-#cl_diff_leak = np.zeros((len(nu_ch), lmax_cl+1))
-#
+
+need_fg_leak[:,:,bad_v] = hp.UNSEEN
+
+map_leak_fg_need2pix=np.zeros((len(nu_ch), npix))
+for nu in range(len(nu_ch)):
+    for j in range(need_fg_leak.shape[0]):
+        map_leak_fg_need2pix[nu] += pippo.mylibpy_needlets_f2betajk_j_healpix_harmonic(need_fg_leak[j,nu],b_values,j)
+
+del need_fg_leak
+np.save(out_dir_maps_recon+f'maps_reconstructed_leak_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}',map_leak_fg_need2pix)
+
+
+#map_leak_HI_need2pix = np.load(out_dir_maps_recon+f'maps_reconstructed_leak_HI_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
+#map_leak_fg_need2pix = np.load(out_dir_maps_recon+f'maps_reconstructed_leak_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_jmax{jmax}_lmax{lmax}_Nfg{Nfg}_nside{nside}.npy')
+
+map_leak_HI_need2pix[:,bad_v] = hp.UNSEEN
+map_leak_fg_need2pix[:,bad_v] = hp.UNSEEN
+
+
+fig = plt.figure(figsize=(10, 7))
+fig.suptitle(f'channel: {nu_ch[ich]} MHz, BEAM {beam}, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}',fontsize=20)
+fig.add_subplot(211) 
+hp.mollview(map_leak_HI_need2pix[ich],min=0, max=1, title= 'Leakage HI',cmap='viridis', hold=True)
+fig.add_subplot(212) 
+hp.mollview(map_leak_fg_need2pix[ich],min=0, max=1, title= 'Leakage Fg',cmap='viridis', hold= True)
+#plt.tight_layout()
+plt.show()
+
+######################################################################
+
+cl_leak_HI = np.zeros((len(nu_ch), lmax_cl+1))
+cl_leak_fg = np.zeros((len(nu_ch), lmax_cl+1))
+
+cl_leak_HI_mask_deconv = np.zeros((num_ch, len(ell_mask)))
+cl_leak_HI_mask_deconv_interp = np.zeros((num_ch, lmax_cl+1))
+
+cl_leak_fg_mask_deconv = np.zeros((num_ch, len(ell_mask)))
+cl_leak_fg_mask_deconv_interp = np.zeros((num_ch, lmax_cl+1))
+
+
+for n in range(num_ch):
+	f_0_leak_HI_mask = nm.NmtField(mask_50,[map_leak_HI_need2pix[n]] )
+	cl_leak_HI_mask_deconv[n] = nm.compute_full_master(f_0_leak_HI_mask, f_0_leak_HI_mask, b)[0]
+	cl_leak_HI_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_leak_HI_mask_deconv[n])
+
+	f_0_leak_fg_mask = nm.NmtField(mask_50,[map_leak_fg_need2pix[n]] ) #qua
+	cl_leak_fg_mask_deconv[n] = nm.compute_full_master(f_0_leak_fg_mask, f_0_leak_fg_mask, b_cosmo)[0]
+	cl_leak_fg_mask_deconv_interp[n] = np.interp(ell, ell_cosmo_mask, cl_leak_fg_mask_deconv[n])
+
+
 #for n in range(len(nu_ch)):
 #	cl_leak_HI[n] = hp.anafast(map_leak_HI_need2pix[n], lmax=lmax_cl)
 #	cl_leak_fg[n] = hp.anafast(map_leak_fg_need2pix[n], lmax=lmax_cl)
-#	cl_diff_leak[n] = hp.anafast(map_leak_HI_need2pix[n]-map_leak_fg_need2pix[n], lmax=lmax_cl)
+
+
+np.savetxt(out_dir_cl+f'cl_deconv_leak_HI_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_HI_mask_deconv_interp)
+np.savetxt(out_dir_cl+f'cl_deconv_leak_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_fg_mask_deconv_interp)
+
+del map_leak_HI_need2pix; del map_leak_fg_need2pix
 #
-#
-#np.savetxt(out_dir_cl+f'cl_leak_HI_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_HI)
-#np.savetxt(out_dir_cl+f'cl_leak_fg_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_fg)
-#
-#del map_leak_HI_need2pix; del map_leak_fg_need2pix
-##
-#fig=plt.figure()
-#fig.suptitle(f'channel: {nu_ch[ich]} MHz, BEAM {beam}, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}')
-#plt.semilogy(ell[lmin:], factor[lmin:]*np.mean(cl_leak_fg, axis=0)[lmin:],mfc='none', label='Fg leakage')
-#plt.semilogy(ell[lmin:], factor[lmin:]*np.mean(cl_leak_HI, axis=0)[lmin:],mfc='none', label='HI leakage')
-#plt.xlim([lmin,200])
-#plt.xlabel(r'$\ell$')
-#plt.ylabel(r'$ \frac{\ell*(\ell+1)}{2\pi} \langle C_{\ell} \rangle$')
-#plt.legend()
-##plt.tight_layout()
-##plt.savefig(f'Plots_PCA_needlets/recons_factorxcl_beam40arcmin_leakage_jmax{jmax}_lmax{lmax_cl}.png')
-#plt.show()
-#
+fig=plt.figure()
+fig.suptitle(f'channel: {nu_ch[ich]} MHz, BEAM {beam}, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}')
+plt.semilogy(ell[lmin:], factor[lmin:]*np.mean(cl_leak_fg_mask_deconv_interp, axis=0)[lmin:],mfc='none', label='Fg leakage')
+plt.semilogy(ell[lmin:], factor[lmin:]*np.mean(cl_leak_HI_mask_deconv_interp, axis=0)[lmin:],mfc='none', label='HI leakage')
+plt.xlim([lmin,200])
+plt.xlabel(r'$\ell$')
+plt.ylabel(r'$ \frac{\ell*(\ell+1)}{2\pi} \langle C_{\ell} \rangle$')
+plt.legend()
+#plt.tight_layout()
+#plt.savefig(f'Plots_PCA_needlets/recons_factorxcl_beam40arcmin_leakage_jmax{jmax}_lmax{lmax_cl}.png')
+plt.show()
+
 #fig = plt.figure()
 #plt.semilogy(ell[lmin:],np.mean(cl_diff_cosmo_PCA_HI_need2harm, axis=0)[lmin:],mfc='none', label='Cl diff Cosmo - PCA HI maps')
 #plt.semilogy(ell[lmin:],np.mean(cl_diff_leak, axis=0)[lmin:],mfc='none', label='Cl HI - Fg leakage')
@@ -562,4 +614,3 @@ del diff_cl_need2sphe; #del diff_cl_need2sphe_cosmo_recons
 #plt.ylabel(r'$ \frac{\ell*(\ell+1)}{2\pi} \langle C_{\ell} \rangle$')
 #plt.legend()
 #plt.show()
-
