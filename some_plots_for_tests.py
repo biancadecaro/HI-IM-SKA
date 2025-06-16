@@ -149,4 +149,7 @@ ax.set_xlabel(r'$\ell$')
 
 fig.legend(ncols=2,loc='outside center right',bbox_to_anchor=(1, 0.80))
 
+#plt.show()
+#plt.close('all')
+
 plt.show()

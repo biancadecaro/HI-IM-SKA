@@ -148,6 +148,8 @@ cl_PCA_HI_pol_6=np.loadtxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch
 ###################################################################
 ####  comparison with standard PCA ##############################
 out_dir_cl_std = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/power_spectra_cls_from_healpix_maps/'
+cl_standard_PCA_HI=np.loadtxt(out_dir_cl_std+f'cl_deconv_PCA_HI_noise_synch_ff_ps_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_lmax{2*nside}_nside{nside}.dat')
+
 cl_standard_PCA_HI_pol_18=np.loadtxt(out_dir_cl_std+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg18}_lmax{2*nside}_nside{nside}.dat')
 cl_standard_PCA_HI_pol_3=np.loadtxt(out_dir_cl_std+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_lmax{2*nside}_nside{nside}.dat')
 cl_standard_PCA_HI_pol_4=np.loadtxt(out_dir_cl_std+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg4}_lmax{2*nside}_nside{nside}.dat')
@@ -247,6 +249,38 @@ ax.set_ylabel(r'$\langle \Delta \rangle $[%]')
 ax.set_xlabel(r'$\ell$')
 ax.set_xticks(np.arange(lmin,lmax_plot+1, 10))
 plt.legend()
+
+#######################################################################################
+############################### CROSS CORR MASK #########################################
+
+map_cosmo=np.load('../PCA_pixels_output/Maps_PCA/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/cosmo_HI_noise_105_900.5_1004.5MHz_lmax383_nside128.npy',allow_pickle=True)[ich]
+map_PCA=np.load('../PCA_pixels_output/Maps_PCA/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/res_PCA_HI_noise_synch_ff_ps_105_900.5_1004.5MHz_Nfg3_lmax383_nside128.npy',allow_pickle=True)[ich]
+map_PCA_pol3=np.load('../PCA_pixels_output/Maps_PCA/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/res_PCA_HI_noise_synch_ff_ps_pol_105_900.5_1004.5MHz_Nfg3_lmax383_nside128.npy',allow_pickle=True)[ich]
+map_PCA_pol6=np.load('../PCA_pixels_output/Maps_PCA/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/res_PCA_HI_noise_synch_ff_ps_pol_105_900.5_1004.5MHz_Nfg6_lmax383_nside128.npy',allow_pickle=True)[ich]
+map_PCA_pol18=np.load('../PCA_pixels_output/Maps_PCA/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/res_PCA_HI_noise_synch_ff_ps_pol_105_900.5_1004.5MHz_Nfg18_lmax383_nside128.npy',allow_pickle=True)[ich]
+
+
+cl_cross_cosmo = hp.anafast(map1=map_cosmo, map2=map_cosmo, lmax=lmax_cl)
+cl_cross_cosmo_PCA = hp.anafast(map1=map_cosmo, map2=map_PCA, lmax=lmax_cl)
+cl_cross_cosmo_PCA_pol3 = hp.anafast(map1=map_cosmo, map2=map_PCA_pol3, lmax=lmax_cl)
+cl_cross_cosmo_PCA_pol6 = hp.anafast(map1=map_cosmo, map2=map_PCA_pol6, lmax=lmax_cl)
+cl_cross_cosmo_PCA_pol18 = hp.anafast(map1=map_cosmo, map2=map_PCA_pol18, lmax=lmax_cl)
+
+
+fig, ax = plt.subplots(1,1)
+ax.set_title('PCA standard, fsky=50%')
+ax.plot(ell[lmin:], factor[lmin:]*cl_cross_cosmo[lmin:], 'k' ,label='Input cosmo')
+ax.plot(ell[lmin:], factor[lmin:]*cl_cross_cosmo_PCA[lmin:],ls='--',c=c_pal[0], mfc='none', label='PCA w/o pol leak Nfg=3')
+ax.plot(ell[lmin:], factor[lmin:]*cl_cross_cosmo_PCA_pol3[lmin:],ls=':',c=c_pal[1], mfc='none', label='PCA with pol leak Nfg=3')
+ax.plot(ell[lmin:], factor[lmin:]*cl_cross_cosmo_PCA_pol6[lmin:],ls='-.', c=c_pal[2],mfc='none', label='PCA with pol leak Nfg=6')
+ax.plot(ell[lmin:], factor[lmin:]*cl_cross_cosmo_PCA_pol18[lmin:],ls=(0, (5, 1)),c=c_pal[3], mfc='none', label='PCA with pol leak Nfg=18')
+
+ax.set_xlim([lmin, lmax_plot+1])
+ax.set_ylabel(r'$  \ell(\ell+1)/2\pi~ C_{\ell}^{\rm cosmo \times }  $ [mK$^{2}$]')
+ax.set_xlabel(r'$\ell$')
+ax.set_xticks(np.arange(lmin,lmax_plot+1, 10))
+plt.legend()
+
 
 
 
