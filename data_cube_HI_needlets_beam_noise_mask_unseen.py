@@ -8,7 +8,7 @@ import cython_mylibc as pippo
 import os
 
 
-fg_comp = 'synch_ff_ps_pol'
+fg_comp = 'synch_ff_ps'
 beam_s= 'theta40arcmin'
 path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
@@ -163,6 +163,7 @@ map_fg_need_output = np.zeros((num_freq, jmax+1, npix))
 
 for nu in range(num_freq):
 	map_need_output[nu] = pippo.mylibpy_needlets_f2betajk_healpix_harmonic(full_maps_freq[nu], B, jmax,lmax )
+	map_need_output[:,:,bad_v]=hp.UNSEEN
 np.save(out_dir+fname_obs_tot,map_need_output)
 
 fig = plt.figure(figsize=(10, 7))
@@ -171,6 +172,7 @@ del map_need_output; del full_maps_freq; del need_analysis
 
 for nu in range(num_freq):        
 	map_HI_need_output[nu] = pippo.mylibpy_needlets_f2betajk_healpix_harmonic(HI_noise_maps_freq[nu], B, jmax,lmax )
+	map_HI_need_output[:,:,bad_v]=hp.UNSEEN
 np.save(out_dir+fname_HI,map_HI_need_output)
 
 fig = plt.figure(figsize=(10, 7))
@@ -180,6 +182,7 @@ del map_HI_need_output; del HI_noise_maps_freq; del need_analysis_HI
 
 for nu in range(num_freq):        
 	map_fg_need_output[nu] = pippo.mylibpy_needlets_f2betajk_healpix_harmonic(fg_maps_freq[nu], B, jmax,lmax )
+	map_fg_need_output[:,:,bad_v]=hp.UNSEEN
 np.save(out_dir+fname_fg,map_fg_need_output)
 fig = plt.figure(figsize=(10, 7))
 hp.mollview(map_fg_need_output[ich,j_test], cmap='viridis', title=f'Fg, j={j_test}, freq={nu_ch[ich]}', hold=True)
