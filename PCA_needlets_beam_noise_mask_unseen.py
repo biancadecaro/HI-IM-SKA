@@ -39,16 +39,16 @@ formatter.set_scientific(True)
 formatter.set_powerlimits((-1,1)) 
 
 ###########################################################################3
-fg_comp = 'synch_ff_ps'
-beam_s = 'SKA_AA4'
-path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
+fg_comp = 'synch_ff_ps_pol'
+beam_s = '1.3deg_SKA_AA4'
+path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
 
 
 out_dir_output = 'PCA_needlets_output/'
-out_dir_output_PCA = out_dir_output+f'PCA_maps/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+out_dir_output_PCA = out_dir_output+f'PCA_maps_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 out_dir_plot = out_dir_output+f'Plots_PCA_needlets/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'#noise_mask_patch_stripe82_noise_mask0.39
 if not os.path.exists(out_dir_output):
         os.makedirs(out_dir_output)
@@ -60,7 +60,7 @@ del file
 
 
 
-need_dir = f'Maps_needlets/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+need_dir = f'Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_105freq_900.5_1004.5MHz_jmax4_lmax383_B4.42_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
@@ -87,25 +87,26 @@ fsky_50 = np.sum(mask_50)/hp.nside2npix(nside)
 
 
 ########################################################################
-bad_v = np.where(mask_50==0)
-
-
-maskt =np.zeros(mask_50.shape)
-maskt[bad_v]=  1
-mask = ma.make_mask(maskt, shrink=False)
-
-need_tot_maps_masked=ma.zeros(need_tot_maps.shape)
-
-for n in range(num_freq):
-    for jj in range(jmax+1):
-        need_tot_maps_masked[n,jj]  =ma.MaskedArray(need_tot_maps[n,jj], mask=mask)#np.isnan(full_maps_freq_mask[n])
-
-
+#bad_v = np.where(mask_50==0)
+#
+#
+#maskt =np.zeros(mask_50.shape)
+#maskt[bad_v]=  1
+#mask = ma.make_mask(maskt, shrink=False)
+#
+#need_tot_maps_masked=ma.zeros(need_tot_maps.shape)
+#
+#for n in range(num_freq):
+#    for jj in range(jmax+1):
+#        need_tot_maps_masked[n,jj]  =ma.MaskedArray(need_tot_maps[n,jj], mask=mask)#np.isnan(full_maps_freq_mask[n])
+#
+#
 Cov_channels = np.zeros((jmax+1,num_freq, num_freq))
 
 for j in range(Cov_channels.shape[0]):
-    Cov_channels[j]=ma.cov(need_tot_maps_masked[:,j,:])
+    #Cov_channels[j]=ma.cov(need_tot_maps_masked[:,j,:])
     #corr_coeff = ma.corrcoef(need_tot_maps_masked)
+    Cov_channels[j]=np.cov(need_tot_maps[:,j,:])
 
 
 ##########################################################################
@@ -120,8 +121,9 @@ del Cov_channels
 
 
 fig = plt.figure(figsize=(12,6))
+pal = sns.color_palette("crest", n_colors=jmax+1)
 for j in range(eigenval.shape[0]):
-    plt.semilogy(np.arange(1,num_freq+1),eigenval[j][::-1],'--o',mfc='none',label=f'j={j}')#markersize=5,
+    plt.semilogy(np.arange(1,num_freq+1),eigenval[j][::-1],'--o',mfc='none',color=pal[j],label=f'j={j}')#markersize=5,
 
 plt.legend( ncols=2)
 x_ticks = np.arange(-10,num_freq+10, 10)
@@ -174,8 +176,11 @@ plt.show()
 res_fg_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
 
 for j in range(eigenvec_fg_Nfg.shape[0]):
-    res_fg_maps[j] = ma.dot(eigenvec_fg_Nfg[j],ma.dot(eigenvec_fg_Nfg[j].T,need_tot_maps[:,j,:]))
+    #res_fg_maps[j] = ma.dot(eigenvec_fg_Nfg[j],ma.dot(eigenvec_fg_Nfg[j].T,need_tot_maps[:,j,:])) # Bianca 9/07
+    res_fg_maps[j] = np.dot(eigenvec_fg_Nfg[j],np.dot(eigenvec_fg_Nfg[j].T,need_tot_maps[:,j,:]))
 
+    #res_fg_maps[j] = eigenvec_fg_Nfg[j]@eigenvec_fg_Nfg[j].T@need_tot_maps[:,j,:]
+    
 print(res_fg_maps.shape)
 
 filename = out_dir_output_PCA+f'res_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_nside{nside}'
@@ -193,7 +198,7 @@ j_test=7
 res_HI_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
 for j in range(eigenvec_fg_Nfg.shape[0]):
     res_HI_maps[j,:,:] = need_tot_maps[:,j,:] - res_fg_maps[j,:,:]
-    res_HI_maps[j,:,bad_v]=hp.UNSEEN
+    #res_HI_maps[j,:,bad_v]=hp.UNSEEN  # Bianca 9/07
 
     #hp.mollview(res_HI_maps[j][ich],min=0, max=0.39, cmap='viridis', title=f'j={j}')
 #plt.show()
@@ -211,8 +216,8 @@ print('.. ho calcolato res HI .. ')
 
 res_fg_maps_totj=res_fg_maps.sum(axis=0)
 res_HI_maps_totj = res_HI_maps.sum(axis=0)
-res_fg_maps_totj[:, bad_v] = hp.UNSEEN
-res_HI_maps_totj[:, bad_v] = hp.UNSEEN
+#res_fg_maps_totj[:, bad_v] = hp.UNSEEN
+#res_HI_maps_totj[:, bad_v] = hp.UNSEEN # Bianca 9/07
 del res_HI_maps; del res_fg_maps
 
 
@@ -234,8 +239,10 @@ leak_fg_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
 leak_HI_maps = np.zeros((eigenvec_fg_Nfg.shape[0], num_freq, npix))
 
 for j in range(eigenvec_fg_Nfg.shape[0]):
-    leak_fg_maps[j] = need_fg_maps[:,j,:] - ma.dot(eigenvec_fg_Nfg[j],ma.dot(eigenvec_fg_Nfg[j].T,need_fg_maps[:,j,:]))
-    leak_fg_maps[j,:,bad_v]=hp.UNSEEN
+    #leak_fg_maps[j] = need_fg_maps[:,j,:] - ma.dot(eigenvec_fg_Nfg[j],ma.dot(eigenvec_fg_Nfg[j].T,need_fg_maps[:,j,:]))
+    leak_fg_maps[j] = need_fg_maps[:,j,:] - np.dot(eigenvec_fg_Nfg[j],np.dot(eigenvec_fg_Nfg[j].T,need_fg_maps[:,j,:])) #Bianca 9/7
+
+    #leak_fg_maps[j,:,bad_v]=hp.UNSEEN #Bianca 9/7
 
 
 #filename = out_dir_output_PCA+f'leak_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_nside{nside}'
@@ -267,8 +274,9 @@ need_HI_maps = np.load(need_HI_maps_filename)#[:,:jmax,:]
 
 
 for j in range(eigenvec_fg_Nfg.shape[0]):
-    leak_HI_maps[j] = ma.dot(eigenvec_fg_Nfg[j],ma.dot(eigenvec_fg_Nfg[j].T,need_HI_maps[:,j,:]))
-    leak_HI_maps[j,:,bad_v]=hp.UNSEEN   
+    #leak_HI_maps[j] = ma.dot(eigenvec_fg_Nfg[j],ma.dot(eigenvec_fg_Nfg[j].T,need_HI_maps[:,j,:]))
+    leak_HI_maps[j] = np.dot(eigenvec_fg_Nfg[j],np.dot(eigenvec_fg_Nfg[j].T,need_HI_maps[:,j,:])) #Bianca 9/07
+    #leak_HI_maps[j,:,bad_v]=hp.UNSEEN   #Bianca 9/07
 
 del eigenvec_fg_Nfg; 
 
@@ -293,10 +301,12 @@ del leak_HI_maps#; del leak_fg_maps
 ##############################################
 
 
-need_HI_maps_totj = ma.sum(need_HI_maps, axis=1)#need_HI_maps.sum(axis=1)np.nansum(need_HI_maps, axis=1)#
-need_fg_maps_totj = ma.sum(need_fg_maps, axis=1)#need_fg_maps.sum(axis=1)np.nansum(need_fg_maps, axis=1)#
-need_HI_maps_totj[:, bad_v] = hp.UNSEEN
-need_fg_maps_totj[:,bad_v] = hp.UNSEEN
+#need_HI_maps_totj = ma.sum(need_HI_maps, axis=1)#need_HI_maps.sum(axis=1)np.nansum(need_HI_maps, axis=1)# Bianca 9/07
+#need_fg_maps_totj = ma.sum(need_fg_maps, axis=1)#need_fg_maps.sum(axis=1)np.nansum(need_fg_maps, axis=1)# Bianca 9/07
+need_HI_maps_totj = np.sum(need_HI_maps, axis=1)
+need_fg_maps_totj = np.sum(need_fg_maps, axis=1)
+#need_HI_maps_totj[:, bad_v] = hp.UNSEEN
+#need_fg_maps_totj[:,bad_v] = hp.UNSEEN
 
 del need_HI_maps;del need_fg_maps
 

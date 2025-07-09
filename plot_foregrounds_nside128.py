@@ -380,10 +380,10 @@ pl_maps_beam_no_mean = np.array([pl_maps_beam[i] -np.mean(pl_maps_beam[i],axis=0
 file_beam_no_mean = {'cosmological_signal':HI_maps_beam_no_mean,'gal_ff':ff_maps_beam_no_mean,'gal_synch':synch_maps_beam_no_mean,'point_sources':ps_maps_beam_no_mean, 'pol_leakage':pl_maps_beam_no_mean, 'noise':noise_maps_beam}
 
 
-ls_dic = {'cosmological_signal':"-",'gal_ff':"--",'gal_synch':"-.",'point_sources':':', 'pol_leakage':(0, (3, 1, 1, 1)), 'noise':(0, (3, 10, 1, 10))}
+ls_dic = {'cosmological_signal':"-",'gal_ff':"--",'gal_synch':"-.",'point_sources':':', 'pol_leakage':(0, (3, 1, 1, 1)), 'noise':(0, (3, 5, 1, 5, 1, 5))}
 lab_dic = {'cosmological_signal':"21-cm signal",'gal_ff':"Gal free-free",'gal_synch':"Gal synchrotron",'point_sources':"Point sources", 'pol_leakage':"Pol leakage", 'noise':'Noise'}
-col_dic = {'cosmological_signal':c_pal[0],'gal_ff':c_pal[1],'gal_synch':c_pal[2],'point_sources':c_pal[3], 'pol_leakage': c_pal[4], 'noise':c_pal[5]}
-
+col_dic = {'cosmological_signal':c_pal[0],'gal_ff':c_pal[1],'gal_synch':c_pal[2],'point_sources':c_pal[3], 'pol_leakage': c_pal[4], 'noise':c_pal[7]}
+print(f'col_dic:{col_dic}')
 
 
 #for c in components:
@@ -552,7 +552,7 @@ ax1.set_xlabel(r'$\ell$')
 ax2=fig.add_subplot(222, sharey=ax1)
 ax2.set_title(r'$\nu \in $'+f'[{nu_ch[0]}, {nu_ch[-1]}] MHz')
 for c in components:
-	ax2.fill_between(ell[2:],factor[2:]*cl_comp_beam[c][0][2:],factor[2:]*cl_comp_beam[c][-1][2:], alpha=0.7,label=lab_dic[c] )
+	ax2.fill_between(ell[2:],factor[2:]*cl_comp_beam[c][0][2:],factor[2:]*cl_comp_beam[c][-1][2:], color=col_dic[c],alpha=0.7,label=lab_dic[c] )
 ax2.set_yscale('log')
 ax2.set_ylim([1e-7, 1e7])
 ax2.set_xlim([0,lmax_fwmh_max])
@@ -562,7 +562,7 @@ ax2.set_xlabel(r'$\ell$')
 ax3=fig.add_subplot(223)#,sharex = ax1)
 ax3.set_title(r'$\nu \in $'+f'[{nu_ch[0]}, {nu_ch[-1]}] MHz, '+r'f$_{\rm sky}$=50%')
 for c in components:
-	ax3.fill_between(ell[2:],factor[2:]*cl_comp_beam_mask_deconv[c][0][2:],factor[2:]*cl_comp_beam_mask_deconv[c][-1][2:], alpha=0.7,label=lab_dic[c] )
+	ax3.fill_between(ell[2:],factor[2:]*cl_comp_beam_mask_deconv[c][0][2:],factor[2:]*cl_comp_beam_mask_deconv[c][-1][2:], alpha=0.7,color=col_dic[c],label=lab_dic[c] )
 
 ax3.set_yscale('log')
 ax3.set_ylim([1e-7, 1e7])

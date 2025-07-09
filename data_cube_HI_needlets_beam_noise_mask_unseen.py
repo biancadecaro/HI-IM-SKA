@@ -40,8 +40,8 @@ formatter.set_powerlimits((-1,1))
 #############################
 
 fg_comp = 'synch_ff_ps'
-beam_s= 'SKA_AA4'
-path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
+beam_s= '1.3deg_SKA_AA4'
+path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
 	file = pickle.load(f)
 	f.close()
@@ -58,7 +58,11 @@ HI_noise_maps_freq = file['maps_sims_HI'] + file['maps_sims_noise']
 fg_maps_freq = file['maps_sims_fg']
 full_maps_freq = file['maps_sims_tot'] + file['maps_sims_noise']
 noise_maps_freq = file['maps_sims_noise']
-print(HI_noise_maps_freq.shape)
+
+full_maps_freq = np.array([full_maps_freq[i] -np.mean(full_maps_freq[i],axis=0)  for i in range(num_freq)])
+fg_maps_freq = np.array([fg_maps_freq[i] -np.mean(fg_maps_freq[i],axis=0)  for i in range(num_freq)])
+HI_noise_maps_freq = np.array([HI_noise_maps_freq[i] -np.mean(HI_noise_maps_freq[i],axis=0)  for i in range(num_freq)])
+
 
 ich=int(num_freq/2)
 
@@ -123,7 +127,7 @@ hp.mollview(full_maps_freq[ich]-fg_maps_freq[ich], title=f'Observation - Fg',cma
 plt.show()
 
 
-out_dir = f'./Maps_needlets/No_mean/Beam_{beam_s}_noise_mask{fsky_50:0.2}_unseen/'
+out_dir = f'./Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask{fsky_50:0.2}_unseen/'
 if not os.path.exists(out_dir):
 	os.makedirs(out_dir)
 
@@ -206,7 +210,7 @@ map_fg_need_output = np.zeros((num_freq, jmax+1, npix))
 
 for nu in range(num_freq):
 	map_need_output[nu] = pippo.mylibpy_needlets_f2betajk_healpix_harmonic(full_maps_freq[nu], B, jmax,lmax )
-map_need_output[:,:,bad_v]=hp.UNSEEN
+#map_need_output[:,:,bad_v]=hp.UNSEEN
 np.save(out_dir+fname_obs_tot,map_need_output)
 
 fig = plt.figure(figsize=(10, 7))
@@ -215,7 +219,7 @@ del map_need_output; del full_maps_freq; del need_analysis
 
 for nu in range(num_freq):        
 	map_HI_need_output[nu] = pippo.mylibpy_needlets_f2betajk_healpix_harmonic(HI_noise_maps_freq[nu], B, jmax,lmax )
-map_HI_need_output[:,:,bad_v]=hp.UNSEEN
+#map_HI_need_output[:,:,bad_v]=hp.UNSEEN
 np.save(out_dir+fname_HI,map_HI_need_output)
 
 fig = plt.figure(figsize=(10, 7))
@@ -225,7 +229,7 @@ del map_HI_need_output; del HI_noise_maps_freq; del need_analysis_HI
 
 for nu in range(num_freq):        
 	map_fg_need_output[nu] = pippo.mylibpy_needlets_f2betajk_healpix_harmonic(fg_maps_freq[nu], B, jmax,lmax )
-map_fg_need_output[:,:,bad_v]=hp.UNSEEN
+#map_fg_need_output[:,:,bad_v]=hp.UNSEEN
 np.save(out_dir+fname_fg,map_fg_need_output)
 fig = plt.figure(figsize=(10, 7))
 hp.mollview(map_fg_need_output[ich,j_test], cmap='viridis', title=f'Fg, j={j_test}, freq={nu_ch[ich]}', hold=True)

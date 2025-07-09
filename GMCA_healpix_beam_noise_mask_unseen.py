@@ -22,8 +22,8 @@ import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 ################################################################
-beam_s = '1.3deg_SKA_AA4'
-out_dir= f'GMCA_pixels_output/Maps_GMCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+beam_s = 'SKA_AA4'
+out_dir= f'GMCA_pixels_output/Maps_GMCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 out_dir_plot = f'GMCA_pixels_output/Plots_GMCA_healpix/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 
 if not os.path.exists(out_dir):
@@ -33,9 +33,9 @@ if not os.path.exists(out_dir_plot):
 
 ################################################################
 
-fg_components='synch_ff_ps_pol'
+fg_components='synch_ff_ps'
 
-path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_components}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
+path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_components}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -44,7 +44,7 @@ with open(path_data_sims_tot+'.pkl', 'rb') as f:
 nu_ch= file['freq']
 
 num_freq = len(nu_ch)
-
+ich = int(num_freq/2)
 nu0 =1420
 print(f'working with {len(nu_ch)} channels, from {min(nu_ch)} to {max(nu_ch)} MHz')
 print(f'i.e. channels are {nu_ch[1]-nu_ch[0]} MHz thick')
@@ -54,6 +54,10 @@ HI_maps_freq = file['maps_sims_HI'] + file['maps_sims_noise']  #aggiungo il nois
 fg_maps_freq = file['maps_sims_fg']
 full_maps_freq = file['maps_sims_tot'] + file['maps_sims_noise']  #aggiungo il noise
 
+
+full_maps_freq = np.array([full_maps_freq[i] -np.mean(full_maps_freq[i],axis=0)  for i in range(num_freq)])
+fg_maps_freq = np.array([fg_maps_freq[i] -np.mean(fg_maps_freq[i],axis=0)  for i in range(num_freq)])
+HI_maps_freq = np.array([HI_maps_freq[i] -np.mean(HI_maps_freq[i],axis=0)  for i in range(num_freq)])
 
 ######################################################################################################
 npix = np.shape(HI_maps_freq)[1]
@@ -97,7 +101,7 @@ for n in range(num_freq):
 #########################################################################################
 
 
-ich = int(num_freq/2)
+
 fig = plt.figure()
 fig.suptitle(f'channel {ich}: {nu_ch[ich]} MHz',fontsize=20)
 fig.add_subplot(221) 

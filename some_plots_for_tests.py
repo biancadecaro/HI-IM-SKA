@@ -43,8 +43,8 @@ c_pal = sns.color_palette().as_hex()
 beam_s = 'SKA_AA4'
 fg_comp = 'synch_ff_ps'
 
-out_dir_maps_recon = f'PCA_pixels_output/Maps_PCA/No_mean/Beam_{beam_s}_noise/'
-out_dir_cl = out_dir_maps_recon+'power_spectra_cls_from_healpix_maps/'
+out_dir_maps = f'PCA_pixels_output/Maps_PCA/No_mean/Beam_{beam_s}_noise/'
+out_dir_cl = out_dir_maps+'power_spectra_cls_from_healpix_maps/'
 
 
 num_ch=105
@@ -143,13 +143,51 @@ ax.plot(ell[lmin:], factor[lmin:]*cl_fg_leak_pol_Nfg3.mean(axis=0)[lmin:], c=c_p
 ax.plot(ell[lmin:], factor[lmin:]*cl_fg_leak_pol_Nfg6.mean(axis=0)[lmin:], c=c_pal[1],ls=':', label= 'pol, Nfg=6 ')
 ax.plot(ell[lmin:], factor[lmin:]*cl_fg_leak_pol_Nfg18.mean(axis=0)[lmin:], c=c_pal[1],ls='-.', label= 'pol, Nfg=18 ')
 ax.set_yscale('log')
+ax.set_ylim([5e-7, 1e-2])
 
 ax.set_ylabel(r'$  \ell(\ell+1)/2\pi~ \langle C_{\ell} \rangle_{\rm ch}$ [mK$^{2}$]')
 ax.set_xlabel(r'$\ell$')
 
 fig.legend(ncols=2,loc='outside center right',bbox_to_anchor=(1, 0.80))
 
-#plt.show()
-#plt.close('all')
 
+
+
+################# mask ############################
+
+out_dir_maps = f'PCA_pixels_output/Maps_PCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+out_dir_cl = out_dir_maps+'power_spectra_cls_from_healpix_maps/'
+
+
+cl_HI_leak_deconv = np.loadtxt(out_dir_cl+f'cl_deconv_leak_HI_noise_synch_ff_ps_105_900.5_1004.5MHz_Nfg{Nfg3}_lmax{lmax_cl}_nside{nside}.dat')
+cl_fg_leak_deconv = np.loadtxt(out_dir_cl+f'cl_deconv_leak_fg_synch_ff_ps_105_900.5_1004.5MHz_Nfg{Nfg3}_lmax{lmax_cl}_nside{nside}.dat')
+
+cl_HI_leak_pol_Nfg3_deconv = np.loadtxt(out_dir_cl+f'cl_deconv_leak_HI_noise_synch_ff_ps_pol_105_900.5_1004.5MHz_Nfg{Nfg3}_lmax{lmax_cl}_nside{nside}.dat')
+cl_fg_leak_pol_Nfg3_deconv = np.loadtxt(out_dir_cl+f'cl_deconv_leak_fg_synch_ff_ps_pol_105_900.5_1004.5MHz_Nfg{Nfg3}_lmax{lmax_cl}_nside{nside}.dat')
+
+cl_HI_leak_pol_Nfg6_deconv = np.loadtxt(out_dir_cl+f'cl_deconv_leak_HI_noise_synch_ff_ps_pol_105_900.5_1004.5MHz_Nfg{Nfg6}_lmax{lmax_cl}_nside{nside}.dat')
+cl_fg_leak_pol_Nfg6_deconv = np.loadtxt(out_dir_cl+f'cl_deconv_leak_fg_synch_ff_ps_pol_105_900.5_1004.5MHz_Nfg{Nfg6}_lmax{lmax_cl}_nside{nside}.dat')
+
+cl_HI_leak_pol_Nfg18_deconv = np.loadtxt(out_dir_cl+f'cl_deconv_leak_HI_noise_synch_ff_ps_pol_105_900.5_1004.5MHz_Nfg{Nfg18}_lmax{lmax_cl}_nside{nside}.dat')
+cl_fg_leak_pol_Nfg18_deconv = np.loadtxt(out_dir_cl+f'cl_deconv_leak_fg_synch_ff_ps_pol_105_900.5_1004.5MHz_Nfg{Nfg18}_lmax{lmax_cl}_nside{nside}.dat')
+
+fig, ax= plt.subplots()
+ax.set_title('Foreground and HI leakage, mean over channels, fsky 50%')
+
+ax.plot(ell[lmin:], factor[lmin:]*cl_HI_leak_deconv.mean(axis=0)[lmin:], c=c_pal[0],ls='-',label= 'HI leakage ')
+ax.plot(ell[lmin:], factor[lmin:]*cl_HI_leak_pol_Nfg3_deconv.mean(axis=0)[lmin:], c=c_pal[0],ls='--', label= 'pol, Nfg=3 ')
+ax.plot(ell[lmin:], factor[lmin:]*cl_HI_leak_pol_Nfg6_deconv.mean(axis=0)[lmin:], c=c_pal[0],ls=':', label= 'pol, Nfg=6 ')
+ax.plot(ell[lmin:], factor[lmin:]*cl_HI_leak_pol_Nfg18_deconv.mean(axis=0)[lmin:], c=c_pal[0],ls='-.', label= 'pol, Nfg=18 ')
+
+ax.plot(ell[lmin:], factor[lmin:]*cl_fg_leak_deconv.mean(axis=0)[lmin:], c=c_pal[1],ls='-',label= 'fg leakage ')
+ax.plot(ell[lmin:], factor[lmin:]*cl_fg_leak_pol_Nfg3_deconv.mean(axis=0)[lmin:], c=c_pal[1],ls='--', label= 'pol, Nfg=3 ')
+ax.plot(ell[lmin:], factor[lmin:]*cl_fg_leak_pol_Nfg6_deconv.mean(axis=0)[lmin:], c=c_pal[1],ls=':', label= 'pol, Nfg=6 ')
+ax.plot(ell[lmin:], factor[lmin:]*cl_fg_leak_pol_Nfg18_deconv.mean(axis=0)[lmin:], c=c_pal[1],ls='-.', label= 'pol, Nfg=18 ')
+ax.set_yscale('log')
+ax.set_ylim([5e-7, 1e-2])
+
+ax.set_ylabel(r'$  \ell(\ell+1)/2\pi~ \langle C_{\ell} \rangle_{\rm ch}$ [mK$^{2}$]')
+ax.set_xlabel(r'$\ell$')
+
+fig.legend(ncols=2,loc='outside center right',bbox_to_anchor=(1, 0.80))
 plt.show()

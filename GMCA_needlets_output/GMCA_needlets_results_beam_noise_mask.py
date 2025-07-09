@@ -24,8 +24,8 @@ beam = beam_s.replace('_', ' ')
 print(beam)
 
 out_dir_plot = 'Plots_GMCA_needlets/'
-dir_GMCA = f'GMCA_maps/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'# noise_mask0.39
-out_dir_maps_recon = f'maps_reconstructed/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+dir_GMCA = f'GMCA_maps_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'# noise_mask0.39
+out_dir_maps_recon = f'maps_reconstructed_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 if not os.path.exists(out_dir_maps_recon):
 		os.makedirs(out_dir_maps_recon)
 
@@ -45,14 +45,14 @@ B = pippo.mylibpy_jmax_lmax2B(jmax, lmax)
 
 path_GMCA_HI=dir_GMCA+f'res_GMCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 path_GMCA_fg=dir_GMCA+f'res_GMCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
-path_cosmo_HI = f'../GMCA_pixels_output/Maps_GMCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/cosmo_HI_noise_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
+path_cosmo_HI = f'../GMCA_pixels_output/Maps_GMCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/cosmo_HI_noise_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
 #path_cosmo_HI_fullsky = f'../GMCA_pixels_output/Maps_GMCA/No_mean/Beam_{beam_s}_noise/cosmo_HI_noise_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
 
-path_fg = f'../GMCA_pixels_output/Maps_GMCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/fg_input_{fg_comp}_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
+path_fg = f'../GMCA_pixels_output/Maps_GMCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/fg_input_{fg_comp}_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
 #path_leak_Fg = dir_GMCA+f'leak_GMCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 #path_leak_HI = dir_GMCA+f'leak_GMCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
-path_cosmo_HI_bjk = f'../Maps_needlets/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/bjk_maps_HI_noise_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
-path_input_fg_bjk = f'../Maps_needlets/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/bjk_maps_fg_{fg_comp}_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
+path_cosmo_HI_bjk = f'../Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/bjk_maps_HI_noise_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
+path_input_fg_bjk = f'../Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/bjk_maps_fg_{fg_comp}_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
 
 
 print(f'jmax:{jmax}, lmax:{lmax}, num_ch:{num_ch}, min_ch:{min_ch}, max_ch:{max_ch}, Nfg:{Nfg}')
@@ -91,8 +91,8 @@ b_values = pippo.mylibpy_needlets_std_init_b_values(B,jmax,lmax)
 res_GMCA_HI = np.load(path_GMCA_HI+'.npy')
 res_GMCA_fg = np.load(path_GMCA_fg+'.npy')
 
-res_GMCA_HI[:,:,bad_v] = hp.UNSEEN
-res_GMCA_fg[:,:,bad_v] = hp.UNSEEN
+#res_GMCA_HI[:,:,bad_v] = hp.UNSEEN
+#res_GMCA_fg[:,:,bad_v] = hp.UNSEEN
 
 print(res_GMCA_HI.shape)
 map_GMCA_HI_need2pix=np.zeros((len(nu_ch), npix))
@@ -267,7 +267,7 @@ plt.semilogy(ell[2:],factor[2:]*cl_cosmo_HI[ich][2:],label='Cosmo + noise fsky')
 plt.semilogy(ell[2:],factor[2:]*cl_GMCA_HI_need2harm[ich][2:],'+', label='GMCA HI + noise fsky')
 plt.semilogy(ell[2:],factor[2:]*cl_GMCA_HI_mask_deconv_interp[ich][2:],'+', label='GMCA HI + noise fsky deconv')
 #plt.semilogy(ell[2:],factor[2:]*cl_cosmo_HI_fullsky[ich][2:],'k--' ,label='Cosmo + noise full sky')
-#plt.semilogy(ell[2:],factor[2:]*cl_cosmo_HI_recons[ich][2:], label='Cosmo reconstructed')
+plt.semilogy(ell[2:],factor[2:]*cl_cosmo_HI_recons[ich][2:], label='Cosmo reconstructed')
 plt.xlim([0,200])
 plt.legend()
 frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi} \langle C_{\ell} \rangle_{\rm ch}$')
@@ -277,11 +277,11 @@ frame1.set_xticks(np.arange(1,200+1, 10))
 
 diff_cl_need2sphe = cl_GMCA_HI_need2harm/cl_cosmo_HI-1
 #diff_cl_need2sphe_full = cl_GMCA_HI_mask_deconv_interp/cl_cosmo_HI_fullsky-1
-#diff_cl_need2sphe_cosmo_recons = cl_cosmo_HI_recons/cl_cosmo_HI-1
+diff_cl_need2sphe_cosmo_recons = cl_cosmo_HI_recons/cl_cosmo_HI-1
 frame2=fig.add_axes((.1,.1,.8,.2))
 plt.plot(ell[2:], diff_cl_need2sphe[ich][2:]*100, label='fsky')
 #plt.plot(ell[2:], diff_cl_need2sphe_full[ich][2:]*100, label='full sky')
-#plt.plot(ell[2:], diff_cl_need2sphe_cosmo_recons[ich][2:]*100, label=f'% recons_HI/input_HI -1')
+plt.plot(ell[2:], diff_cl_need2sphe_cosmo_recons[ich][2:]*100, label=f'% recons_HI/input_HI -1')
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_xlim([0,200])
 frame2.set_ylim([-10,10])

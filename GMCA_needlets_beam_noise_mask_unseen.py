@@ -22,15 +22,15 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 #print(sns.color_palette("husl", 15).as_hex())
 sns.palettes.color_palette()
 ###########################################################################3
-fg_comp='synch_ff_ps'
-beam_s = 'SKA_AA4'
-path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
+fg_comp='synch_ff_ps_pol'
+beam_s = '1.3deg_SKA_AA4'
+path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
 
 out_dir_output = 'GMCA_needlets_output/'
-out_dir_output_GMCA = out_dir_output+f'GMCA_maps/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+out_dir_output_GMCA = out_dir_output+f'GMCA_maps_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 out_dir_plot = out_dir_output+f'Plots_GMCA_needlets/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 if not os.path.exists(out_dir_output):
         os.makedirs(out_dir_output)
@@ -40,7 +40,7 @@ if not os.path.exists(out_dir_output_GMCA):
 nu_ch= file['freq']
 del file
 
-need_dir = f'Maps_needlets/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+need_dir = f'Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_105freq_900.5_1004.5MHz_jmax4_lmax383_B4.42_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
@@ -108,7 +108,8 @@ whitening = False; epsi = 1e-3
 # estimated mixing matrix:
 Ae = np.zeros((jmax+1, num_freq,num_sources))
 for j in range(Ae.shape[0]): 
-    Ae[j] = g4i.ma_run_GMCA(need_tot_maps_masked[:,j,:],AInit,num_sources,mints,nmax,L0,ColFixed,whitening,epsi)
+    #Ae[j] = g4i.ma_run_GMCA(need_tot_maps_masked[:,j,:],AInit,num_sources,mints,nmax,L0,ColFixed,whitening,epsi) Bianca 9/07
+    Ae[j] = g4i.run_GMCA(need_tot_maps[:,j,:],AInit,num_sources,mints,nmax,L0,ColFixed,whitening,epsi)
 
 #np.save(out_dir_output_GMCA+f'Ae_mixing_matrix_{num_freq}_Nfg{num_sources}_jmax{jmax}_lmax{lmax}_nside{nside}', Ae)
 #Ae = np.load(out_dir_output_GMCA+f'Ae_mixing_matrix_{num_freq}_Nfg{num_sources}_jmax{jmax}_lmax{lmax}_nside{nside}.npy')
@@ -142,9 +143,13 @@ plt.show()
 ####################################################################################################
 res_fg_maps = np.zeros((Ae.shape[0], num_freq, npix))
 for j in range(Ae.shape[0]):
-    piA = np.ma.dot(np.linalg.inv(np.ma.dot(Ae[j].T,Ae[j])),Ae[j].T)
-    Se_sph = np.ma.dot(piA,need_tot_maps[:,j,:]) # LS estimate of the sources in the pixel domain
-    res_fg_maps[j] = np.ma.dot(Ae[j],Se_sph)
+    #piA = np.ma.dot(np.linalg.inv(np.ma.dot(Ae[j].T,Ae[j])),Ae[j].T)
+    #Se_sph = np.ma.dot(piA,need_tot_maps[:,j,:]) # LS estimate of the sources in the pixel domain
+    #res_fg_maps[j] = np.ma.dot(Ae[j],Se_sph)  #Bianca 9/07
+    piA = np.dot(np.linalg.inv(np.dot(Ae[j].T,Ae[j])),Ae[j].T)
+    Se_sph = np.dot(piA,need_tot_maps[:,j,:]) # LS estimate of the sources in the pixel domain
+    res_fg_maps[j] = np.dot(Ae[j],Se_sph)
+
     #Ae[j]@np.linalg.inv(Ae[j].T@Ae[j])@Ae[j].T@need_tot_maps[:,j,:]
 print(res_fg_maps.shape)
 
@@ -160,7 +165,7 @@ j_test=3
 res_HI_maps = np.zeros((Ae.shape[0], num_freq, npix))
 for j in range(Ae.shape[0]):
     res_HI_maps[j,:,:] = need_tot_maps[:,j,:] - res_fg_maps[j,:,:]
-    res_HI_maps[j,:,bad_v]=hp.UNSEEN
+    #res_HI_maps[j,:,bad_v]=hp.UNSEEN
     hp.mollview(res_HI_maps[j][ich],min=0, max=0.2, cmap='viridis', title=f'j={j}')
 plt.show()
 del need_tot_maps
@@ -172,8 +177,8 @@ print('.. ho calcolato res HI .. ')
 
 res_fg_maps_totj=res_fg_maps.sum(axis=0)
 res_HI_maps_totj = res_HI_maps.sum(axis=0)
-res_fg_maps_totj[:, bad_v] = hp.UNSEEN
-res_HI_maps_totj[:, bad_v] = hp.UNSEEN
+#res_fg_maps_totj[:, bad_v] = hp.UNSEEN
+#res_HI_maps_totj[:, bad_v] = hp.UNSEEN
 del res_HI_maps; del res_fg_maps
 
 
@@ -189,10 +194,14 @@ leak_fg_maps = np.zeros((Ae.shape[0], num_freq, npix))
 leak_HI_maps = np.zeros((Ae.shape[0], num_freq, npix))
 
 for j in range(Ae.shape[0]):
-    piA = np.ma.dot(np.linalg.inv(np.ma.dot(Ae[j].T,Ae[j])),Ae[j].T)
-    Se_sph = np.ma.dot(piA,need_fg_maps[:,j,:]) # LS estimate of the sources in the pixel domain
-    leak_fg_maps[j] = need_fg_maps[:,j,:]-np.ma.dot(Ae[j],Se_sph)
-    leak_fg_maps[j,:,bad_v]=hp.UNSEEN
+    #piA = np.ma.dot(np.linalg.inv(np.ma.dot(Ae[j].T,Ae[j])),Ae[j].T)
+    #Se_sph = np.ma.dot(piA,need_fg_maps[:,j,:]) # LS estimate of the sources in the pixel domain
+    #leak_fg_maps[j] = need_fg_maps[:,j,:]-np.ma.dot(Ae[j],Se_sph) #Bianca 9/07
+    piA = np.dot(np.linalg.inv(np.dot(Ae[j].T,Ae[j])),Ae[j].T)
+    Se_sph = np.dot(piA,need_fg_maps[:,j,:]) # LS estimate of the sources in the pixel domain
+    leak_fg_maps[j] = need_fg_maps[:,j,:]-np.dot(Ae[j],Se_sph)
+
+    #leak_fg_maps[j,:,bad_v]=hp.UNSEEN
 
 
 np.save(out_dir_output_GMCA+f'leak_GMCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min_ch}_{max_ch}MHz_Nfg{num_sources}_nside{nside}.npy',leak_fg_maps)
@@ -210,9 +219,13 @@ need_HI_maps = np.load(need_HI_maps_filename)#[:,:jmax,:]
 
 
 for j in range(Ae.shape[0]):
-    piA = np.ma.dot(np.linalg.inv(np.ma.dot(Ae[j].T,Ae[j])),Ae[j].T)
-    Se_sph = np.ma.dot(piA,need_HI_maps[:,j,:]) # LS estimate of the sources in the pixel domain
-    leak_HI_maps[j] = np.ma.dot(Ae[j],Se_sph)
+    #piA = np.ma.dot(np.linalg.inv(np.ma.dot(Ae[j].T,Ae[j])),Ae[j].T)
+    #Se_sph = np.ma.dot(piA,need_HI_maps[:,j,:]) # LS estimate of the sources in the pixel domain
+    #leak_HI_maps[j] = np.ma.dot(Ae[j],Se_sph) #Bianca 9/07
+    piA = np.dot(np.linalg.inv(np.dot(Ae[j].T,Ae[j])),Ae[j].T)
+    Se_sph = np.dot(piA,need_HI_maps[:,j,:]) # LS estimate of the sources in the pixel domain
+    leak_HI_maps[j] = np.dot(Ae[j],Se_sph)
+
 
 del Ae; 
 np.save(out_dir_output_GMCA+f'leak_GMCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_freq}_{min_ch}_{max_ch}MHz_Nfg{num_sources}_nside{nside}.npy',leak_HI_maps)
@@ -231,8 +244,8 @@ del leak_HI_maps#; del leak_fg_maps
 
 need_HI_maps_totj = need_HI_maps.sum(axis=1)
 need_fg_maps_totj = need_fg_maps.sum(axis=1)
-need_HI_maps_totj[:, bad_v] = hp.UNSEEN
-need_fg_maps_totj[:,bad_v] = hp.UNSEEN
+#need_HI_maps_totj[:, bad_v] = hp.UNSEEN
+#need_fg_maps_totj[:,bad_v] = hp.UNSEEN
 
 del need_HI_maps;del need_fg_maps
 
