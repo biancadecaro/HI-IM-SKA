@@ -11,6 +11,7 @@ Maps_needlets/
 Maps_needlets_nuovo/
 Maps_needlets_nuovo_1/
 Maps_mexican_needlets/
+Maps_mexican_needlets_nuovo_1/
 PCA_needlets_output/PCA_maps_nuovo/
 PCA_needlets_output/PCA_maps_nuovo_1/
 PCA_needlets_output/maps_reconstructed_nuovo/
@@ -19,6 +20,8 @@ PCA_needlets_output/PCA_maps/
 PCA_needlets_output/maps_reconstructed/
 PCA_mexican_needlets_output/PCA_maps/
 PCA_mexican_needlets_output/maps_reconstructed/
+PCA_mexican_needlets_output/PCA_maps_nuovo_1/
+PCA_mexican_needlets_output/maps_reconstructed_nuovo_1/
 PCA_pixels_output/Maps_PCA/
 PCA_pixels_output/Maps_PCA_nuovo/
 Sims/

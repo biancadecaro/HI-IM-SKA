@@ -39,8 +39,8 @@ formatter.set_scientific(True)
 formatter.set_powerlimits((-1,1)) 
 #############################
 
-fg_comp = 'synch_ff_ps'
-beam_s= '1.3deg_SKA_AA4'
+fg_comp = 'synch_ff_ps_pol'
+beam_s= 'SKA_AA4'
 path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
 	file = pickle.load(f)
@@ -83,7 +83,7 @@ del file
 npix = np.shape(HI_noise_maps_freq)[1]
 nside = hp.get_nside(HI_noise_maps_freq[0])
 lmax=3*nside-1#2*nside#
-jmax=4
+jmax=12
 
 	
 ######################################################################################

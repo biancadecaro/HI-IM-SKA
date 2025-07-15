@@ -18,7 +18,7 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 
 beam = 'SKA_AA4'
 fg_comp='synch_ff_ps'
-path_data_sims_tot = f'Sims/beam_{beam}_no_mean_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
+path_data_sims_tot = f'Sims/nuovo_beam_{beam}_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
         f.close()
@@ -49,6 +49,10 @@ HI_maps_noise_freq = file['maps_sims_HI'] + file['maps_sims_noise']  #aggiungo i
 fg_maps_freq = file['maps_sims_fg']
 full_maps_freq = file['maps_sims_tot'] + file['maps_sims_noise']  #aggiungo il noise
 
+
+#full_maps_freq = np.array([full_maps_freq[i] -np.mean(full_maps_freq[i],axis=0)  for i in range(num_ch)])
+#fg_maps_freq = np.array([fg_maps_freq[i] -np.mean(fg_maps_freq[i],axis=0)  for i in range(num_ch)])
+#HI_maps_noise_freq = np.array([HI_maps_noise_freq[i] -np.mean(HI_maps_noise_freq[i],axis=0)  for i in range(num_ch)])
 
 nu_ch = np.linspace(min_ch, max_ch, num_ch)
 del min_ch;del max_ch
@@ -123,7 +127,7 @@ fig.colorbar(im2, ax=axs, cax=sub_ax,location='right',orientation='vertical',lab
 #######################################################
 beam = 'SKA_AA4'
 fg_comp_pol='synch_ff_ps_pol'
-path_data_sims_tot = f'Sims/beam_SKA_AA4_no_mean_sims_{fg_comp_pol}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
+path_data_sims_tot = f'Sims/nuovo_beam_SKA_AA4_sims_{fg_comp_pol}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as ff:
         file_pol = pickle.load(ff)
         ff.close()
@@ -131,6 +135,10 @@ with open(path_data_sims_tot+'.pkl', 'rb') as ff:
 HI_maps_noise_freq_pol = file_pol['maps_sims_HI'] + file['maps_sims_noise']  #aggiungo il noise
 fg_maps_freq_pol = file_pol['maps_sims_fg']
 full_maps_freq_pol = file_pol['maps_sims_tot'] + file['maps_sims_noise']  #aggiungo il noise
+
+#full_maps_freq_pol = np.array([full_maps_freq_pol[i] -np.mean(full_maps_freq_pol[i],axis=0)  for i in range(num_ch)])
+#fg_maps_freq_pol = np.array([fg_maps_freq_pol[i] -np.mean(fg_maps_freq_pol[i],axis=0)  for i in range(num_ch)])
+#HI_maps_noise_freq_pol = np.array([HI_maps_noise_freq_pol[i] -np.mean(HI_maps_noise_freq_pol[i],axis=0)  for i in range(num_ch)])
 
 
 fig = plt.figure(figsize=(10, 7))
@@ -162,13 +170,15 @@ hp.mollview(mask_50, cmap='viridis', title=f'fsky={np.mean(mask_50):0.2f}', hold
 
 bad_v = np.where(mask_50==0)
 
-full_maps_freq_mask = copy.deepcopy(full_maps_freq)
+print(full_maps_freq_pol[ich].mean())
+
+full_maps_freq_mask = copy.deepcopy(full_maps_freq_pol)
 
 for n in range(num_ch):
 		full_maps_freq_mask[n][bad_v] =  hp.UNSEEN
-		full_maps_freq_mask[n]=hp.remove_dipole(full_maps_freq_mask[n])
+		#full_maps_freq_mask[n]=hp.remove_dipole(full_maps_freq_mask[n])
 
 
-hp.mollview(full_maps_freq_mask[ich], cmap='viridis', unit='T[mK]', min=-300, max=2000, title='')
-plt.savefig(f'obs_beam_SKA_AA4_mask_fsky{fsky_50:0.2f}_ch{nu_ch[ich]}_nside{nside}.png')
+hp.mollview(full_maps_freq_mask[ich], cmap='viridis',min=500, max=5000, unit='T[mK]',title='')# 
+plt.savefig(f'Plots_paper/obs_beam_mean_SKA_AA4_mask_fsky{fsky_50:0.2f}_ch{nu_ch[ich]}_nside{nside}.png')
 plt.show()

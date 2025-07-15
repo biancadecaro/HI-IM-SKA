@@ -40,7 +40,7 @@ formatter.set_powerlimits((-1,1))
 
 ###########################################################################3
 fg_comp = 'synch_ff_ps_pol'
-beam_s = '1.3deg_SKA_AA4'
+beam_s = 'SKA_AA4'
 path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -61,7 +61,7 @@ del file
 
 
 need_dir = f'Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
-need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_105freq_900.5_1004.5MHz_jmax4_lmax383_B4.42_nside128.npy'
+need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_105freq_900.5_1004.5MHz_jmax12_lmax383_B1.64_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
 jmax=need_tot_maps.shape[1]-1
@@ -136,7 +136,7 @@ plt.show()
 if fg_comp=='synch_ff_ps':
     num_sources=3
 if fg_comp=='synch_ff_ps_pol':
-    num_sources=3#6#18
+    num_sources=3#18#6#
 
 Nfg = num_freq - num_sources
 print(f'Nfg:{num_sources}')

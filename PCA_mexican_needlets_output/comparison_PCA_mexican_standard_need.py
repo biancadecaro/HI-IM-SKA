@@ -43,11 +43,11 @@ formatter.set_powerlimits((-1,1))
 beam_s = 'SKA_AA4'
 fg_comp = 'synch_ff_ps_pol'
 
-out_dir_maps_recon = f'maps_reconstructed/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+out_dir_maps_recon = f'maps_reconstructed_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 out_dir_cl = out_dir_maps_recon+'cls_recons_need/'
 
 
-out_dir_maps_recon_std = f'../PCA_needlets_output/maps_reconstructed/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+out_dir_maps_recon_std = f'../PCA_needlets_output/maps_reconstructed_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 out_dir_cl_std = out_dir_maps_recon_std+'cls_recons_need/'
 
 
@@ -129,7 +129,7 @@ frame2.set_xlabel(r'$\ell$')
 #frame2.yaxis.set_major_formatter(formatter) 
 frame2.set_xticks(np.arange(lmin,lmax_plot+1, 20))
 #plt.legend()
-plt.savefig(f'../PCA_needlets_output/Plots_paper/comparison_cl_std_mex_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam_{beam_s}_jmax_std{jmax_std}_jmax_mex{jmax_mex}_Nfg{Nfg}_nside{nside}_mask0.5.png', bbox_inches='tight')
+plt.savefig(f'../PCA_needlets_output/Plots_paper_nuovo/comparison_cl_std_mex_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam_{beam_s}_jmax_std{jmax_std}_jmax_mex{jmax_mex}_Nfg{Nfg}_nside{nside}_mask0.5.png', bbox_inches='tight')
 
 
 #plt.show()
@@ -170,7 +170,7 @@ frame2.set_xlabel(r'$\ell$')
 #frame2.yaxis.set_major_formatter(formatter) 
 frame2.set_xticks(np.arange(lmin,lmax_plot+1, 20))
 #plt.legend()
-plt.savefig(f'../PCA_needlets_output/Plots_paper/comparison_cl_std_mex_need_mean_ch_{fg_comp}_noise_beam_{beam_s}_jmax_std{jmax_std}_jmax_mex{jmax_mex}_Nfg{Nfg}_nside{nside}_mask0.5.png', bbox_inches='tight')
+plt.savefig(f'../PCA_needlets_output/Plots_paper_nuovo/comparison_cl_std_mex_need_mean_ch_{fg_comp}_noise_beam_{beam_s}_jmax_std{jmax_std}_jmax_mex{jmax_mex}_Nfg{Nfg}_nside{nside}_mask0.5.png', bbox_inches='tight')
 
 fig = plt.figure()
 plt.plot(ell[lmin:], (diff_cl_mex/diff_cl_std-1).mean(axis=0)[lmin:])

@@ -45,8 +45,8 @@ import cython_mylibc as pippo
 
 ##########################################################################################
 
-beam_s = '1.3deg_SKA_AA4'
-fg_comp = 'synch_ff_ps'
+beam_s = 'SKA_AA4'
+fg_comp = 'synch_ff_ps_pol'
 beam = beam_s.replace('_', ' ')
 print(beam)
 
@@ -63,7 +63,7 @@ min_ch = 900.5
 max_ch = 1004.5
 nside=128
 npix= hp.nside2npix(nside)
-jmax=4
+jmax=12
 lmax= 3*nside-1
 if fg_comp=='synch_ff_ps':
 	Nfg=3

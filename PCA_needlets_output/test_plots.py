@@ -43,7 +43,7 @@ c_pal = sns.color_palette().as_hex()
 beam_s = 'SKA_AA4'
 fg_comp = 'synch_ff_ps'
 
-out_dir_maps_recon = f'maps_reconstructed/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+out_dir_maps_recon = f'maps_reconstructed_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 out_dir_cl = out_dir_maps_recon+'cls_recons_need/'
 
 num_ch=105
@@ -81,7 +81,7 @@ cl_cosmo_recon_HI=np.loadtxt(out_dir_cl+f'cl_deconv_cosmo_recon_HI_noise_{fg_com
 
 
 cl_PCA_HI=np.loadtxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{2*nside}_nside{nside}.dat')
-cl_PCA_std = np.loadtxt('/home/bianca/Documents/HI IM SKA/PCA_pixels_output/Maps_PCA/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/power_spectra_cls_from_healpix_maps/cl_deconv_PCA_HI_noise_synch_ff_ps_105_900.5_1004.5MHz_Nfg3_lmax256_nside128.dat')
+cl_PCA_std = np.loadtxt('/home/bianca/Documents/HI IM SKA/PCA_pixels_output/Maps_PCA_nuovo/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/power_spectra_cls_from_healpix_maps/cl_deconv_PCA_HI_noise_synch_ff_ps_105_900.5_1004.5MHz_Nfg3_lmax256_nside128.dat')
 #####################################################################
 
 lmax_cl = 2*nside
@@ -132,7 +132,7 @@ plt.xlabel(r'$\ell$')
 beam_s = 'SKA_AA4'
 fg_comp = 'synch_ff_ps_pol'
 
-out_dir_maps_recon = f'maps_reconstructed/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+out_dir_maps_recon = f'maps_reconstructed_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 out_dir_cl = out_dir_maps_recon+'cls_recons_need/'
 
 if fg_comp=='synch_ff_ps':
@@ -142,17 +142,17 @@ if fg_comp=='synch_ff_ps_pol':
 
 cl_PCA_HI_pol_18=np.loadtxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg18}_jmax{jmax}_lmax{2*nside}_nside{nside}.dat')
 cl_PCA_HI_pol_3=np.loadtxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_jmax{jmax}_lmax{2*nside}_nside{nside}.dat')
-cl_PCA_HI_pol_4=np.loadtxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg4}_jmax{jmax}_lmax{2*nside}_nside{nside}.dat')
+#cl_PCA_HI_pol_4=np.loadtxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg4}_jmax{jmax}_lmax{2*nside}_nside{nside}.dat')
 cl_PCA_HI_pol_6=np.loadtxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg6}_jmax{jmax}_lmax{2*nside}_nside{nside}.dat')
 
 ###################################################################
 ####  comparison with standard PCA ##############################
-out_dir_cl_std = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/power_spectra_cls_from_healpix_maps/'
+out_dir_cl_std = f'../PCA_pixels_output/Maps_PCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/power_spectra_cls_from_healpix_maps/'
 cl_standard_PCA_HI=np.loadtxt(out_dir_cl_std+f'cl_deconv_PCA_HI_noise_synch_ff_ps_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_lmax{2*nside}_nside{nside}.dat')
 
 cl_standard_PCA_HI_pol_18=np.loadtxt(out_dir_cl_std+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg18}_lmax{2*nside}_nside{nside}.dat')
 cl_standard_PCA_HI_pol_3=np.loadtxt(out_dir_cl_std+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_lmax{2*nside}_nside{nside}.dat')
-cl_standard_PCA_HI_pol_4=np.loadtxt(out_dir_cl_std+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg4}_lmax{2*nside}_nside{nside}.dat')
+#cl_standard_PCA_HI_pol_4=np.loadtxt(out_dir_cl_std+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg4}_lmax{2*nside}_nside{nside}.dat')
 cl_standard_PCA_HI_pol_6=np.loadtxt(out_dir_cl_std+f'cl_deconv_PCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg6}_lmax{2*nside}_nside{nside}.dat')
 #####################################################################
 fig = plt.figure()
@@ -162,13 +162,13 @@ plt.plot(ell[lmin:], factor[lmin:]*cl_cosmo_HI.mean(axis=0)[lmin:],'k--',label =
 plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_3.mean(axis=0)[lmin:], c=c_pal[0], label=r'Need-PCA, $N_{\rm fg}$=3')
 plt.plot(ell[lmin:],factor[lmin:]*cl_standard_PCA_HI_pol_3.mean(axis=0)[lmin:], ls='--',c=c_pal[0], label=r'PCA HI, $N_{\rm fg}$=3')
 
-plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_4.mean(axis=0)[lmin:], c=c_pal[1], label=r'Need-PCA, $N_{\rm fg}$=4')
-plt.plot(ell[lmin:],factor[lmin:]*cl_standard_PCA_HI_pol_4.mean(axis=0)[lmin:], ls='--',c=c_pal[1], label=r'PCA HI, $N_{\rm fg}$=4')
+#plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_4.mean(axis=0)[lmin:], c=c_pal[1], label=r'Need-PCA, $N_{\rm fg}$=4')
+#plt.plot(ell[lmin:],factor[lmin:]*cl_standard_PCA_HI_pol_4.mean(axis=0)[lmin:], ls='--',c=c_pal[1], label=r'PCA HI, $N_{\rm fg}$=4')
 
-plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_6.mean(axis=0)[lmin:], c=c_pal[2], label=r'Need-PCA, $N_{\rm fg}$=6')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_6.mean(axis=0)[lmin:], c=c_pal[1], label=r'Need-PCA, $N_{\rm fg}$=6')
 plt.plot(ell[lmin:],factor[lmin:]*cl_standard_PCA_HI_pol_6.mean(axis=0)[lmin:], ls='--',c=c_pal[2], label=r'PCA, $N_{\rm fg}$=6')
 
-plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_18.mean(axis=0)[lmin:], c=c_pal[3],  label=r'Need-PCA, $N_{\rm fg}$=18')
+plt.plot(ell[lmin:],factor[lmin:]*cl_PCA_HI_pol_18.mean(axis=0)[lmin:], c=c_pal[2],  label=r'Need-PCA, $N_{\rm fg}$=18')
 plt.plot(ell[lmin:],factor[lmin:]*cl_standard_PCA_HI_pol_18.mean(axis=0)[lmin:], ls='--',c=c_pal[3],  label=r'PCA, $N_{\rm fg}$=18')
 plt.xlim([lmin,lmax_plot])
 plt.ylim([-5e-4,6e-3])
@@ -180,27 +180,27 @@ frame1.set_xticks(np.arange(lmin,lmax_plot+1, 10), labels=[])
 #frame1.yaxis.set_major_formatter(formatter) 
 
 diff_cl_pol_3 = cl_PCA_HI_pol_3/cl_cosmo_HI-1
-diff_cl_pol_4 = cl_PCA_HI_pol_4/cl_cosmo_HI-1
+#diff_cl_pol_4 = cl_PCA_HI_pol_4/cl_cosmo_HI-1
 diff_cl_pol_6 = cl_PCA_HI_pol_6/cl_cosmo_HI-1
 diff_cl_pol_18 = cl_PCA_HI_pol_18/cl_cosmo_HI-1
 
 
 diff_std_PCA_cl_pol_3 = cl_standard_PCA_HI_pol_3/cl_cosmo_HI-1
 diff_std_PCA_cl_pol_6 = cl_standard_PCA_HI_pol_6/cl_cosmo_HI-1
-diff_std_PCA_cl_pol_4 = cl_standard_PCA_HI_pol_4/cl_cosmo_HI-1
+#diff_std_PCA_cl_pol_4 = cl_standard_PCA_HI_pol_4/cl_cosmo_HI-1
 diff_std_PCA_cl_pol_18 = cl_standard_PCA_HI_pol_18/cl_cosmo_HI-1
 
 frame2=fig.add_axes((.1,.1,.8,.2))
 plt.plot(ell[lmin:], diff_cl_pol_3.mean(axis=0)[lmin:]*100, c=c_pal[0], label=r'Need-PCA, $N_{\rm fg}$=3')
 plt.plot(ell[lmin:], diff_std_PCA_cl_pol_3.mean(axis=0)[lmin:]*100,ls='--', c=c_pal[0], label=r'PCA, $N_{\rm fg}$=3')
 
-plt.plot(ell[lmin:], diff_cl_pol_4.mean(axis=0)[lmin:]*100, c=c_pal[1], label=r'Need-PCA, $N_{\rm fg}$=4')
-plt.plot(ell[lmin:], diff_std_PCA_cl_pol_4.mean(axis=0)[lmin:]*100,ls='--', c=c_pal[1], label=r'PCA, $N_{\rm fg}$=4')
+#plt.plot(ell[lmin:], diff_cl_pol_4.mean(axis=0)[lmin:]*100, c=c_pal[1], label=r'Need-PCA, $N_{\rm fg}$=4')
+#plt.plot(ell[lmin:], diff_std_PCA_cl_pol_4.mean(axis=0)[lmin:]*100,ls='--', c=c_pal[1], label=r'PCA, $N_{\rm fg}$=4')
 
-plt.plot(ell[lmin:], diff_cl_pol_6.mean(axis=0)[lmin:]*100, c=c_pal[2], label=r'Need-PCA, $N_{\rm fg}$=6')
+plt.plot(ell[lmin:], diff_cl_pol_6.mean(axis=0)[lmin:]*100, c=c_pal[1], label=r'Need-PCA, $N_{\rm fg}$=6')
 plt.plot(ell[lmin:], diff_std_PCA_cl_pol_6.mean(axis=0)[lmin:]*100,ls='--',c=c_pal[2], label=r'PCA HI, $N_{\rm fg}$=6')
 
-plt.plot(ell[lmin:], diff_cl_pol_18.mean(axis=0)[lmin:]*100, c=c_pal[3], label=r'Need-PCA, $N_{\rm fg}$=18')
+plt.plot(ell[lmin:], diff_cl_pol_18.mean(axis=0)[lmin:]*100, c=c_pal[2], label=r'Need-PCA, $N_{\rm fg}$=18')
 plt.plot(ell[lmin:], diff_std_PCA_cl_pol_18.mean(axis=0)[lmin:]*100,ls='--', c=c_pal[3], label=r'PCA HI, $N_{\rm fg}$=18')
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_ylim([-60,2])
@@ -221,7 +221,7 @@ fig, ax = plt.subplots(1,1)
 plt.title(f'Mean over frequency channels')
 for i, cc in enumerate(chh):
 	ax.plot(ell[lmin:], np.abs(diff_cl[cc])[lmin:]*100, color=c_pal[i], label = f'nu={nu_ch[cc]}')
-	ax.plot(ell[lmin:], np.abs(diff_cl_pol_4[cc])[lmin:]*100, ls='--', color=c_pal[i])
+	#ax.plot(ell[lmin:], np.abs(diff_cl_pol_4[cc])[lmin:]*100, ls='--', color=c_pal[i])
 ax.axhline(ls='--', c= 'k', alpha=0.3)
 ax.set_xlim([lmin, lmax_plot+1])
 ax.set_ylim([-2,40])
@@ -253,11 +253,11 @@ plt.legend()
 #######################################################################################
 ############################### CROSS CORR MASK #########################################
 
-map_cosmo=np.load('../PCA_pixels_output/Maps_PCA/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/cosmo_HI_noise_105_900.5_1004.5MHz_lmax383_nside128.npy',allow_pickle=True)[ich]
-map_PCA=np.load('../PCA_pixels_output/Maps_PCA/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/res_PCA_HI_noise_synch_ff_ps_105_900.5_1004.5MHz_Nfg3_lmax383_nside128.npy',allow_pickle=True)[ich]
-map_PCA_pol3=np.load('../PCA_pixels_output/Maps_PCA/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/res_PCA_HI_noise_synch_ff_ps_pol_105_900.5_1004.5MHz_Nfg3_lmax383_nside128.npy',allow_pickle=True)[ich]
-map_PCA_pol6=np.load('../PCA_pixels_output/Maps_PCA/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/res_PCA_HI_noise_synch_ff_ps_pol_105_900.5_1004.5MHz_Nfg6_lmax383_nside128.npy',allow_pickle=True)[ich]
-map_PCA_pol18=np.load('../PCA_pixels_output/Maps_PCA/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/res_PCA_HI_noise_synch_ff_ps_pol_105_900.5_1004.5MHz_Nfg18_lmax383_nside128.npy',allow_pickle=True)[ich]
+map_cosmo=np.load('../PCA_pixels_output/Maps_PCA_nuovo/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/cosmo_HI_noise_105_900.5_1004.5MHz_lmax383_nside128.npy',allow_pickle=True)[ich]
+map_PCA=np.load('../PCA_pixels_output/Maps_PCA_nuovo/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/res_PCA_HI_noise_synch_ff_ps_105_900.5_1004.5MHz_Nfg3_lmax383_nside128.npy',allow_pickle=True)[ich]
+map_PCA_pol3=np.load('../PCA_pixels_output/Maps_PCA_nuovo/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/res_PCA_HI_noise_synch_ff_ps_pol_105_900.5_1004.5MHz_Nfg3_lmax383_nside128.npy',allow_pickle=True)[ich]
+map_PCA_pol6=np.load('../PCA_pixels_output/Maps_PCA_nuovo/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/res_PCA_HI_noise_synch_ff_ps_pol_105_900.5_1004.5MHz_Nfg6_lmax383_nside128.npy',allow_pickle=True)[ich]
+map_PCA_pol18=np.load('../PCA_pixels_output/Maps_PCA_nuovo/No_mean/Beam_SKA_AA4_noise_mask0.5_unseen/res_PCA_HI_noise_synch_ff_ps_pol_105_900.5_1004.5MHz_Nfg18_lmax383_nside128.npy',allow_pickle=True)[ich]
 
 
 cl_cross_cosmo = hp.anafast(map1=map_cosmo, map2=map_cosmo, lmax=lmax_cl)
@@ -310,4 +310,47 @@ ax.set_xlabel(r'$\ell$')
 
 fig.legend(title='- w/o pol leak,\n-- with pol leakage', loc='outside center right',bbox_to_anchor=(1, 0.72))
 
+
+##############################################################################
+cl_standard_leak_HI_mask_deconv_interp=np.loadtxt(out_dir_cl_std+f'cl_deconv_leak_HI_noise_synch_ff_ps_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat')
+cl_standard_leak_fg_mask_deconv_interp=np.loadtxt(out_dir_cl_std+f'cl_deconv_leak_fg_synch_ff_ps_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat')
+
+#cl_standard_leak_HI_pol_mask_deconv_interp=np.loadtxt(out_dir_cl+f'cl_deconv_leak_HI_synch_ff_ps_pol_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat')
+#cl_standard_leak_fg_pol_mask_deconv_interp=np.loadtxt(out_dir_cl+f'cl_deconv_leak_fg_synch_ff_ps_pol_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat')
+
+
+fig, ax= plt.subplots()
+ax.set_title('Foreground and HI leakage, mean over channels, Nfg=3')
+
+ax.plot(ell[lmin:], factor[lmin:]*cl_leak_HI_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[0],ls='-',label= 'HI leakage')
+ax.plot(ell[lmin:], factor[lmin:]*cl_standard_leak_HI_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[0],ls='--')
+
+ax.plot(ell[lmin:], factor[lmin:]*cl_leak_fg_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[1],ls='-',label= 'Fg leakage')
+ax.plot(ell[lmin:], factor[lmin:]*cl_standard_leak_fg_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[1],ls='--')
+ax.set_yscale('log')
+ax.set_xscale('log')
+ax.set_ylabel(r'$  \ell(\ell+1)/2\pi~ \langle C_{\ell} \rangle_{\rm ch}$ [mK$^{2}$]')
+ax.set_xlabel(r'$\ell$')
+
+fig.legend(title='- Need-PCA,\n-- Standard PCA', loc='outside center right',bbox_to_anchor=(1, 0.72))
+
+
+fig, ax= plt.subplots()
+ax.set_title('Foreground and HI leakage, mean over channels, Nfg=3')
+
+ax.plot(ell[lmin:], 100*((cl_standard_PCA_HI/cl_cosmo_recon_HI).mean(axis=0)[lmin:]-1), c=c_pal[0],label= 'Cl PCA HI')
+ax.plot(ell[lmin:], 100*((cl_standard_leak_HI_mask_deconv_interp/cl_leak_HI_mask_deconv_interp).mean(axis=0)[lmin:]-1),ls='--', c=c_pal[0],label= 'HI leakage')
+#ax.plot(ell[lmin:], 100*((cl_leak_fg_mask_deconv_interp/cl_standard_leak_fg_mask_deconv_interp).mean(axis=0)[lmin:]-1), ls='-.', c=c_pal[0],label= 'Fg leakage')
+#ax.set_yscale('log')
+#ax.set_xscale('log')
+ax.set_xlim([lmin, 10])
+ax.set_ylim([-20, 2])
+ax.set_ylabel(r'$ \%  \langle C_{\ell}^{\rm Std-PCA}/C_{\ell}^{\rm Need-PCA} \rangle_{\rm ch}$ -1 ')
+ax.set_xlabel(r'$\ell$')
+fig.legend( loc='outside center right',bbox_to_anchor=(1, 0.72))
+
+print((cl_standard_PCA_HI/cl_cosmo_recon_HI).mean(axis=0)[lmin:30]-1)
+
 plt.show()
+
+#########################################################################

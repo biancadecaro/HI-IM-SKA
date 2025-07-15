@@ -68,7 +68,7 @@ lmax=3*nside-1
 if fg_components=='synch_ff_ps':
     num_sources=3
 if fg_components=='synch_ff_ps_pol':
-    num_sources=3#18#6
+    num_sources=18#3#6
 print(num_sources)
 print(f'nside:{nside}, lmax:{lmax}, num_ch:{num_freq}, min_ch:{min(nu_ch)}, max_ch:{max(nu_ch)}, Nfg:{num_sources}')
 
