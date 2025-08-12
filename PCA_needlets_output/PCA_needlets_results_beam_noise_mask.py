@@ -63,7 +63,7 @@ min_ch = 900.5
 max_ch = 1004.5
 nside=128
 npix= hp.nside2npix(nside)
-jmax=12
+jmax=4
 lmax= 3*nside-1
 if fg_comp=='synch_ff_ps':
 	Nfg=3
@@ -581,8 +581,8 @@ for n in range(num_ch):
 	cl_leak_HI_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_leak_HI_mask_deconv[n])
 
 	f_0_leak_fg_mask = nm.NmtField(mask_50,[map_leak_fg_need2pix[n]] ) #qua
-	cl_leak_fg_mask_deconv[n] = nm.compute_full_master(f_0_leak_fg_mask, f_0_leak_fg_mask, b_cosmo)[0]
-	cl_leak_fg_mask_deconv_interp[n] = np.interp(ell, ell_cosmo_mask, cl_leak_fg_mask_deconv[n])
+	cl_leak_fg_mask_deconv[n] = nm.compute_full_master(f_0_leak_fg_mask, f_0_leak_fg_mask, b)[0]
+	cl_leak_fg_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_leak_fg_mask_deconv[n])
 
 
 #for n in range(len(nu_ch)):

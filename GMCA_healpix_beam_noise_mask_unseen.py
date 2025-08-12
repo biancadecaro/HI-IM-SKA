@@ -315,7 +315,7 @@ for i in range(num_freq):
 #np.savetxt(out_dir_cl+f'cl_leak_HI_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_HI_leak_Nfg)
 #np.savetxt(out_dir_cl+f'cl_leak_fg_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_fg_leak_Nfg)
 
-del fg_leakage; del HI_leakage
+#del fg_leakage; del HI_leakage
 
 ell = np.arange(0, lmax_cl+1)
 factor = ell*(ell+1)/(2*np.pi)
@@ -397,6 +397,13 @@ ell_mask= b.get_effective_ells()
 cl_GMCA_HI_mask_deconv = np.zeros((num_freq, len(ell_mask)))
 cl_GMCA_HI_mask_deconv_interp = np.zeros((num_freq, lmax_cl+1))
 
+
+cl_leak_HI_mask_deconv = np.zeros((num_freq, len(ell_mask)))
+cl_leak_HI_mask_deconv_interp = np.zeros((num_freq, lmax_cl+1))
+
+cl_leak_fg_mask_deconv = np.zeros((num_freq, len(ell_mask)))
+cl_leak_fg_mask_deconv_interp = np.zeros((num_freq, lmax_cl+1))
+
 #cl_GMCA_HI_mask_0_deconv = np.zeros((num_freq, len(ell_mask)))
 #cl_GMCA_HI_mask_0_deconv_interp = np.zeros((num_freq, lmax_cl+1))
 
@@ -405,8 +412,18 @@ for n in range(num_freq):
     cl_GMCA_HI_mask_deconv[n] = nm.compute_full_master(f_0_mask, f_0_mask, b)[0]
     cl_GMCA_HI_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_GMCA_HI_mask_deconv[n])
     
+    f_0_leak_HI_mask = nm.NmtField(mask_50,[HI_leakage[n]] ) #qua
+    cl_leak_HI_mask_deconv[n] = nm.compute_full_master(f_0_leak_HI_mask, f_0_leak_HI_mask, b)[0]
+    cl_leak_HI_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_leak_HI_mask_deconv[n])
+
+    f_0_leak_fg_mask = nm.NmtField(mask_50,[fg_leakage[n]] ) #qua
+    cl_leak_fg_mask_deconv[n] = nm.compute_full_master(f_0_leak_fg_mask, f_0_leak_fg_mask, b)[0]
+    cl_leak_fg_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_leak_fg_mask_deconv[n])
+    
 
 np.savetxt(out_dir_cl+f'cl_deconv_GMCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_GMCA_HI_mask_deconv_interp)
+np.savetxt(out_dir_cl+f'cl_deconv_leak_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_HI_mask_deconv_interp)
+np.savetxt(out_dir_cl+f'cl_deconv_leak_fg_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_fg_mask_deconv_interp)
 
 
 

@@ -17,8 +17,10 @@ import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 ################################################################
-out_dir= 'GMCA_pixels_output/Maps_GMCA/No_mean/Beam_theta40arcmin_noise/'
-out_dir_plot = 'GMCA_pixels_output/Plots_GMCA_healpix/No_mean/Beam_theta40arcmin_noise/'
+beam_s = 'theta40arcmin'
+out_dir= f'GMCA_pixels_output/Maps_GMCA_nuovo/No_mean/Beam_{beam_s}_noise/'
+out_dir_plot = f'GMCA_pixels_output/Plots_GMCA_healpix/No_mean/Beam_{beam_s}_noise/'
+
 
 if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -27,9 +29,9 @@ if not os.path.exists(out_dir_plot):
 
 ################################################################
 
-fg_components='synch_ff_ps_pol'
+fg_components='synch_ff_ps'
 
-path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_{fg_components}_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
+path_data_sims_tot = f'Sims/beam_theta40arcmin_no_mean_sims_synch_ff_ps_noise_40freq_905.0_1295.0MHz_thick10MHz_lmax383_nside128'
 
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -38,7 +40,7 @@ with open(path_data_sims_tot+'.pkl', 'rb') as f:
 nu_ch= file['freq']
 
 num_freq = len(nu_ch)
-
+ich = int(num_freq/2)
 nu0 =1420
 print(f'working with {len(nu_ch)} channels, from {min(nu_ch)} to {max(nu_ch)} MHz')
 print(f'i.e. channels are {nu_ch[1]-nu_ch[0]} MHz thick')
@@ -49,7 +51,9 @@ fg_maps_freq = file['maps_sims_fg']
 full_maps_freq = file['maps_sims_tot'] + file['maps_sims_noise']  #aggiungo il noise
 
 
-print(nu_ch)
+#full_maps_freq = np.array([full_maps_freq[i] -np.mean(full_maps_freq[i],axis=0)  for i in range(num_freq)])
+#fg_maps_freq = np.array([fg_maps_freq[i] -np.mean(fg_maps_freq[i],axis=0)  for i in range(num_freq)])
+#HI_maps_freq = np.array([HI_maps_freq[i] -np.mean(HI_maps_freq[i],axis=0)  for i in range(num_freq)])
 
 ######################################################################################################
 ich = 19#int(num_freq/2)
@@ -65,7 +69,7 @@ plt.show()
 npix = np.shape(HI_maps_freq)[1]
 nside = hp.get_nside(HI_maps_freq[0])
 lmax=3*nside-1
-num_sources = 18
+num_sources = 3
 print(f'nside:{nside}, lmax:{lmax}, num_ch:{num_freq}, min_ch:{min(nu_ch)}, max_ch:{max(nu_ch)}, Nfg:{num_sources}')
 
 ##############################################################################################
@@ -264,7 +268,7 @@ plt.plot(ell[1:], factor[1:]*np.mean(cl_Hi, axis=0)[1:],mfc='none', label='Cosmo
 plt.plot(ell[1:], factor[1:]*np.mean(cl_Hi_recons_Nfg, axis=0)[1:],'+',mfc='none', label='GMCA HI+noise')
 plt.xlabel(r'$\ell$')
 plt.ylabel(r'$ \frac{\ell(\ell+1)}{2\pi} \langle C_{\ell} \rangle $')
-plt.xlim([0,200])
+#plt.xlim([0,200])
 plt.legend()
 plt.show()
 
@@ -275,8 +279,10 @@ plt.plot(ell[1:], 100*np.mean((cl_Hi-cl_Hi_recons_Nfg)/cl_Hi, axis=0)[1:],'--',m
 plt.xlabel(r'$\ell$')
 plt.ylabel(r'$\%\langle C_{\ell}^{\rm rec}/C_{\ell}^{\rm cosmo}-1 \rangle$')
 plt.axhline(y=0,c='k',ls='--',alpha=0.5)
-plt.xlim([0,200])
+#plt.xlim([0,200])
 plt.ylim([-50,50])
 #plt.tight_layout()
 plt.show()
-print(min(100*np.mean(cl_Hi_recons_Nfg/cl_Hi-1, axis=0)), max(100*np.mean(cl_Hi_recons_Nfg/cl_Hi-1, axis=0)))
+print(np.mean(cl_Hi_recons_Nfg/cl_Hi, axis=0))
+
+print(min(100*abs(np.mean(cl_Hi_recons_Nfg/cl_Hi-1, axis=0)[2:])), max(100*abs(np.mean(cl_Hi_recons_Nfg/cl_Hi-1, axis=0)[2:])))

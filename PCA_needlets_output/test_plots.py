@@ -210,7 +210,7 @@ frame2.set_xlabel(r'$\ell$')
 #frame2.yaxis.set_major_formatter(formatter) 
 frame2.set_xticks(np.arange(lmin,lmax_plot+1, 10))
 
-plt.close('all')
+#plt.close('all')
 
 ########################################################################
 ############################### test pol ##################################
@@ -218,17 +218,20 @@ plt.close('all')
 chh = [0,ich,num_ch-1]
 
 fig, ax = plt.subplots(1,1)
-plt.title(f'Mean over frequency channels')
+#plt.title(f'Mean over frequency channels')
 for i, cc in enumerate(chh):
 	ax.plot(ell[lmin:], np.abs(diff_cl[cc])[lmin:]*100, color=c_pal[i], label = f'nu={nu_ch[cc]}')
-	#ax.plot(ell[lmin:], np.abs(diff_cl_pol_4[cc])[lmin:]*100, ls='--', color=c_pal[i])
+	ax.plot(ell[lmin:], np.abs(diff_cl_pol_3[cc])[lmin:]*100, ls='--', color=c_pal[i])
+ax.plot(ell[lmin:], np.abs(diff_cl.mean(axis=0))[lmin:]*100, color='k')
+ax.plot(ell[lmin:], np.abs(diff_cl_pol_3.mean(axis=0))[lmin:]*100, ls='--', color='k')
 ax.axhline(ls='--', c= 'k', alpha=0.3)
 ax.set_xlim([lmin, lmax_plot+1])
 ax.set_ylim([-2,40])
 ax.set_ylabel(r'|$\Delta$| [%]')
 ax.set_xlabel(r'$\ell$')
 ax.set_xticks(np.arange(lmin,lmax_plot+1, 10))
-plt.legend(title='- without pol leak, Nfg=3, -- with pol leakage, Nfg=4')
+#plt.legend(title='- without pol leak, Nfg=3, -- with pol leakage, Nfg=4')
+plt.legend(title='- without pol leak, Nfg=3, -- with pol leakage, Nfg=3')
 
 
 
@@ -282,24 +285,33 @@ ax.set_xticks(np.arange(lmin,lmax_plot+1, 10))
 plt.legend()
 
 
-
+plt.close('all')
 
 
 ################################################################
 ##################### leakage #########################
-
-
 cl_leak_HI_mask_deconv_interp=np.loadtxt(out_dir_cl+f'cl_deconv_leak_HI_synch_ff_ps_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat')
 cl_leak_fg_mask_deconv_interp=np.loadtxt(out_dir_cl+f'cl_deconv_leak_fg_synch_ff_ps_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat')
 
 cl_leak_HI_pol_mask_deconv_interp=np.loadtxt(out_dir_cl+f'cl_deconv_leak_HI_synch_ff_ps_pol_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat')
 cl_leak_fg_pol_mask_deconv_interp=np.loadtxt(out_dir_cl+f'cl_deconv_leak_fg_synch_ff_ps_pol_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat')
 
+out_dir_maps_recon_GMCA = f'..GMCA_needlets_output/maps_reconstructed_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+out_dir_cl_GMCA = out_dir_maps_recon+'cls_recons_need/'
+
+cl_leak_GMCA_HI_mask_deconv_interp=np.loadtxt(out_dir_cl_GMCA+f'cl_deconv_leak_HI_synch_ff_ps_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat')
+cl_leak_GMCA_fg_mask_deconv_interp=np.loadtxt(out_dir_cl_GMCA+f'cl_deconv_leak_fg_synch_ff_ps_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat')
+
+cl_leak_GMCA_HI_pol_mask_deconv_interp=np.loadtxt(out_dir_cl_GMCA+f'cl_deconv_leak_HI_synch_ff_ps_pol_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat')
+cl_leak_GMCA_fg_pol_mask_deconv_interp=np.loadtxt(out_dir_cl_GMCA+f'cl_deconv_leak_fg_synch_ff_ps_pol_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat')
+
+
+
 fig, ax= plt.subplots()
 ax.set_title('Foreground and HI leakage, mean over channels, Nfg=3')
 
-ax.plot(ell[lmin:], factor[lmin:]*cl_leak_HI_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[0],ls='-',label= 'HI leakage')
-ax.plot(ell[lmin:], factor[lmin:]*cl_leak_HI_pol_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[0],ls='--')
+#ax.plot(ell[lmin:], factor[lmin:]*cl_leak_HI_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[0],ls='-',label= 'HI leakage')
+#ax.plot(ell[lmin:], factor[lmin:]*cl_leak_HI_pol_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[0],ls='--')
 
 ax.plot(ell[lmin:], factor[lmin:]*cl_leak_fg_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[1],ls='-',label= 'Fg leakage')
 ax.plot(ell[lmin:], factor[lmin:]*cl_leak_fg_pol_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[1],ls='--')
@@ -311,9 +323,36 @@ ax.set_xlabel(r'$\ell$')
 fig.legend(title='- w/o pol leak,\n-- with pol leakage', loc='outside center right',bbox_to_anchor=(1, 0.72))
 
 
+#fig, ax= plt.subplots()
+#ax.set_title('Foreground and HI leakage, ch 900.5 MHz, Nfg=3')
+#
+#ax.plot(ell[lmin:], factor[lmin:]*cl_leak_HI_mask_deconv_interp[0][lmin:], c=c_pal[0],ls='-',label= 'HI leakage')
+#ax.plot(ell[lmin:], factor[lmin:]*cl_leak_HI_pol_mask_deconv_interp[0][lmin:], c=c_pal[0],ls='--')
+#
+#ax.plot(ell[lmin:], factor[lmin:]*cl_leak_fg_mask_deconv_interp[0][lmin:], c=c_pal[1],ls='-',label= 'Fg leakage')
+#ax.plot(ell[lmin:], factor[lmin:]*cl_leak_fg_pol_mask_deconv_interp[0][lmin:], c=c_pal[1],ls='--')
+#ax.set_yscale('log')
+#
+#ax.set_ylabel(r'$  \ell(\ell+1)/2\pi~ \langle C_{\ell} \rangle_{\rm ch}$ [mK$^{2}$]')
+#ax.set_xlabel(r'$\ell$')
+#
+#fig.legend(title='- w/o pol leak,\n-- with pol leakage', loc='outside center right',bbox_to_anchor=(1, 0.72))
+
 ##############################################################################
 cl_standard_leak_HI_mask_deconv_interp=np.loadtxt(out_dir_cl_std+f'cl_deconv_leak_HI_noise_synch_ff_ps_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat')
 cl_standard_leak_fg_mask_deconv_interp=np.loadtxt(out_dir_cl_std+f'cl_deconv_leak_fg_synch_ff_ps_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat')
+
+cl_standard_leak_HI_pol_mask_deconv_interp=np.loadtxt(out_dir_cl_std+f'cl_deconv_leak_HI_noise_synch_ff_ps_pol_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat')
+cl_standard_leak_fg_pol_mask_deconv_interp=np.loadtxt(out_dir_cl_std+f'cl_deconv_leak_fg_synch_ff_ps_pol_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat')
+
+out_dir_cl_std_GMCA = f'../GMCA_pixels_output/Maps_GMCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/power_spectra_cls_from_healpix_maps/'
+
+cl_standard_GMCA_leak_HI_mask_deconv_interp=np.loadtxt(out_dir_cl_std_GMCA+f'cl_deconv_leak_HI_noise_synch_ff_ps_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat')
+cl_standard_GMCA_leak_fg_mask_deconv_interp=np.loadtxt(out_dir_cl_std_GMCA+f'cl_deconv_leak_fg_synch_ff_ps_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat')
+
+cl_standard_GMCA_leak_HI_pol_mask_deconv_interp=np.loadtxt(out_dir_cl_std_GMCA+f'cl_deconv_leak_HI_noise_synch_ff_ps_pol_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat')
+cl_standard_GMCA_leak_fg_pol_mask_deconv_interp=np.loadtxt(out_dir_cl_std_GMCA+f'cl_deconv_leak_fg_synch_ff_ps_pol_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_lmax{lmax_cl}_nside{nside}.dat')
+
 
 #cl_standard_leak_HI_pol_mask_deconv_interp=np.loadtxt(out_dir_cl+f'cl_deconv_leak_HI_synch_ff_ps_pol_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat')
 #cl_standard_leak_fg_pol_mask_deconv_interp=np.loadtxt(out_dir_cl+f'cl_deconv_leak_fg_synch_ff_ps_pol_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg3}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat')
@@ -335,22 +374,69 @@ ax.set_xlabel(r'$\ell$')
 fig.legend(title='- Need-PCA,\n-- Standard PCA', loc='outside center right',bbox_to_anchor=(1, 0.72))
 
 
-fig, ax= plt.subplots()
-ax.set_title('Foreground and HI leakage, mean over channels, Nfg=3')
 
-ax.plot(ell[lmin:], 100*((cl_standard_PCA_HI/cl_cosmo_recon_HI).mean(axis=0)[lmin:]-1), c=c_pal[0],label= 'Cl PCA HI')
-ax.plot(ell[lmin:], 100*((cl_standard_leak_HI_mask_deconv_interp/cl_leak_HI_mask_deconv_interp).mean(axis=0)[lmin:]-1),ls='--', c=c_pal[0],label= 'HI leakage')
-#ax.plot(ell[lmin:], 100*((cl_leak_fg_mask_deconv_interp/cl_standard_leak_fg_mask_deconv_interp).mean(axis=0)[lmin:]-1), ls='-.', c=c_pal[0],label= 'Fg leakage')
-#ax.set_yscale('log')
-#ax.set_xscale('log')
-ax.set_xlim([lmin, 10])
-ax.set_ylim([-20, 2])
-ax.set_ylabel(r'$ \%  \langle C_{\ell}^{\rm Std-PCA}/C_{\ell}^{\rm Need-PCA} \rangle_{\rm ch}$ -1 ')
-ax.set_xlabel(r'$\ell$')
-fig.legend( loc='outside center right',bbox_to_anchor=(1, 0.72))
+#fig, ax= plt.subplots()
+#ax.set_title('Foreground and HI leakage, mean over channels, Nfg=3')
+#
+#ax.plot(ell[lmin:], 100*((cl_standard_PCA_HI/cl_cosmo_recon_HI).mean(axis=0)[lmin:]-1), c=c_pal[0],label= 'Cl PCA HI')
+#ax.plot(ell[lmin:], 100*((cl_standard_leak_HI_mask_deconv_interp/cl_leak_HI_mask_deconv_interp).mean(axis=0)[lmin:]-1),ls='--', c=c_pal[0],label= 'HI leakage')
+##ax.plot(ell[lmin:], 100*((cl_leak_fg_mask_deconv_interp/cl_standard_leak_fg_mask_deconv_interp).mean(axis=0)[lmin:]-1), ls='-.', c=c_pal[0],label= 'Fg leakage')
+##ax.set_yscale('log')
+##ax.set_xscale('log')
+#ax.set_xlim([lmin, 10])
+#ax.set_ylim([-20, 2])
+#ax.set_ylabel(r'$ \%  \langle C_{\ell}^{\rm Std-PCA}/C_{\ell}^{\rm Need-PCA} \rangle_{\rm ch}$ -1 ')
+#ax.set_xlabel(r'$\ell$')
+#fig.legend( loc='outside center right',bbox_to_anchor=(1, 0.72))
+#
+#print((cl_standard_PCA_HI/cl_cosmo_recon_HI).mean(axis=0)[lmin:30]-1)
 
-print((cl_standard_PCA_HI/cl_cosmo_recon_HI).mean(axis=0)[lmin:30]-1)
-
-plt.show()
 
 #########################################################################
+
+fig, ax= plt.subplots()
+ax.set_title('Foreground leakage, mean over channels, Nfg=3')
+
+#ax.plot(ell[lmin:], factor[lmin:]*cl_leak_HI_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[0],ls='-',label= 'HI leakage')
+#ax.plot(ell[lmin:], factor[lmin:]*cl_standard_leak_HI_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[0],ls='--')
+
+ax.plot(ell[lmin:], factor[lmin:]*cl_leak_fg_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[0],ls='-',label= 'w/o pol')
+ax.plot(ell[lmin:], factor[lmin:]*cl_standard_leak_fg_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[0],ls='--')
+
+
+ax.plot(ell[lmin:], factor[lmin:]*cl_leak_fg_pol_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[1],ls='-',label= 'w pol')
+ax.plot(ell[lmin:], factor[lmin:]*cl_standard_leak_fg_pol_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[1],ls='--')
+
+
+ax.set_yscale('log')
+#ax.set_xscale('log')
+ax.set_ylabel(r'$  \ell(\ell+1)/2\pi~ \langle C_{\ell} \rangle_{\rm ch}$ [mK$^{2}$]')
+ax.set_xlabel(r'$\ell$')
+
+fig.legend(title='- Need-PCA,\n-- Standard PCA', loc='outside center right',bbox_to_anchor=(1, 0.72))
+
+
+
+fig, ax= plt.subplots()
+ax.set_title('Foreground leakageCGMCA, mean over channels, Nfg=3')
+
+#ax.plot(ell[lmin:], factor[lmin:]*cl_leak_HI_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[0],ls='-',label= 'HI leakage')
+#ax.plot(ell[lmin:], factor[lmin:]*cl_standard_leak_HI_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[0],ls='--')
+
+ax.plot(ell[lmin:], factor[lmin:]*cl_leak_GMCA_fg_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[0],ls='-',label= 'w/o pol')
+ax.plot(ell[lmin:], factor[lmin:]*cl_standard_GMCA_leak_fg_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[0],ls='--')
+
+
+ax.plot(ell[lmin:], factor[lmin:]*cl_leak_GMCA_fg_pol_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[1],ls='-',label= 'w pol')
+ax.plot(ell[lmin:], factor[lmin:]*cl_standard_GMCA_leak_fg_pol_mask_deconv_interp.mean(axis=0)[lmin:], c=c_pal[1],ls='--')
+
+
+ax.set_yscale('log')
+#ax.set_xscale('log')
+ax.set_ylabel(r'$  \ell(\ell+1)/2\pi~ \langle C_{\ell} \rangle_{\rm ch}$ [mK$^{2}$]')
+ax.set_xlabel(r'$\ell$')
+
+fig.legend(title='- Need-PCA,\n-- Standard PCA', loc='outside center right',bbox_to_anchor=(1, 0.72))
+
+
+plt.show()

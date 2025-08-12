@@ -39,7 +39,7 @@ formatter.set_scientific(True)
 formatter.set_powerlimits((-1,1)) 
 
 ###########################################################################3
-fg_comp = 'synch_ff_ps_pol'
+fg_comp = 'synch_ff_ps'
 beam_s = 'SKA_AA4'
 path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
@@ -61,7 +61,7 @@ del file
 
 
 need_dir = f'Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
-need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_105freq_900.5_1004.5MHz_jmax12_lmax383_B1.64_nside128.npy'
+need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_105freq_900.5_1004.5MHz_jmax4_lmax383_B4.42_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
 jmax=need_tot_maps.shape[1]-1
@@ -125,10 +125,11 @@ pal = sns.color_palette("crest", n_colors=jmax+1)
 for j in range(eigenval.shape[0]):
     plt.semilogy(np.arange(1,num_freq+1),eigenval[j][::-1],'--o',mfc='none',color=pal[j],label=f'j={j}')#markersize=5,
 
+
 plt.legend( ncols=2)
 x_ticks = np.arange(-10,num_freq+10, 10)
 ax = plt.gca()
-ax.set(xlim=[-10,num_freq+10],xticks=x_ticks,xlabel="eigenvalue number",ylabel="$\\lambda$",title='Eigenvalues')
+ax.set(xlim=[-10,num_freq+10],xticks=x_ticks,xlabel="eigenvalue number",ylabel="$\\lambda$",title='Eigenvalues')#
 plt.tight_layout()
 plt.savefig(f'Plots_paper/eigenvalue_cov_mask_unseen_need_no_mean_{fg_comp}_beam_{beam_s}_jmax{jmax}_lmax{lmax}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}_nside{nside}.png')
 plt.show()
