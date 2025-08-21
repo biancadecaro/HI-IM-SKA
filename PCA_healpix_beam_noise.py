@@ -30,7 +30,7 @@ if not os.path.exists(out_dir_plot):
 ###################################################################################
 
 fg_components='synch_ff_ps'
-path_data_sims_tot = f'Sims/beam_{beam_s}_no_mean_sims_{fg_components}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
+path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_components}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -53,6 +53,12 @@ print(f'corresponding to the redshift range z: [{min(nu0/nu_ch -1.0):.2f} - {max
 HI_maps_freq = file['maps_sims_HI'] + file['maps_sims_noise']  #aggiungo il noise
 fg_maps_freq = file['maps_sims_fg']
 full_maps_freq = file['maps_sims_tot'] + file['maps_sims_noise']  #aggiungo il noise
+
+print(full_maps_freq[0].mean())
+
+full_maps_freq = np.array([full_maps_freq[i] -np.mean(full_maps_freq[i],axis=0)  for i in range(num_freq)])
+fg_maps_freq = np.array([fg_maps_freq[i] -np.mean(fg_maps_freq[i],axis=0)  for i in range(num_freq)])
+HI_maps_freq = np.array([HI_maps_freq[i] -np.mean(HI_maps_freq[i],axis=0)  for i in range(num_freq)])
 
 
 npix = np.shape(HI_maps_freq)[1]
@@ -192,7 +198,7 @@ hp.gnomview(HI_maps_freq[ich],rot=[-22,21], coord='G', reso=hp.nside2resol(nside
 fig.add_subplot(132) 
 hp.gnomview(res_HI[ich],rot=[-22,21], coord='G', reso=hp.nside2resol(nside, arcmin=True), min=0, max=1, title='PCA HI+noise', cmap= 'viridis', hold=True)
 fig.add_subplot(133) 
-hp.gnomview(HI_maps_freq[ich]-res_HI[ich], rot=[-22,21],coord='G', reso=hp.nside2resol(nside, arcmin=True), min=-0.2, max=0.2, title='PCA residuals', cmap= 'viridis', hold=True)
+hp.gnomview(HI_maps_freq[ich]-res_HI[ich], rot=[-22,21],coord='G', reso=hp.nside2resol(nside, arcmin=True), min=0, max=1, title='PCA residuals', cmap= 'viridis', hold=True)
 #plt.tight_layout()
 plt.show()
 
@@ -239,8 +245,8 @@ factor = ell*(ell+1)/(2*np.pi)
 fig = plt.figure(figsize=(10,7))
 frame1=fig.add_axes((.1,.3,.8,.6))
 plt.title(f'Channel:{nu_ch[ich]} MHz, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}')
-plt.semilogy(ell[2:], factor[2:]*cl_Hi[ich][2:],mfc='none', label='Cosmo HI+noise fsky')
-plt.semilogy(ell[2:], factor[2:]*cl_Hi_recons_Nfg[ich][2:],'+',color=c_pal[1],mfc='none', label='PCA HI+noise')
+plt.plot(ell[2:], factor[2:]*cl_Hi[ich][2:],mfc='none', label='Cosmo HI+noise fsky')
+plt.plot(ell[2:], factor[2:]*cl_Hi_recons_Nfg[ich][2:],'+',color=c_pal[1],mfc='none', label='PCA HI+noise')
 plt.xlim([0,200])
 plt.legend()
 frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi}C_{\ell}$')
@@ -254,7 +260,7 @@ frame2=fig.add_axes((.1,.1,.8,.2))
 plt.plot(ell[2:], diff_cl_pca_cosmo[ich][2:]*100, color=c_pal[1],label='mask UNSEEN')
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_xlim([0,200])
-frame2.set_ylim([-50,50])
+frame2.set_ylim([-20,20])
 frame2.set_ylabel(r'%$ C_{\ell}^{\rm PCA} / C_{\ell}^{\rm cosmo} -1$')
 frame2.set_xlabel(r'$\ell$')
 frame1.set_xticks(np.arange(1,200+1, 10))
@@ -266,8 +272,8 @@ plt.legend()
 fig = plt.figure(figsize=(10,7))
 frame1=fig.add_axes((.1,.3,.8,.6))
 plt.title(f'Mean over channel, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}')
-plt.semilogy(ell[2:], factor[2:]*np.mean(cl_Hi, axis=0)[2:],mfc='none', label='Cosmo HI+noise')
-plt.semilogy(ell[2:], factor[2:]*np.mean(cl_Hi_recons_Nfg, axis=0)[2:],'+',mfc='none', label='PCA HI+noise')
+plt.plot(ell[2:], factor[2:]*np.mean(cl_Hi, axis=0)[2:],mfc='none', label='Cosmo HI+noise')
+plt.plot(ell[2:], factor[2:]*np.mean(cl_Hi_recons_Nfg, axis=0)[2:],'+',mfc='none', label='PCA HI+noise')
 plt.xlim([0,200])
 plt.legend()
 frame1.set_ylabel(r'$\langle \frac{\ell(\ell+1)}{2\pi}C_{\ell} \rangle $')
@@ -279,7 +285,7 @@ frame2=fig.add_axes((.1,.1,.8,.2))
 plt.plot(ell[2:], np.mean(diff_cl_pca_cosmo, axis=0)[2:]*100)
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
 frame2.set_xlim([0,200])
-frame2.set_ylim([-50,50])
+frame2.set_ylim([-20,20])
 frame2.set_ylabel(r'%$ \langle C_{\ell}^{\rm PCA} / C_{\ell}^{\rm cosmo} -1 \rangle $')
 frame2.set_xlabel(r'$\ell$')
 frame1.set_xticks(np.arange(1,200+1, 10))

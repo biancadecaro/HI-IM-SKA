@@ -18,7 +18,7 @@ import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 ###########################################################################
-beam_s = 'SKA_AA4'
+beam_s = 'theta40arcmin_BINGO'
 out_dir= f'PCA_pixels_output/Maps_PCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 out_dir_plot = f'PCA_pixels_output/Plots_PCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 
@@ -29,8 +29,8 @@ if not os.path.exists(out_dir_plot):
 
 ###################################################################################
 
-fg_components='synch_ff_ps_pol'
-path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_components}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
+fg_components='synch_ff_ps'
+path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_components}_noise_30freq_965.0_1255.0MHz_thick10.0MHz_lmax383_nside128'
 
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
