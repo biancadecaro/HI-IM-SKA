@@ -37,6 +37,8 @@ mpl.rc('xtick', direction='in', top=False, bottom = True)
 mpl.rc('ytick', direction='in', right=False, left = True)
 
 c_pal = sns.color_palette().as_hex()
+ls_list= ["-","--","-.",':',(0, (3, 1, 1, 1)),(0, (3, 5, 1, 5, 1, 5))]
+c_pal_viridis = sns.color_palette('viridis')
 ##########################################################
 c_light = 3.0*1e8  # m/s
 
@@ -424,6 +426,47 @@ ax.set_xlabel(r'$\nu$')
 plt.legend(ncols=1, loc='upper right')
 plt.savefig(f'Plots_paper/brightness_temperature_beam_no_mean_lat{lat}_lon{long}_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_nside{nside_out}.png')
 #plt.show()
+
+
+fig, ax = plt.subplots(1,1)
+ax.plot(nu_ch_new,np.abs(file_beam_no_mean['pol_leakage'][:,pix_dir]), color=col_dic['pol_leakage'], ls=ls_dic['pol_leakage'], label=lab_dic['pol_leakage'])
+ax.plot(nu_ch_new,np.abs(file_beam_no_mean['cosmological_signal'][:,pix_dir]), color=col_dic['cosmological_signal'], ls=ls_dic['cosmological_signal'], label=lab_dic['cosmological_signal'])
+ax.set_xticks(np.arange(min(nu_ch_new), max(nu_ch_new), 20))
+#ax.set_xlabel(np.arange(min(nu_ch_new), max(nu_ch_new), 20))
+ax.set_yscale('log')
+#plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+ax.set_ylabel('|T| [mK]')
+ax.set_xlabel(r'$\nu$')
+plt.legend(ncols=1, loc='lower center')
+
+
+####################################################################
+############## polarization leakage ############################
+
+lat_list =[-85, -45, -5, 30, 60]
+
+pix_dir_list = hp.ang2pix(nside=nside_out, theta=long, phi=lat_list, lonlat=True)
+pix_dir_label = ['-85°','-45°','-5°', '30°','60°']
+
+
+fig, ax = plt.subplots(1,1)
+for t, tt in enumerate(pix_dir_list):
+	ax.plot(nu_ch_new,file_beam_no_mean['pol_leakage'][:,tt], color=c_pal_viridis[t], ls=ls_list[t], label=pix_dir_label[t])
+ax.set_xticks(np.arange(min(nu_ch_new), max(nu_ch_new), 20))
+#ax.set_xlabel(np.arange(min(nu_ch_new), max(nu_ch_new), 20))
+#ax.set_yscale('log')
+#plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+ax.set_ylabel('T [mK]')
+ax.set_xlabel(r'$\nu$')
+plt.legend(ncols=1, loc='upper right', title='Latitude [deg]')
+
+plt.show()
+
+
+
+
+
+
 ###########################################################
 ##################### cl ##################################
 lmax_cl = 2*nside_out

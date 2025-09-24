@@ -18,7 +18,7 @@ import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 ###########################################################################
-beam_s = 'theta40arcmin_BINGO'
+beam_s = 'SKA_AA4'
 out_dir= f'PCA_pixels_output/Maps_PCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 out_dir_plot = f'PCA_pixels_output/Plots_PCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 
@@ -30,7 +30,7 @@ if not os.path.exists(out_dir_plot):
 ###################################################################################
 
 fg_components='synch_ff_ps'
-path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_components}_noise_30freq_965.0_1255.0MHz_thick10.0MHz_lmax383_nside128'
+path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_components}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -53,6 +53,7 @@ print(f'corresponding to the redshift range z: [{min(nu0/nu_ch -1.0):.2f} - {max
 HI_maps_freq = file['maps_sims_HI'] + file['maps_sims_noise']  #aggiungo il noise
 fg_maps_freq = file['maps_sims_fg']
 full_maps_freq = file['maps_sims_tot'] + file['maps_sims_noise']  #aggiungo il noise
+noise = file['maps_sims_noise']
 
 print(full_maps_freq[0].mean())
 
@@ -269,6 +270,8 @@ res_fg_maps=ma.dot(eigenvec_fg_Nfg,ma.dot(eigenvec_fg_Nfg.T,full_maps_freq_mask)
 
 #The foreground residual that leaks into the recovered signal and noise
 fg_leakage = fg_maps_freq_mask - ma.dot(eigenvec_fg_Nfg,ma.dot(eigenvec_fg_Nfg.T,fg_maps_freq_mask))
+fg_leakage_noise = (fg_maps_freq_mask + noise)- ma.dot(eigenvec_fg_Nfg,ma.dot(eigenvec_fg_Nfg.T,fg_maps_freq_mask+noise))
+
 HI_leakage = ma.dot(eigenvec_fg_Nfg,ma.dot(eigenvec_fg_Nfg.T,HI_maps_freq_mask))
 fg_leakage[:,bad_v]=hp.UNSEEN
 HI_leakage[:,bad_v] = hp.UNSEEN
@@ -460,6 +463,9 @@ cl_leak_HI_mask_deconv_interp = np.zeros((num_freq, lmax_cl+1))
 cl_leak_fg_mask_deconv = np.zeros((num_freq, len(ell_mask)))
 cl_leak_fg_mask_deconv_interp = np.zeros((num_freq, lmax_cl+1))
 
+cl_leak_fg_noise_mask_deconv = np.zeros((num_freq, len(ell_mask)))
+cl_leak_fg_noise_mask_deconv_interp = np.zeros((num_freq, lmax_cl+1))
+
 
 #cl_PCA_HI_mask_0_deconv = np.zeros((num_freq, len(ell_mask)))
 #cl_PCA_HI_mask_0_deconv_interp = np.zeros((num_freq, lmax_cl+1))
@@ -481,6 +487,11 @@ for n in range(num_freq):
     cl_leak_fg_mask_deconv[n] = nm.compute_full_master(f_0_leak_fg_mask, f_0_leak_fg_mask, b)[0]
     cl_leak_fg_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_leak_fg_mask_deconv[n])
 
+    f_0_leak_fg_noise_mask = nm.NmtField(mask_50,[fg_leakage_noise[n]] ) #qua
+    cl_leak_fg_noise_mask_deconv[n] = nm.compute_full_master(f_0_leak_fg_noise_mask, f_0_leak_fg_noise_mask, b)[0]
+    cl_leak_fg_noise_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_leak_fg_noise_mask_deconv[n])
+
+
 del fg_leakage; del HI_leakage
 
 np.savetxt(out_dir_cl+f'cl_PCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_PCA_HI_mask_deconv)
@@ -490,6 +501,7 @@ np.savetxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_components}_{num_freq}_{min(n
 
 np.savetxt(out_dir_cl+f'cl_deconv_leak_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_HI_mask_deconv_interp)
 np.savetxt(out_dir_cl+f'cl_deconv_leak_fg_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_fg_mask_deconv_interp)
+np.savetxt(out_dir_cl+f'cl_deconv_leak_fg_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_fg_noise_mask_deconv_interp)
 
 
 ell=np.arange(lmax_cl+1)

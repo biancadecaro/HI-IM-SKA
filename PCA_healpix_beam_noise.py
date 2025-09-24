@@ -53,6 +53,7 @@ print(f'corresponding to the redshift range z: [{min(nu0/nu_ch -1.0):.2f} - {max
 HI_maps_freq = file['maps_sims_HI'] + file['maps_sims_noise']  #aggiungo il noise
 fg_maps_freq = file['maps_sims_fg']
 full_maps_freq = file['maps_sims_tot'] + file['maps_sims_noise']  #aggiungo il noise
+noise = file['maps_sims_noise']
 
 print(full_maps_freq[0].mean())
 
@@ -161,6 +162,7 @@ res_fg_maps=eigenvec_fg_Nfg@eigenvec_fg_Nfg.T@full_maps_freq
 
 #The foreground residual that leaks into the recovered signal and noise
 fg_leakage = fg_maps_freq - eigenvec_fg_Nfg@eigenvec_fg_Nfg.T@fg_maps_freq
+fg_leakage_noise = (fg_maps_freq+noise) - eigenvec_fg_Nfg@eigenvec_fg_Nfg.T@(fg_maps_freq+noise)
 HI_leakage = eigenvec_fg_Nfg@eigenvec_fg_Nfg.T@HI_maps_freq
 
 del eigenvec_fg_Nfg
