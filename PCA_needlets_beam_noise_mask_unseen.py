@@ -39,8 +39,8 @@ formatter.set_scientific(True)
 formatter.set_powerlimits((-1,1)) 
 
 ###########################################################################3
-fg_comp = 'synch_ff_ps'
-beam_s = 'SKA_AA4'
+fg_comp = 'synch_ff_ps_pol'
+beam_s = 'cosine_Amp0.1_smooth_True_SKA_AA4'
 path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -137,7 +137,7 @@ plt.show()
 if fg_comp=='synch_ff_ps':
     num_sources=3
 if fg_comp=='synch_ff_ps_pol':
-    num_sources=3#18#6#
+    num_sources=6#18#3#
 
 Nfg = num_freq - num_sources
 print(f'Nfg:{num_sources}')

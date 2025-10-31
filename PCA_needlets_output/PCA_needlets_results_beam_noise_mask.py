@@ -45,7 +45,7 @@ import cython_mylibc as pippo
 
 ##########################################################################################
 
-beam_s = 'SKA_AA4'
+beam_s = 'cosine_Amp0.1_smooth_True_SKA_AA4'
 fg_comp = 'synch_ff_ps_pol'
 beam = beam_s.replace('_', ' ')
 print(beam)
@@ -68,7 +68,7 @@ lmax= 3*nside-1
 if fg_comp=='synch_ff_ps':
 	Nfg=3
 if fg_comp=='synch_ff_ps_pol':
-	Nfg=3#18#6
+	Nfg=6#18#3
 B = pippo.mylibpy_jmax_lmax2B(jmax, lmax)
 
 path_PCA_HI=dir_PCA+f'res_PCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'

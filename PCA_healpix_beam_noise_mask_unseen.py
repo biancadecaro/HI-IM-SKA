@@ -18,7 +18,7 @@ import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 ###########################################################################
-beam_s = 'SKA_AA4'
+beam_s = 'cosine_Amp0.1_smooth_True_SKA_AA4'#cosine_Amp0.1_smooth_True_
 out_dir= f'PCA_pixels_output/Maps_PCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 out_dir_plot = f'PCA_pixels_output/Plots_PCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
 
@@ -29,7 +29,7 @@ if not os.path.exists(out_dir_plot):
 
 ###################################################################################
 
-fg_components='synch_ff_ps'
+fg_components='synch_ff_ps_pol'
 path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_components}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
@@ -69,7 +69,7 @@ lmax=3*nside-1
 if fg_components=='synch_ff_ps':
     num_sources=3
 if fg_components=='synch_ff_ps_pol':
-    num_sources=18#3#6
+    num_sources=6#3#18
 print(num_sources)
 print(f'nside:{nside}, lmax:{lmax}, num_ch:{num_freq}, min_ch:{min(nu_ch)}, max_ch:{max(nu_ch)}, Nfg:{num_sources}')
 
@@ -498,6 +498,7 @@ np.savetxt(out_dir_cl+f'cl_PCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_
 
 np.savetxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_PCA_HI_mask_deconv_interp)
 
+np.savetxt(out_dir_cl+f'cl_deconv_cosmo_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_cosmo_HI_mask_deconv_interp)
 
 np.savetxt(out_dir_cl+f'cl_deconv_leak_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_HI_mask_deconv_interp)
 np.savetxt(out_dir_cl+f'cl_deconv_leak_fg_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_fg_mask_deconv_interp)

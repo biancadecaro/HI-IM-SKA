@@ -4,10 +4,11 @@ import healpy as hp
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import seaborn as sns
+from convolution_func import*
 
 sns.set_theme(style = 'white')
 sns.palettes.color_palette()
-import cython_mylibc as pippo
+
 
 plt.rcParams['figure.figsize']=(11,7)
 plt.rcParams['axes.titlesize']=20
@@ -298,20 +299,8 @@ ff_maps_beam=np.load(f'Sims/ff_sims_mean_beam_SKA_AA4_noise_{num_freq_new}freq_{
 ps_maps_beam=np.load(f'Sims/ps_sims_mean_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy')
 pl_maps_beam=np.load(f'Sims/pol_sims_mean_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy')
 HI_maps_beam=np.load(f'Sims/HI_sims_mean_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy')
-noise_maps_beam = np.load(f'Sims/noise_sims_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy')
+#noise_maps_beam = np.load(f'Sims/noise_sims_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy')
 
-#fig = plt.figure(figsize=(15, 7))
-##fig.suptitle(f'channel: {nu_ch_new[ich]} MHz, Nside {nside}',fontsize=20)
-#fig.add_subplot(221) 
-#hp.mollview(synch_maps_beam[ich],  min=100, max=70000, norm='log',unit='T[mK]',cmap='viridis',title=f'Gal synchrotron', hold=True)
-#fig.add_subplot(222) 
-#hp.mollview(ff_maps_beam[ich], min=1, max=10000, unit='T[mK]',norm='log',cmap='viridis',title=f'Gal free-free',hold=True)
-#fig.add_subplot(223)
-#hp.mollview(ps_maps_beam[ich],  min=200, max=500,unit='T[mK]',title=f'Point sources',cmap='viridis', hold=True)
-#fig.add_subplot(224)
-#hp.mollview(pl_maps_beam[ich],  unit= 'T[mK]', min=-1, max=4, title=f'Polarization leakage',cmap='viridis', hold=True)
-##plt.savefig(f'Plots_paper/comp_HI_fg_input_beam_mean_lmax{lmax}_nside{nside}_ch{nu_ch_new[ich]}.png')
-#plt.show()
 
 ###########################################
 ########## singole figure ###################
@@ -342,7 +331,7 @@ plt.savefig(f'Plots_paper/comp_pol_beam_mean_lmax{lmax}_nside{nside}_ch{nu_ch_ne
 #	else:
 #		file_mean[c] = np.array([file_new[c][i] for i in range(num_freq_new)])
 
-file_beam_mean = {'cosmological_signal':HI_maps_beam,'gal_ff':ff_maps_beam,'gal_synch':synch_maps_beam,'point_sources':ps_maps_beam, 'pol_leakage':pl_maps_beam, 'noise':noise_maps_beam}
+file_beam_mean = {'cosmological_signal':HI_maps_beam,'gal_ff':ff_maps_beam,'gal_synch':synch_maps_beam,'point_sources':ps_maps_beam, 'pol_leakage':pl_maps_beam, 'noise':noise}
 
 
 file_no_mean = {}
@@ -362,7 +351,7 @@ ps_maps_beam_no_mean = np.array([ps_maps_beam[i] -np.mean(ps_maps_beam[i],axis=0
 HI_maps_beam_no_mean = np.array([HI_maps_beam[i] -np.mean(HI_maps_beam[i],axis=0) for i in range(num_freq_new)]) 
 pl_maps_beam_no_mean = np.array([pl_maps_beam[i] -np.mean(pl_maps_beam[i],axis=0) for i in range(num_freq_new)]) 
 
-file_beam_no_mean = {'cosmological_signal':HI_maps_beam_no_mean,'gal_ff':ff_maps_beam_no_mean,'gal_synch':synch_maps_beam_no_mean,'point_sources':ps_maps_beam_no_mean, 'pol_leakage':pl_maps_beam_no_mean, 'noise':noise_maps_beam}
+file_beam_no_mean = {'cosmological_signal':HI_maps_beam_no_mean,'gal_ff':ff_maps_beam_no_mean,'gal_synch':synch_maps_beam_no_mean,'point_sources':ps_maps_beam_no_mean, 'pol_leakage':pl_maps_beam_no_mean, 'noise':noise}
 
 
 ls_dic = {'cosmological_signal':"-",'gal_ff':"--",'gal_synch':"-.",'point_sources':':', 'pol_leakage':(0, (3, 1, 1, 1)), 'noise':(0, (3, 10, 1, 10))}
@@ -370,19 +359,6 @@ lab_dic = {'cosmological_signal':"21-cm signal",'gal_ff':"Gal free-free",'gal_sy
 col_dic = {'cosmological_signal':c_pal[0],'gal_ff':c_pal[1],'gal_synch':c_pal[2],'point_sources':c_pal[3], 'pol_leakage': c_pal[4], 'noise':c_pal[5]}
 
 
-
-#for c in components:
-#	for nu in range(num_freq_new):
-#		alm=hp.map2alm(file_no_mean[c][nu], lmax=lmax)
-#		file_no_mean[c][nu] = hp.alm2map(alm, lmax=lmax, nside = nside)
-#		file_no_mean[c][nu] = hp.remove_dipole(file_no_mean[c][nu])
-#
-#		alm_beam = hp.map2alm(file_beam_no_mean[c][nu], lmax=lmax)
-#		file_beam_no_mean[c][nu] = hp.alm2map(alm_beam, lmax=lmax, nside = nside)
-#		file_beam_no_mean[c][nu] = hp.remove_dipole(file_beam_no_mean[c][nu])
-#		#alm=0
-#		#alm_beam=0
-#	print(f'fatto {c}')
 
 ##############################################################################
 ################# proviamo a fare il plot per frequenza#######################
@@ -397,7 +373,7 @@ fig, ax = plt.subplots(1,1)
 for c in components:
 	if c =='noise':
 		ax.plot(nu_ch_new,np.abs(file_beam_no_mean[c][:,pix_dir]), color=col_dic[c], ls=ls_dic[c], label=lab_dic[c])
-		print(noise_maps_beam[:,pix_dir])
+		print(noise[:,pix_dir])
 	else:
 		ax.plot(nu_ch_new,np.abs(file_beam_no_mean[c][:,pix_dir]), color=col_dic[c], ls=ls_dic[c], label=lab_dic[c])
 ax.set_xticks(np.arange(min(nu_ch_new), max(nu_ch_new), 20))
@@ -417,23 +393,23 @@ factor = ell*(ell+1)/(2.*np.pi)
 
 lmax_cl_plot = 400
 
-cl_comp = {}
-
-for c in components:
-	cl_comp[c]= np.zeros((num_freq_new, lmax_cl+1))
-	for nu in range(num_freq_new):
-		cl_comp[c][nu] = hp.anafast(file_no_mean[c][nu], lmax=lmax_cl)
-
-plt.figure()
-plt.title(r'$\nu$='+f'{nu_ch[ich]} MHz')
-for c in components:
-	plt.plot(ell[:], factor[:]*cl_comp[c][ich][:], ls=ls_dic[c], color=col_dic[c], label=lab_dic[c])
-plt.yscale('log')
-plt.ylim([1e-7, 1e7])
-plt.xlim([0,lmax_cl_plot])
-plt.ylabel(r'$\frac{\ell(\ell+1)}{2\pi} C_{\ell}$ [mK$^2$]')
-plt.xlabel(r'$\ell$')
-plt.legend(ncols=1 )
+#cl_comp = {}
+#
+#for c in components:
+#	cl_comp[c]= np.zeros((num_freq_new, lmax_cl+1))
+#	for nu in range(num_freq_new):
+#		cl_comp[c][nu] = hp.anafast(file_no_mean[c][nu], lmax=lmax_cl)
+#
+#plt.figure()
+#plt.title(r'$\nu$='+f'{nu_ch[ich]} MHz')
+#for c in components:
+#	plt.plot(ell[:], factor[:]*cl_comp[c][ich][:], ls=ls_dic[c], color=col_dic[c], label=lab_dic[c])
+#plt.yscale('log')
+#plt.ylim([1e-7, 1e7])
+#plt.xlim([0,lmax_cl_plot])
+#plt.ylabel(r'$\frac{\ell(\ell+1)}{2\pi} C_{\ell}$ [mK$^2$]')
+#plt.xlabel(r'$\ell$')
+#plt.legend(ncols=1 )
 #plt.savefig(f'Plots_paper/cl_components_HI_sync_ff_ps_pol_ch{nu_ch[ich]}MHz_lmax{lmax_cl}_nside{nside}.png')
 #plt.show()
 
@@ -460,6 +436,8 @@ for c in components:
 	for nu in range(num_freq_new):
 		cl_comp_beam[c][nu] = hp.anafast(file_beam_no_mean[c][nu], lmax=lmax_cl)
 
+del file_beam_mean; del file_beam_no_mean
+
 plt.figure()
 plt.title(r'$\nu$='+f'{nu_ch[ich]} MHz')
 for c in components:
@@ -470,7 +448,7 @@ plt.xlim([0,lmax_fwmh_max])
 plt.ylabel(r'$\frac{\ell(\ell+1)}{2\pi} C_{\ell}$ [mK$^2$]')
 plt.xlabel(r'$\ell$')
 plt.legend(ncols=1, loc='upper right')
-plt.savefig(f'Plots_paper/cl_components_beam_SKA_AA4_HI_sync_ff_ps_pol_ch{nu_ch[ich]}MHz_lmax{lmax_cl}_nside{nside}.png')
+#plt.savefig(f'Plots_paper/cl_components_beam_SKA_AA4_HI_sync_ff_ps_pol_ch{nu_ch[ich]}MHz_lmax{lmax_cl}_nside{nside}.png')
 
 
 #cl_HI_min = cl_comp_beam['cosmological_signal'][0]
@@ -508,6 +486,68 @@ plt.xlim([0,lmax_fwmh_max])
 plt.ylabel(r'$\frac{\ell(\ell+1)}{2\pi} C_{\ell}$ [mK$^2$]')
 plt.xlabel(r'$\ell$')
 plt.legend(ncols=1, loc='upper right')
-plt.savefig(f'Plots_paper/cl_components_beam_SKA_AA4_fill_between_HI_sync_ff_ps_pol_ch_min_max{lmax_cl}_nside{nside}.png')
+#plt.savefig(f'Plots_paper/cl_components_beam_SKA_AA4_fill_between_HI_sync_ff_ps_pol_ch_min_max{lmax_cl}_nside{nside}.png')
+
+
+###################################################################################
+
+Amp=0.0
+T_p = 20
+smooth = False
+
+bl_beam_cos=create_bl_vec(beam='cosine', nside=nside,dish_diameter=dish_diam, T_p=T_p, Amp=Amp, smooth=smooth, ch_nu=nu_ch)
+
+#noise_maps_beam = np.array([convolve(noise[i],beam[i], lmax=lmax) for i in range(num_freq_new)])
+#np.save(f'Sims/noise_sims_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy',noise_maps_beam)
+
+#synch_maps_cosine_beam =  convolution_bl(file_new['gal_synch'],beam_bl=bl_beam_cos, nside=nside)
+#ff_maps_cosine_beam =  convolution_bl(file_new['gal_ff'],beam_bl=bl_beam_cos, nside=nside)
+#ps_maps_cosine_beam =  convolution_bl(file_new['point_sources'],beam_bl=bl_beam_cos, nside=nside)
+#pl_maps_cosine_beam =  convolution_bl(file_new['pol_leakage'],beam_bl=bl_beam_cos, nside=nside)
+#HI_maps_cosine_beam =  convolution_bl(file_new['cosmological_signal'],beam_bl=bl_beam_cos, nside=nside)
+
+#np.save(f'Sims/synch_sims_mean_cosine_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy',synch_maps_cosine_beam)
+#np.save(f'Sims/ff_sims_mean_cosine_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy',ff_maps_cosine_beam)
+#np.save(f'Sims/ps_sims_mean_cosine_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy',ps_maps_cosine_beam)
+#np.save(f'Sims/pol_sims_mean_cosine_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy',pl_maps_cosine_beam)
+#np.save(f'Sims/HI_sims_mean_cosine_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy',HI_maps_cosine_beam)
+
+
+synch_maps_cosine_beam=np.load(f'Sims/synch_sims_mean_cosine_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy')
+ff_maps_cosine_beam=np.load(f'Sims/ff_sims_mean_cosine_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy')
+ps_maps_cosine_beam=np.load(f'Sims/ps_sims_mean_cosine_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy')
+pl_maps_cosine_beam=np.load(f'Sims/pol_sims_mean_cosine_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy')
+HI_maps_cosine_beam=np.load(f'Sims/HI_sims_mean_cosine_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy')
+#noise_maps_cosine_beam = np.load(f'Sims/noise_sims_cosine_beam_SKA_AA4_noise_{num_freq_new}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_lmax{lmax}_nside{nside}.npy')
+
+
+synch_maps_cosine_beam_no_mean = np.array([synch_maps_cosine_beam[i] -np.mean(synch_maps_cosine_beam[i],axis=0)  for i in range(num_freq_new)])
+ff_maps_cosine_beam_no_mean = np.array([ff_maps_cosine_beam[i] -np.mean(ff_maps_cosine_beam[i],axis=0) for i in range(num_freq_new)])
+ps_maps_cosine_beam_no_mean = np.array([ps_maps_cosine_beam[i] -np.mean(ps_maps_cosine_beam[i],axis=0) for i in range(num_freq_new)]) 
+HI_maps_cosine_beam_no_mean = np.array([HI_maps_cosine_beam[i] -np.mean(HI_maps_cosine_beam[i],axis=0) for i in range(num_freq_new)]) 
+pl_maps_cosine_beam_no_mean = np.array([pl_maps_cosine_beam[i] -np.mean(pl_maps_cosine_beam[i],axis=0) for i in range(num_freq_new)]) 
+
+file_cosine_beam_no_mean = {'cosmological_signal':HI_maps_cosine_beam_no_mean,'gal_ff':ff_maps_cosine_beam_no_mean,'gal_synch':synch_maps_cosine_beam_no_mean,'point_sources':ps_maps_beam_no_mean, 'pol_leakage':pl_maps_cosine_beam_no_mean, 'noise':noise}
+
+###############################################
+
+cl_comp_cosine_beam = {}
+
+for c in components:
+	cl_comp_cosine_beam[c]= np.zeros((num_freq_new, lmax_cl+1))
+	for nu in range(num_freq_new):
+		cl_comp_cosine_beam[c][nu] = hp.anafast(file_cosine_beam_no_mean[c][nu], lmax=lmax_cl)
+
+
+plt.figure()
+plt.title(r'$\nu$='+f'{nu_ch[ich]} MHz, cosine beam')
+for c in components:
+	plt.plot(ell[2:], factor[2:]*cl_comp_cosine_beam[c][ich][2:], ls=ls_dic[c], color=col_dic[c],label=lab_dic[c])
+plt.yscale('log')
+plt.ylim([1e-7, 1e7])
+#plt.xlim([0,lmax_fwmh_max])
+plt.ylabel(r'$\frac{\ell(\ell+1)}{2\pi} C_{\ell}$ [mK$^2$]')
+plt.xlabel(r'$\ell$')
+plt.legend(ncols=1, loc='upper right')
 
 plt.show()

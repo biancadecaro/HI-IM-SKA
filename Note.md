@@ -36,3 +36,25 @@ Elenco puntato delle cose da fare e fatte:
 
 - datacube needlets jmax=12 pol leakage
 - PCA needlets jmax=12 pol leakage
+
+###########################################################
+Elenco puntato delle cose da fare con il beam nuovo
+
+COSINE As=0.1, Tp=20, smooth True
+polarization leakage
+
+- new file pol **FATTO**
+
+- datacube standard needlets jmax= 4 **FATTO**
+
+Foreground  cleaning:
+
+- PCA standard **FATTO**
+- GMCA standard **FATTO**
+- PCA needlets 
+- GMCA needlets
+
+
+
+
+

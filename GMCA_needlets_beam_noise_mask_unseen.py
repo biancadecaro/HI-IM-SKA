@@ -23,7 +23,7 @@ mpl.rc('ytick', direction='in', right=True, left = True)
 sns.palettes.color_palette()
 ###########################################################################3
 fg_comp='synch_ff_ps_pol'
-beam_s = '1.3deg_SKA_AA4'
+beam_s = 'cosine_Amp0.1_smooth_True_SKA_AA4'
 path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -72,7 +72,7 @@ fsky_50 = np.sum(mask_50)/hp.nside2npix(nside)
 if fg_comp=='synch_ff_ps':
     num_sources=3
 if fg_comp=='synch_ff_ps_pol':
-    num_sources=3#18
+    num_sources=6#3#18
 print(f'Nfg={num_sources}')  # number of sources to be estimated
 mints = 0.1 # min threshold (what is sparse compared to noise?)
 nmax  = 100 # number of iterations (usually 100 is safe)
