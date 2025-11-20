@@ -8,19 +8,38 @@ import seaborn as sns
 from Beams import AiryBeam
 
 
+import matplotlib as mpl
+mpl.rc('xtick', direction='in', top=False, bottom = True)
+mpl.rc('ytick', direction='in', right=False, left = True)
+
+#print(sns.color_palette("husl", 15).as_hex())
+sns.palettes.color_palette()
+import cython_mylibc as pippo
+
+plt.rcParams['figure.figsize']=(11,7)
+plt.rcParams['axes.titlesize']=20
+plt.rcParams['lines.linewidth']  = 3.
+plt.rcParams['lines.markersize']=6
+plt.rcParams['axes.labelsize']  =20
+plt.rcParams['legend.fontsize']=20
+plt.rcParams['xtick.labelsize']=20
+plt.rcParams['ytick.labelsize']=20
+plt.rcParams['xtick.major.width'] = 1
+plt.rcParams['ytick.major.width'] = 1
+plt.rcParams['xtick.minor.width'] = 1
+plt.rcParams['ytick.minor.width'] = 1
+plt.rcParams['axes.formatter.use_mathtext']=True
+plt.rcParams['savefig.dpi']=300
+
+
+
 from matplotlib import ticker
 formatter = ticker.ScalarFormatter(useMathText=True)
 formatter.set_scientific(True) 
 formatter.set_powerlimits((-1,1)) 
 
-import matplotlib as mpl
-mpl.rc('xtick', direction='in', top=False, bottom = True)
-mpl.rc('ytick', direction='in', right=False, left = True)
-
-
-#sns.set_theme(style = 'white')
-#sns.set_palette('husl',15)
 c_pal = sns.color_palette().as_hex()
+
 #######################################################################
 ###########################################################################
 ######## Computing beam size using given survey specifics: ################
@@ -129,7 +148,7 @@ T_p_rip = 20
 smooth_rip = True
 
 delta_theta_rip=createDtheta(nu_ch,dish_diam,T_p_rip,Amp_rip,smooth_rip)#*np.pi/180.
-
+delta_theta_rip = np.deg2rad(delta_theta_rip)
 
 
 beam_cos=np.zeros(len(theta))
@@ -143,29 +162,29 @@ beam_gauss_rip=np.zeros(len(theta))
 
 
 for p in pixel:
-    beam_cos[p]=cos_beam(theta_rad[p], delta_theta)
-    beam_gauss[p]=gaussian(theta_rad[p], delta_theta)
+    beam_cos[p]=cos_beam(theta_airy[p], delta_theta)
+    beam_gauss[p]=gaussian(theta_airy[p], delta_theta)
     #beam_jinc[p]=jinc(theta[p])
 
-    #beam_cos_rip[p]=cos_beam(thetas[p], delta_theta_rip)
-    #beam_gauss_rip[p]=gaussian(thetas[p], delta_theta_rip)
+    beam_cos_rip[p]=cos_beam(theta_airy[p], delta_theta_rip)
+    beam_gauss_rip[p]=gaussian(theta_airy[p], delta_theta_rip)
     ##beam_jinc_rip[p]=jinc(theta[p])
 
 
 
 fig, ax = plt.subplots(1,1)
-plt.suptitle(f'{nu_ch[0]} MHz, FWMH = {delta_theta[0]:0.2f} deg')
-ax.plot(theta_rad,10*np.log10(beam_cos/beam_cos[0]),color=c_pal[0], label='cosine')
+plt.suptitle(f'{nu_ch[0]} MHz, FWMH = {np.rad2deg(delta_theta[0]):0.2f} deg', fontsize=20)
+ax.plot(airy.data['theta'],10*np.log10(beam_cos_rip/beam_cos_rip[0]),color=c_pal[0], label='Cosine beam, ripple corrections')
 #ax.plot(theta,10*np.log10(beam_cos_rip/beam_cos_rip[0]),'--', color=c_pal[0], label='cosine w ripples')
-ax.plot(theta_rad,10*np.log10(beam_gauss/beam_gauss[0]), color=c_pal[1],label='gauss')
+ax.plot(airy.data['theta'],10*np.log10(beam_gauss/beam_gauss[0]), color=c_pal[1],label='Gaussian beam')
 #ax.plot(theta,10*np.log10(beam_gauss_rip/beam_gauss_rip[0]), '--', color=c_pal[1],label='gauss w ripples')
-ax.plot(theta_airy,10*np.log10(beam_airy/beam_airy[0]), color=c_pal[2],label='airy')
+#ax.plot(theta_airy,10*np.log10(beam_airy/beam_airy[0]), color=c_pal[2],label='airy')
 
-xticks  = np.arange(0,np.deg2rad(10), 0.05)
-xlabels = np.linspace(0,10, )
+xticks  = np.linspace(0.0,10, 5)
+xlabels = np.linspace(0.1,10,5 )
 ax.set_xticks(ticks=xticks)
 
-ax.set_xlim([0, np.deg2rad(10)])
+ax.set_xlim([0, 10])
 ax.set_ylim([-50,0])
 
 ax.set_xlabel(r'$\theta$ ')

@@ -51,8 +51,11 @@ Foreground  cleaning:
 
 - PCA standard **FATTO**
 - GMCA standard **FATTO**
-- PCA needlets 
-- GMCA needlets
+- PCA needlets **FATTO**
+- GMCA needlets **FATTO**
+
+
+il prior di GNILC sembra compatibile con il different beam quello gaussiano è meno alto, non so bene vosa voglia dire
 
 
 

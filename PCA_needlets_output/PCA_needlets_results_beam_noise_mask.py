@@ -39,9 +39,6 @@ formatter = ticker.ScalarFormatter(useMathText=True)
 formatter.set_scientific(True) 
 formatter.set_powerlimits((-1,1)) 
 
-#print(sns.color_palette("husl", 15).as_hex())
-sns.palettes.color_palette()
-import cython_mylibc as pippo
 
 ##########################################################################################
 

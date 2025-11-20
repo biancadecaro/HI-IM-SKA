@@ -72,6 +72,9 @@ factor_8 = ell_mask_8*(ell_mask_8+1)/(2.*np.pi)
 
 print(ell_mask, (lmax+1)/delta_ell)
 
+cl_HI_anafast = np.zeros((num_freq, lmax_cl+1))
+
+
 cl_HI_mask_deconv = np.zeros((num_freq, len(ell_mask)))
 cl_PCA_deconv = np.zeros((num_freq, len(ell_mask)))
 
@@ -85,6 +88,8 @@ cl_HI_mask_deconv_interp_8 = np.zeros((num_freq, lmax_cl+1))
 cl_PCA_HI_mask_deconv_interp_8 = np.zeros((num_freq, lmax_cl+1))
 
 for n in range(num_freq):
+	cl_HI_anafast[n] = hp.anafast(HI_maps_freq[n], lmax=lmax_cl)
+
 	f_0_mask = nm.NmtField(mask_50,[HI_maps_freq_mask[n]] )
 	cl_HI_mask_deconv[n] = nm.compute_full_master(f_0_mask, f_0_mask, b)[0]
 	cl_HI_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_HI_mask_deconv[n])
@@ -123,6 +128,7 @@ plt.xlabel(r'$\ell$')
 
 plt.figure()
 plt.suptitle('interpolation')
+plt.plot(ell, factor_ell*cl_HI_anafast.mean(axis=0), label='cl cosmo ansfast')
 plt.plot(ell, factor_ell*cl_HI_mask_deconv_interp.mean(axis=0), label='cl cosmo')
 plt.plot(ell, factor_ell*cl_PCA_HI_mask_deconv_interp.mean(axis=0), label='cl PCA')
 

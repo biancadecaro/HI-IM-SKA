@@ -38,9 +38,12 @@ formatter = ticker.ScalarFormatter(useMathText=True)
 formatter.set_scientific(True) 
 formatter.set_powerlimits((-1,1)) 
 
+
+c_pal = sns.color_palette().as_hex()
+
 ###########################################################################3
-fg_comp = 'synch_ff_ps_pol'
-beam_s = 'cosine_Amp0.1_smooth_True_SKA_AA4'
+fg_comp = 'synch_ff_ps'
+beam_s = 'SKA_AA4'
 path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -123,7 +126,7 @@ del Cov_channels
 fig = plt.figure(figsize=(12,6))
 pal = sns.color_palette("crest", n_colors=jmax+1)
 for j in range(eigenval.shape[0]):
-    plt.semilogy(np.arange(1,num_freq+1),eigenval[j][::-1],'--o',mfc='none',color=pal[j],label=f'j={j}')#markersize=5,
+    plt.semilogy(np.arange(1,num_freq+1),eigenval[j][::-1],'--o',mfc='none',color=c_pal[j],label=f'j={j}')#markersize=5,
 
 
 plt.legend( ncols=2)

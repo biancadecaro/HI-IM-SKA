@@ -271,7 +271,7 @@ cl_cross_cosmo_PCA_pol18 = hp.anafast(map1=map_cosmo, map2=map_PCA_pol18, lmax=l
 
 
 fig, ax = plt.subplots(1,1)
-ax.set_title('PCA standard, fsky=50%')
+ax.set_title('PCA standard,cross,  fsky=50%')
 ax.plot(ell[lmin:], factor[lmin:]*cl_cross_cosmo[lmin:], 'k' ,label='Input cosmo')
 ax.plot(ell[lmin:], factor[lmin:]*cl_cross_cosmo_PCA[lmin:],ls='--',c=c_pal[0], mfc='none', label='PCA w/o pol leak Nfg=3')
 ax.plot(ell[lmin:], factor[lmin:]*cl_cross_cosmo_PCA_pol3[lmin:],ls=':',c=c_pal[1], mfc='none', label='PCA with pol leak Nfg=3')
@@ -285,7 +285,7 @@ ax.set_xticks(np.arange(lmin,lmax_plot+1, 10))
 plt.legend()
 
 
-plt.close('all')
+#plt.close('all')
 
 
 ################################################################
