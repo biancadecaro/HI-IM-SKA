@@ -8,8 +8,10 @@ import seaborn as sns
 import numpy.ma as ma
 import copy
 import pymaster as nm
+from convolution_func import create_bl_vec
+
 sns.set_theme(style = 'white')
-#sns.set_palette('husl',15)
+
 from matplotlib import colors
 sns.palettes.color_palette()
 c_pal = sns.color_palette().as_hex()
@@ -18,14 +20,14 @@ import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 ###########################################################################
-beam_s = '1.55deg_cosine_Amp0.1_smooth_True_SKA_AA4'#1.55deg_cosine_Amp0.1_smooth_True_cosine_Amp0.1_smooth_True_
-out_dir= f'PCA_pixels_output/Maps_PCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
-out_dir_plot = f'PCA_pixels_output/Plots_PCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+beam_s = 'cosine_Amp0.1_smooth_True_SKA_AA4'
+out_dir= f'PCA_pixels_output/Maps_PCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/'
+out_dir_plot = f'PCA_pixels_output/Plots_PCA/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/'
 
 if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+	os.makedirs(out_dir)
 if not os.path.exists(out_dir_plot):
-        os.makedirs(out_dir_plot)
+	os.makedirs(out_dir_plot)
 
 ###################################################################################
 
@@ -33,8 +35,8 @@ fg_components='synch_ff_ps'
 path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_components}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
-        file = pickle.load(f)
-        f.close()
+	file = pickle.load(f)
+	f.close()
 
 nu_ch= file['freq']
 
@@ -50,42 +52,121 @@ fg_maps_freq = file['maps_sims_fg']
 full_maps_freq = file['maps_sims_tot'] + file['maps_sims_noise']  #aggiungo il noise
 noise = file['maps_sims_noise']
 
-print(full_maps_freq[0].mean())
 
 full_maps_freq = np.array([full_maps_freq[i] -np.mean(full_maps_freq[i],axis=0)  for i in range(num_freq)])
 fg_maps_freq = np.array([fg_maps_freq[i] -np.mean(fg_maps_freq[i],axis=0)  for i in range(num_freq)])
 HI_maps_freq = np.array([HI_maps_freq[i] -np.mean(HI_maps_freq[i],axis=0)  for i in range(num_freq)])
 
-print(full_maps_freq[0].mean())
 
 npix = np.shape(HI_maps_freq)[1]
 nside = hp.get_nside(HI_maps_freq[0])
 lmax=3*nside-1
 if fg_components=='synch_ff_ps':
-    num_sources=4
+    num_sources=3#3
 if fg_components=='synch_ff_ps_pol':
-    num_sources=5#4#18
-print(num_sources)
+    num_sources=5#3
 print(f'nside:{nside}, lmax:{lmax}, num_ch:{num_freq}, min_ch:{min(nu_ch)}, max_ch:{max(nu_ch)}, Nfg:{num_sources}')
 
-#######################################
+
+###########################################################################
+######## Computing beam size using given survey specifics: ################
+### initialise a dictionary with the instrument specifications
+### for noise and beam calculation
+c_light = 3.0*1e8  # m/s
+dish_diam_MeerKat = 13.5 #m
+dish_diam_SKA = 15 # m
+Ndishes_MeerKAT = 64.
+Ndishes_SKA = 133.
+dish_diam = (Ndishes_MeerKAT*dish_diam_MeerKat+ Ndishes_SKA*dish_diam_SKA)/(Ndishes_MeerKAT+Ndishes_SKA) # m (effective)
+Omega_sur     = 20000   # Survey area deg2
+t_obs     = 10000. # hrs, observing time
+Ndishes   = Ndishes_MeerKAT + Ndishes_SKA  # number of dishes
+specs_dict = {'dish_diam': dish_diam,
+			  'Omega_sur': Omega_sur, 't_obs': t_obs, 'Ndishes' : Ndishes}
+
+
+Amp=0.1
+T_p = 20
+smooth = True
+
+
+bl_beam_cos, delta_theta=create_bl_vec(beam='cosine', nside=nside,dish_diameter=dish_diam, T_p=T_p, Amp=Amp, smooth=smooth, ch_nu=nu_ch)
+
+bl_beam_cos_worst = bl_beam_cos[0]
+delta_theta_worst = delta_theta[0]
+print(np.pi/delta_theta_worst)
+
+
+#####################################################################################
+
+HI_maps_freq_beam_deconv=np.zeros((num_freq,npix))
+fg_maps_freq_beam_deconv=np.zeros((num_freq,npix))
+full_maps_freq_beam_deconv=np.zeros((num_freq,npix))
+
+length_of_alms=hp.Alm.getsize(lmax)
+for n in range(num_freq):
+	alm_HI_ms = hp.sphtfunc.map2alm(HI_maps_freq[n])
+	alm_HI_rs=np.zeros(length_of_alms,dtype=complex)
+
+	alm_fg_ms = hp.sphtfunc.map2alm(fg_maps_freq[n])
+	alm_fg_rs=np.zeros(length_of_alms,dtype=complex)
+
+	alm_tot_ms = hp.sphtfunc.map2alm(full_maps_freq[n])
+	alm_tot_rs=np.zeros(length_of_alms,dtype=complex)
+
+	counter=0
+	for m in range(lmax+1):
+			for l in range(m,lmax+1):
+					alm_HI_rs[counter]=alm_HI_ms[counter]*(bl_beam_cos_worst[l]/bl_beam_cos[n][l])
+					alm_fg_rs[counter]=alm_fg_ms[counter]*(bl_beam_cos_worst[l]/bl_beam_cos[n][l])
+					alm_tot_rs[counter]=alm_tot_ms[counter]*(bl_beam_cos_worst[l]/bl_beam_cos[n][l])
+					counter+=1
+
+	HI_maps_freq_beam_deconv[n] = hp.alm2map(alms=alm_HI_rs, nside=nside,inplace=False)
+	fg_maps_freq_beam_deconv[n] = hp.alm2map(alms=alm_fg_rs, nside=nside,inplace=False)
+	full_maps_freq_beam_deconv[n] = hp.alm2map(alms=alm_tot_rs, nside=nside,inplace=False)
+
+################################################################################################
+ell = np.arange(lmax+1)
+factor = ell*(ell+1)/(2*np.pi)
+ich = int(num_freq/2)
+prova_cl_HI_conv = hp.anafast(HI_maps_freq[ich], lmax=lmax) # ha il noise aggiunto dopo
+prova_cl_HI_deconv = hp.anafast(HI_maps_freq_beam_deconv[ich], lmax=lmax) #deconvoluto con il noise
+
+
+fig=plt.figure()
+plt.suptitle(f'Channel : {nu_ch[ich]} MHz')
+
+plt.plot(ell[2:], factor[2:]*prova_cl_HI_conv[2:],'+',mfc='none', label= 'Convolved + noise ')
+plt.plot(ell[2:], factor[2:]*prova_cl_HI_deconv[2:],'+',mfc='none', label= 'Deconvolved')
+plt.xlabel(r'$\ell$')
+plt.ylabel(r'$ \frac{\ell(\ell+1)}{2\pi}  C_{\ell}^{\rm HI} $')
+plt.ylim(([-0.01, 0.08]))
+plt.xlim([-1,lmax+1])
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+################################################################
+del HI_maps_freq; del fg_maps_freq; del full_maps_freq; del alm_fg_ms; del alm_HI_rs; del alm_fg_rs; del alm_tot_rs
+
+
+hp.mollview(HI_maps_freq_beam_deconv[21], cmap='viridis', min=0, max=1)
+#######################################################################################
 
 pix_mask = hp.query_strip(nside, theta1=np.pi*2/3, theta2=np.pi/3)
 print(pix_mask)
 mask_50 = np.zeros(npix)
 mask_50[pix_mask] =1
 fsky_50 = np.sum(mask_50)/hp.nside2npix(nside)
-
-#######################################################################################
-
+######################################################################
 
 bad_v = np.where(mask_50==0)
 
-HI_maps_freq_mask = copy.deepcopy(HI_maps_freq)
-fg_maps_freq_mask = copy.deepcopy(fg_maps_freq)
-full_maps_freq_mask = copy.deepcopy(full_maps_freq)
+HI_maps_freq_mask = copy.deepcopy(HI_maps_freq_beam_deconv)
+fg_maps_freq_mask = copy.deepcopy(fg_maps_freq_beam_deconv)
+full_maps_freq_mask = copy.deepcopy(full_maps_freq_beam_deconv)
 
-print(full_maps_freq_mask.shape)
 
 for n in range(num_freq):
 		HI_maps_freq_mask[n][bad_v] =  hp.UNSEEN
@@ -99,29 +180,49 @@ for n in range(num_freq):
 
 
 
+hp.mollview(HI_maps_freq_mask[0], title='freq 0',cmap='viridis' )
+hp.mollview(HI_maps_freq_mask[-1], title='freq -1',cmap='viridis' )
+plt.show()
 
 #########################################################################################
 
 
-ich = 21
+ich = 21#int(num_freq/2)
+#fig = plt.figure()
+#fig.suptitle(f'channel {ich}: {nu_ch[ich]} MHz',fontsize=20)
+#fig.add_subplot(221) 
+#hp.mollview(full_maps_freq_mask[ich], cmap='viridis', title=f'Observations', hold=True)
+#fig.add_subplot(222)
+#hp.mollview(fg_maps_freq_mask[ich], cmap='viridis', title=f'Input foreground', hold=True)
+#fig.add_subplot(223)
+#hp.mollview(HI_maps_freq_mask[ich], cmap='viridis', min=0, max=1,title=f'Input HI + noise', hold=True)
+#plt.show()
+
 
 ######################################################################################################
 
+#mask_bool = mask_40
+#mask_bool[bad_v] = True
+#mask_bool[mask_bool==1] = False
+##mask_bool = np.array(mask_40,dtype='bool')
+#print(mask_bool)
 
 full_maps_freq_masked=ma.zeros((num_freq,npix))
-
+#fg_maps_freq_masked=ma.zeros((num_freq,npix))
+#HI_maps_freq_masked=ma.zeros((num_freq,npix))
+#full_maps_freq_masked= ma.asarray(full_maps_freq_masked)
 maskt =np.zeros(mask_50.shape)
 maskt[bad_v]=  1
 mask = ma.make_mask(maskt, shrink=False)
+#mask_b = np.array(maskt,dtype='int')
+#hp.mollview(mask_b, title='mask b', cmap = 'viridis')
 
 
 
 for n in range(num_freq):
-        full_maps_freq_masked[n]  =ma.MaskedArray(full_maps_freq_mask[n], mask=mask)#np.isnan(full_maps_freq_mask[n])
-
+	full_maps_freq_masked[n]  =ma.MaskedArray(full_maps_freq_mask[n], mask=mask)#np.isnan(full_maps_freq_mask[n])
 
 Cov_channels=ma.cov(full_maps_freq_masked)
-corr_coeff = ma.corrcoef(full_maps_freq_masked)
 
 
 eigenval, eigenvec= np.linalg.eig(Cov_channels)
@@ -144,6 +245,7 @@ plt.legend()
 ############################# PCA ##########################################
 
 eigenvec_fg_Nfg = eigenvec[:, 0:num_sources]
+#eigenvec_fg_Nfg_mask_0 = eigenvec_mask_0[:, 0:num_sources]
 
 fig=plt.figure()
 plt.suptitle(f'Mixing matrix, Nfg:{num_sources}, sources: {fg_components},\nbeam: {beam_s}, fsky:{fsky_50:0.2f}')
@@ -156,7 +258,8 @@ plt.colorbar()
 
 del eigenvec
 
-
+#for r in range(0,num_sources):
+#    eigenvec_fg_Nfg[:,r] = eigenvec_fg_Nfg[:,r]/lng.norm(eigenvec_fg_Nfg[:,r])
 ######################################################################################
 
 # gal freefree spectral index for reference
@@ -265,7 +368,7 @@ hp.mollview(HI_leakage[ich], title=f'HI leakage freq={nu_ch[ich]}', min=0, max=0
 ###############################################################################################################
 out_dir_cl = out_dir+'power_spectra_cls_from_healpix_maps/'
 if not os.path.exists(out_dir_cl):
-        os.makedirs(out_dir_cl)
+	os.makedirs(out_dir_cl)
 
 lmax_cl = 2*nside
 
@@ -280,7 +383,7 @@ cl_HI_leak_Nfg=np.zeros((num_freq, lmax_cl+1))
 for i in range(num_freq):
     cl_Hi[i] = hp.anafast(HI_maps_freq_mask[i], lmax=lmax_cl)
     #cl_Hi_mask_0[i] = hp.anafast(HI_maps_freq_mask_0[i], lmax=lmax_cl)
-    cl_HI_cosmo_full[i] = hp.anafast(HI_maps_freq[i], lmax=lmax_cl)
+    cl_HI_cosmo_full[i] = hp.anafast(HI_maps_freq_beam_deconv[i], lmax=lmax_cl)
     cl_Hi_recons_Nfg[i] = hp.anafast(res_HI[i], lmax=lmax_cl)
     #cl_Hi_recons_Nfg_mask_0[i] = hp.anafast(res_HI_mask_0[i], lmax=lmax_cl)
     cl_fg_leak_Nfg[i]=hp.anafast(fg_leakage[i], lmax=lmax_cl)
@@ -423,7 +526,7 @@ np.savetxt(out_dir_cl+f'cl_PCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_
 
 np.savetxt(out_dir_cl+f'cl_deconv_PCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_PCA_HI_mask_deconv_interp)
 
-np.savetxt(out_dir_cl+f'cl_deconv_cosmo_HI_noise_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_cosmo_HI_mask_deconv_interp)
+np.savetxt(out_dir_cl+f'cl_deconv_cosmo_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_cosmo_HI_mask_deconv_interp)
 
 np.savetxt(out_dir_cl+f'cl_deconv_leak_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_HI_mask_deconv_interp)
 np.savetxt(out_dir_cl+f'cl_deconv_leak_fg_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat', cl_leak_fg_mask_deconv_interp)
@@ -498,3 +601,72 @@ plt.xlim([0,200])
 plt.legend()
 
 plt.show()
+#cl_res_HI_no_mask = np.loadtxt(f'PCA_pixels_output/Maps_PCA/No_mean/Beam_theta40arcmin_noise/power_spectra_cls_from_healpix_maps/cl_PCA_HI_noise_{fg_components}_{num_freq}_{min(nu_ch)}_{max(nu_ch)}MHz_Nfg{num_sources}_lmax{lmax_cl}_nside{nside}.dat')
+#
+#diff_cl_PCA_mask_full = cl_Hi_recons_Nfg/cl_res_HI_no_mask -1 
+#diff_cl_PCA_mask_full_deconv = cl_PCA_HI_mask_deconv_interp/cl_res_HI_no_mask -1 
+#diff_cl_PCA_mask_cosmo_full_deconv = cl_PCA_HI_mask_deconv_interp/cl_HI_cosmo_full -1 
+#
+#diff_cl_PCA_mask_0_full_deconv = cl_PCA_HI_mask_0_deconv_interp/cl_res_HI_no_mask -1 
+#diff_cl_PCA_mask_0_cosmo_full_deconv = cl_PCA_HI_mask_0_deconv_interp/cl_HI_cosmo_full -1 
+#
+#fig = plt.figure(figsize=(10,7))
+#frame1=fig.add_axes((.1,.3,.8,.6))
+#plt.title(f'Channel:{nu_ch[ich]} MHz, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}')
+#plt.semilogy(ell[2:], factor[2:]*cl_HI_cosmo_full[ich][2:],'k--', mfc='none', label='Cosmo HI full sky')
+#plt.semilogy(ell[2:], factor[2:]*cl_res_HI_no_mask[ich][2:],mfc='none', label='PCA HI full sky')
+##plt.semilogy(ell[2:], factor[2:]*cl_Hi_recons_Nfg[ich][2:],'+',mfc='none', label='PCA HI fsky')
+#plt.semilogy(ell[2:], factor[2:]*cl_PCA_HI_mask_deconv_interp[ich][2:],'+',mfc='none', label='PCA HI fsky deconvolution mask UNSEEN')
+#plt.semilogy(ell[2:], factor[2:]*cl_PCA_HI_mask_0_deconv_interp[ich][2:],'+',mfc='none', label='PCA HI fsky deconvolution mask 0')
+#plt.xlim([0,200])
+#plt.legend()
+#frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi}C_{\ell}$')
+#frame1.set_xlabel([])
+#frame1.set_xticks(np.arange(1,200+1, 10))
+#
+#frame2=fig.add_axes((.1,.1,.8,.2))
+##plt.plot(ell[2:], diff_cl_PCA_mask_full_deconv[ich][2:]*100, label='% PCA mask UNSEEN deconv/PCA full sky -1 ')
+#plt.plot(ell[2:], diff_cl_PCA_mask_cosmo_full_deconv[ich][2:]*100,c_pal[1],  label='% PCA mask UNSEEN deconv /cosmo full sky -1  ')
+##plt.plot(ell[2:], diff_cl_PCA_mask_0_full_deconv[ich][2:]*100, label='% PCA mask 0 deconv/PCA full sky -1 ')
+#plt.plot(ell[2:], diff_cl_PCA_mask_0_cosmo_full_deconv[ich][2:]*100, c_pal[2], label='% PCA mask 0 deconv /cosmo full sky -1  ')
+#frame2.axhline(ls='--', c= 'k', alpha=0.3)
+#frame2.set_xlim([0,200])
+#frame2.set_ylim([-50,50])
+#frame2.set_ylabel(r'%$ C_{\ell}^{\rm PCA,mask} / C_{\ell}^{\rm PCA,full} -1$')
+#frame2.set_xlabel(r'$\ell$')
+#frame1.set_xticks(np.arange(1,200+1, 10))
+##plt.tight_layout()
+#plt.legend()
+
+
+
+
+#fig = plt.figure(figsize=(10,7))
+#frame1=fig.add_axes((.1,.3,.8,.6))
+#plt.title(f'Mean over channels, BEAM {beam_s}, lmax:{lmax}, Nfg:{num_sources}')
+#plt.semilogy(ell[2:], factor[2:]*np.mean(cl_HI_cosmo_full, axis=0)[2:],'k--',mfc='none', label='Cosmo HI full sky')
+#plt.semilogy(ell[2:], factor[2:]*np.mean(cl_res_HI_no_mask, axis=0)[2:],mfc='none', label='PCA HI full sky')
+##plt.semilogy(ell[2:], factor[2:]*np.mean(cl_Hi_recons_Nfg, axis=0)[2:],'+',mfc='none', label='PCA HI fsky')
+#plt.semilogy(ell[2:], factor[2:]*np.mean(cl_PCA_HI_mask_deconv_interp, axis=0)[2:],'+',mfc='none', label='PCA HI fsky deconvolution mask UNSEEN')
+#plt.semilogy(ell[2:], factor[2:]*np.mean(cl_PCA_HI_mask_0_deconv_interp, axis=0)[2:],'+',mfc='none', label='PCA HI fsky deconvolution mask 0')
+#plt.xlim([0,200])
+#plt.legend()
+#frame1.set_ylabel(r'$\langle \frac{\ell(\ell+1)}{2\pi}C_{\ell}\rangle$')
+#frame1.set_xlabel([])
+#frame1.set_xticks(np.arange(1,200+1, 10))
+#
+#frame2=fig.add_axes((.1,.1,.8,.2))
+##plt.plot(ell[2:], np.mean(diff_cl_PCA_mask_full_deconv, axis=0)[2:]*100, label='% PCA mask deconv/PCA full sky -1 ')
+#plt.plot(ell[2:], np.mean(diff_cl_PCA_mask_cosmo_full_deconv, axis=0)[2:]*100,c_pal[1], label='% PCA mask deconv /cosmo full sky -1  ')
+##plt.plot(ell[2:], np.mean(diff_cl_PCA_mask_0_full_deconv, axis=0)[2:]*100, label='% PCA mask 0 deconv/PCA full sky -1 ')
+#plt.plot(ell[2:], np.mean(diff_cl_PCA_mask_0_cosmo_full_deconv, axis=0)[2:]*100, c_pal[2],label='% PCA mask 0 deconv /cosmo full sky -1  ')
+#frame2.axhline(ls='--', c= 'k', alpha=0.3)
+#frame2.set_xlim([0,200])
+#frame2.set_ylim([-50,50])
+#frame2.set_ylabel(r'%$\langle C_{\ell}^{\rm PCA } / C_{\ell}^{\rm cosmo} -1 \rangle $')
+#frame2.set_xlabel(r'$\ell$')
+#frame1.set_xticks(np.arange(1,200+1, 10))
+##plt.tight_layout()
+#plt.legend()
+#
+#plt.show()

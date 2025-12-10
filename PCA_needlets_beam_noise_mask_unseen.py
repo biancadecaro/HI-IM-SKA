@@ -42,8 +42,9 @@ formatter.set_powerlimits((-1,1))
 c_pal = sns.color_palette().as_hex()
 
 ###########################################################################3
-fg_comp = 'synch_ff_ps'
-beam_s = 'SKA_AA4'
+fg_comp = 'synch_ff_ps_pol'
+beam_s = 'cosine_Amp0.1_smooth_True_SKA_AA4'
+
 path_data_sims_tot = f'Sims/nuovo_beam_{beam_s}_sims_{fg_comp}_noise_105freq_900.5_1004.5MHz_thick1.0MHz_lmax383_nside128'
 with open(path_data_sims_tot+'.pkl', 'rb') as f:
         file = pickle.load(f)
@@ -51,8 +52,8 @@ with open(path_data_sims_tot+'.pkl', 'rb') as f:
 
 
 out_dir_output = 'PCA_needlets_output/'
-out_dir_output_PCA = out_dir_output+f'PCA_maps_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
-out_dir_plot = out_dir_output+f'Plots_PCA_needlets/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'#noise_mask_patch_stripe82_noise_mask0.39
+out_dir_output_PCA = out_dir_output+f'PCA_maps_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/'
+out_dir_plot = out_dir_output+f'Plots_PCA_needlets/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/'#noise_mask_patch_stripe82_noise_mask0.39
 if not os.path.exists(out_dir_output):
         os.makedirs(out_dir_output)
 if not os.path.exists(out_dir_output_PCA):
@@ -63,7 +64,7 @@ del file
 
 
 
-need_dir = f'Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+need_dir = f'Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/'
 need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_105freq_900.5_1004.5MHz_jmax4_lmax383_B4.42_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
@@ -140,7 +141,7 @@ plt.show()
 if fg_comp=='synch_ff_ps':
     num_sources=3
 if fg_comp=='synch_ff_ps_pol':
-    num_sources=6#18#3#
+    num_sources=3#18#3#6
 
 Nfg = num_freq - num_sources
 print(f'Nfg:{num_sources}')

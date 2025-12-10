@@ -8,6 +8,7 @@ import sys
 import h5py
 sys.path.insert(1, '/home/bianca/Documents/gmca4im-master/scripts/')
 import gmca4im_lib2 as g4i
+from convolution_func import create_bl_vec,convolution_bl, single_convolution_bl
 import seaborn as sns
 import numpy.ma as ma
 import copy
@@ -22,9 +23,9 @@ import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 ################################################################
-beam_s = '1.55deg_cosine_Amp0.1_smooth_True_SKA_AA4'
-out_dir= f'GMCA_pixels_output/Maps_GMCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
-out_dir_plot = f'GMCA_pixels_output/Plots_GMCA_healpix/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+beam_s = 'cosine_Amp0.1_smooth_True_SKA_AA4'
+out_dir= f'GMCA_pixels_output/Maps_GMCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/'
+out_dir_plot = f'GMCA_pixels_output/Plots_GMCA_healpix/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/'
 
 if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -70,7 +71,68 @@ if fg_components=='synch_ff_ps_pol':
 print(num_sources)
 print(f'nside:{nside}, lmax:{lmax}, num_ch:{num_freq}, min_ch:{min(nu_ch)}, max_ch:{max(nu_ch)}, Nfg:{num_sources}')
 
-#######################################
+###########################################################################
+######## Computing beam size using given survey specifics: ################
+### initialise a dictionary with the instrument specifications
+### for noise and beam calculation
+dish_diam_MeerKat = 13.5 #m
+dish_diam_SKA = 15 # m
+Ndishes_MeerKAT = 64.
+Ndishes_SKA = 133.
+dish_diam = (Ndishes_MeerKAT*dish_diam_MeerKat+ Ndishes_SKA*dish_diam_SKA)/(Ndishes_MeerKAT+Ndishes_SKA) # m (effective)
+Omega_sur     = 20000   # Survey area deg2
+t_obs     = 10000. # hrs, observing time
+Ndishes   = Ndishes_MeerKAT + Ndishes_SKA  # number of dishes
+specs_dict = {'dish_diam': dish_diam,
+			  'Omega_sur': Omega_sur, 't_obs': t_obs, 'Ndishes' : Ndishes}
+
+
+Amp=0.1
+T_p = 20
+smooth = True
+
+
+print()
+
+bl_beam_cos, delta_theta=create_bl_vec(beam='cosine', nside=nside,dish_diameter=dish_diam, T_p=T_p, Amp=Amp, smooth=smooth, ch_nu=nu_ch)
+bl_beam_cos_worst = bl_beam_cos[0]
+delta_theta_worst = delta_theta[0]
+print(np.pi/delta_theta_worst)
+#####################################################################################
+
+HI_maps_freq_beam_deconv=np.zeros((num_freq,npix))
+fg_maps_freq_beam_deconv=np.zeros((num_freq,npix))
+full_maps_freq_beam_deconv=np.zeros((num_freq,npix))
+
+length_of_alms=hp.Alm.getsize(lmax)
+for n in range(num_freq):
+	alm_HI_ms = hp.sphtfunc.map2alm(HI_maps_freq[n])
+	alm_HI_rs=np.zeros(length_of_alms,dtype=complex)
+
+	alm_fg_ms = hp.sphtfunc.map2alm(fg_maps_freq[n])
+	alm_fg_rs=np.zeros(length_of_alms,dtype=complex)
+
+	alm_tot_ms = hp.sphtfunc.map2alm(full_maps_freq[n])
+	alm_tot_rs=np.zeros(length_of_alms,dtype=complex)
+
+	counter=0
+	for m in range(lmax+1):
+			for l in range(m,lmax+1):
+					alm_HI_rs[counter]=alm_HI_ms[counter]*(bl_beam_cos_worst[l]/bl_beam_cos[n][l])
+					alm_fg_rs[counter]=alm_fg_ms[counter]*(bl_beam_cos_worst[l]/bl_beam_cos[n][l])
+					alm_tot_rs[counter]=alm_tot_ms[counter]*(bl_beam_cos_worst[l]/bl_beam_cos[n][l])
+					counter+=1
+
+	HI_maps_freq_beam_deconv[n] = hp.alm2map(alms=alm_HI_rs, nside=nside,inplace=False)
+	fg_maps_freq_beam_deconv[n] = hp.alm2map(alms=alm_fg_rs, nside=nside,inplace=False)
+	full_maps_freq_beam_deconv[n] = hp.alm2map(alms=alm_tot_rs, nside=nside,inplace=False)
+
+
+del HI_maps_freq; del fg_maps_freq; del full_maps_freq; del alm_fg_ms; del alm_HI_rs; del alm_fg_rs; del alm_tot_rs
+
+
+hp.mollview(HI_maps_freq_beam_deconv[21], cmap='viridis', min=0, max=1)
+#######################################################################################
 
 pix_mask = hp.query_strip(nside, theta1=np.pi*2/3, theta2=np.pi/3)
 print(pix_mask)
@@ -82,9 +144,9 @@ fsky_50 = np.sum(mask_50)/hp.nside2npix(nside)
 #######################################################################################
 bad_v = np.where(mask_50==0)
 
-HI_maps_freq_mask = copy.deepcopy(HI_maps_freq)
-fg_maps_freq_mask = copy.deepcopy(fg_maps_freq)
-full_maps_freq_mask = copy.deepcopy(full_maps_freq)
+HI_maps_freq_mask = copy.deepcopy(HI_maps_freq_beam_deconv)
+fg_maps_freq_mask = copy.deepcopy(fg_maps_freq_beam_deconv)
+full_maps_freq_mask = copy.deepcopy(full_maps_freq_beam_deconv)
 
 print(full_maps_freq_mask.shape)
 
@@ -303,7 +365,7 @@ cl_HI_leak_Nfg=np.zeros((num_freq, lmax_cl+1))
 
 for i in range(num_freq):
     cl_Hi[i] = hp.anafast(HI_maps_freq_mask[i], lmax=lmax_cl)
-    cl_HI_cosmo_full[i] = hp.anafast(HI_maps_freq[i], lmax=lmax_cl)
+    cl_HI_cosmo_full[i] = hp.anafast(HI_maps_freq_beam_deconv[i], lmax=lmax_cl)
     cl_Hi_recons_Nfg[i] = hp.anafast(res_HI[i], lmax=lmax_cl)
     cl_fg_leak_Nfg[i]=hp.anafast(fg_leakage[i], lmax=lmax_cl)
     cl_HI_leak_Nfg[i]=hp.anafast(HI_leakage[i], lmax=lmax_cl)

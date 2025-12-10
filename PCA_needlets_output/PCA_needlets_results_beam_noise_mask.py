@@ -50,8 +50,8 @@ print(beam)
 out_dir_plot = 'Plots_PCA_needlets_nuovo/'
 if not os.path.exists(out_dir_plot):
 		os.makedirs(out_dir_plot)
-dir_PCA = f'PCA_maps_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'# noise_mask0.39
-out_dir_maps_recon = f'maps_reconstructed_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+dir_PCA = f'PCA_maps_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/'# noise_mask0.39
+out_dir_maps_recon = f'maps_reconstructed_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/'
 if not os.path.exists(out_dir_maps_recon):
 		os.makedirs(out_dir_maps_recon)
 
@@ -65,19 +65,18 @@ lmax= 3*nside-1
 if fg_comp=='synch_ff_ps':
 	Nfg=3
 if fg_comp=='synch_ff_ps_pol':
-	Nfg=6#18#3
+	Nfg=3#18#3
 B = pippo.mylibpy_jmax_lmax2B(jmax, lmax)
 
 path_PCA_HI=dir_PCA+f'res_PCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 path_PCA_fg=dir_PCA+f'res_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
-path_cosmo_HI = f'../PCA_pixels_output/Maps_PCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/cosmo_HI_noise_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
-#path_cosmo_HI_fullsky = f'../PCA_pixels_output/Maps_PCA/No_mean/Beam_{beam_s}_noise/cosmo_HI_noise_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
+path_cosmo_HI = f'../PCA_pixels_output/Maps_PCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/cosmo_HI_noise_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
 
-path_fg = f'../PCA_pixels_output/Maps_PCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/fg_input_{fg_comp}_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
+path_fg = f'../PCA_pixels_output/Maps_PCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/fg_input_{fg_comp}_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
 path_leak_Fg = dir_PCA+f'leak_PCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 path_leak_HI = dir_PCA+f'leak_PCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
-path_cosmo_HI_bjk = f'../Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/bjk_maps_HI_noise_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
-path_input_fg_bjk = f'../Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/bjk_maps_fg_{fg_comp}_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
+path_cosmo_HI_bjk = f'../Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/bjk_maps_HI_noise_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
+path_input_fg_bjk = f'../Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/bjk_maps_fg_{fg_comp}_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
 
 
 print(f'jmax:{jmax}, lmax:{lmax}, num_ch:{num_ch}, min_ch:{min_ch}, max_ch:{max_ch}, Nfg:{Nfg}')
@@ -440,72 +439,6 @@ frame1.set_xticks(np.arange(lmin,200+1, 10))
 plt.show()
 
 del diff_cl_need2sphe; #del diff_cl_need2sphe_cosmo_recons
-
-#fig = plt.figure(figsize=(10,7))
-#frame1=fig.add_axes((.1,.3,.8,.6))
-#plt.title(f'NEEDLETS CLs: channel:{nu_ch[ich]} MHz, BEAM {beam}, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}, fsky:0.39')
-#plt.semilogy(ell[lmin:],factor[lmin:]*cl_cosmo_HI[ich][lmin:],label='Cosmo + noise fsky')
-#plt.semilogy(ell[lmin:],factor[lmin:]*cl_PCA_HI_need2harm[ich][lmin:],'+', label='PCA HI + noise fsky')
-#plt.semilogy(ell[lmin:],factor[lmin:]*cl_PCA_HI_mask_deconv_interp[ich][lmin:],'+', label='PCA HI + noise fsky deconv')
-##plt.semilogy(ell[lmin:],factor[lmin:]*cl_cosmo_HI_fullsky[ich][lmin:],'k--' ,label='Cosmo + noise full sky')
-##plt.semilogy(ell[lmin:],factor[lmin:]*cl_cosmo_HI_recons[ich][lmin:], label='Cosmo reconstructed')
-#plt.xlim([lmin,200])
-#plt.legend()
-#frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi} \langle C_{\ell} \rangle_{\rm ch}$')
-#frame1.set_xlabel([])
-#frame1.set_xticks(np.arange(lmin,200+1, 10))
-#
-#
-#diff_cl_need2sphe = cl_PCA_HI_need2harm/cl_cosmo_HI-1
-##diff_cl_need2sphe_full = cl_PCA_HI_mask_deconv_interp/cl_cosmo_HI_fullsky-1
-##diff_cl_need2sphe_cosmo_recons = cl_cosmo_HI_recons/cl_cosmo_HI-1
-#frame2=fig.add_axes((.1,.1,.8,.2))
-#plt.plot(ell[lmin:], diff_cl_need2sphe[ich][lmin:]*100, label='fsky')
-##plt.plot(ell[lmin:], diff_cl_need2sphe_full[ich][lmin:]*100, label='full sky')
-##plt.plot(ell[lmin:], diff_cl_need2sphe_cosmo_recons[ich][lmin:]*100, label=f'% recons_HI/input_HI -1')
-#frame2.axhline(ls='--', c= 'k', alpha=0.3)
-#frame2.set_xlim([lmin,200])
-#frame2.set_ylim([-10,10])
-#frame2.set_ylabel(r'%$ C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} $-1')
-#frame2.set_xlabel(r'$\ell$')
-#frame1.set_xticks(np.arange(lmin,200+1, 10))
-##plt.tight_layout()
-#plt.legend()
-##plt.savefig(f'Plots_PCA_needlets/cl_std_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam40arcmin_jmax{jmax}_lmax{lmax_cl}_Nfg{Nfg}_nside{nside}_mask0.39.png')
-#
-#plt.show()
-#
-#fig = plt.figure(figsize=(10,7))
-#frame1=fig.add_axes((.1,.3,.8,.6))
-#plt.title(f'NEEDLETS CLs: mean over channels, BEAM {beam}, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}')
-#plt.plot(ell[lmin:], factor[lmin:]*cl_cosmo_HI.mean(axis=0)[lmin:], label = f'Cosmo + noise')
-#plt.plot(ell[lmin:], factor[lmin:]*cl_PCA_HI_need2harm.mean(axis=0)[lmin:],'+',mfc='none', label = f'PCA HI + noise')
-##plt.plot(ell[lmin:], factor[lmin:]*cl_cosmo_HI_recons.mean(axis=0)[lmin:], label = f'Cosmo reconstructed')
-#plt.xlim([lmin,200])
-#plt.legend()
-#frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi} \langle C_{\ell} \rangle_{\rm ch}$')
-#frame1.set_xlabel([])
-#frame1.set_xticks(np.arange(lmin,200+1, 10))
-#
-#1
-#del cl_PCA_HI_need2harm
-#del cl_cosmo_HI_recons; del cl_cosmo_HI
-#frame2=fig.add_axes((.1,.1,.8,.2))
-#plt.plot(ell[lmin:], diff_cl_need2sphe.mean(axis=0)[lmin:]*100, label='% PCA_HI/input_HI -1')
-##plt.plot(ell[lmin:], diff_cl_need2sphe_cosmo_recons.mean(axis=0)[lmin:]*100, label=f'% recons_HI/input_HI -1')
-#frame2.axhline(ls='--', c= 'k', alpha=0.3)
-#frame2.set_xlim([lmin,200])
-#frame2.set_ylim([-10,10])
-#frame2.set_ylabel(r'%$ \langle diff \rangle_{\rm ch}$')
-#frame2.set_xlabel(r'$\ell$')
-#frame1.set_xticks(np.arange(lmin,200+1, 10))
-##plt.tight_layout()
-#plt.legend()
-#
-#
-#plt.show()
-#
-#del diff_cl_need2sphe; #del diff_cl_need2sphe_cosmo_recons
 
 
 #######################################################################

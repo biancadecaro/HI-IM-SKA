@@ -13,6 +13,9 @@ import healpy as hp
 import matplotlib.pyplot as plt
 import pickle
 from convolution_func import*
+import seaborn as sns
+sns.set_theme(style = 'white')
+sns.color_palette("husl",n_colors=15)
 
 c_light = 3.0*1e8  # m/s
 
@@ -171,8 +174,6 @@ file_ud={}
 
 file_ud['frequencies'] = nu_ch[:idx_nu_max]
 
-print(file_ud['frequencies'], len(file_ud['frequencies']))
-
 components = list(file.keys())
 print(components)
 components.remove('frequencies')
@@ -184,10 +185,9 @@ if 'pol_leakage' in components:
 	fg_comp = 'synch_ff_ps_pol'
 
 
-
 for c in components:
   print(c)
-  #file_new[c]=file[c][:idx_nu_max]
+
   file_ud[c] = hp.pixelfunc.ud_grade(map_in=file[c][:idx_nu_max], nside_out=nside_out)
 
 del file
@@ -235,9 +235,7 @@ Amp=0.1
 T_p = 20
 smooth = True
 
-
 print()
-
 
 ################################## NOISE ################################################
 dnu = nu_ch_new[1]-nu_ch_new[0]
@@ -252,58 +250,41 @@ del sigma_noise
 
 ich =int(num_freq_new/2)
 
-
-#for nu in range(num_freq_new):
-#		alm_obs = hp.map2alm(obs_maps[nu], lmax=lmax)
-#		obs_maps[nu] = hp.alm2map(alm_obs, lmax=lmax, nside = nside_out)
-#		#obs_maps[nu] = hp.remove_dipole(obs_maps[nu])
-#		del alm_obs
-#		alm_fg = hp.map2alm(fg_maps[nu], lmax=lmax)
-#		fg_maps[nu] = hp.alm2map(alm_fg, lmax=lmax, nside = nside_out)
-#		#fg_maps[nu] = hp.remove_dipole(fg_maps[nu])
-#		del alm_fg
-#		alm_HI = hp.map2alm(file_ud['cosmological_signal'][nu], lmax=lmax)
-#		file_ud['cosmological_signal'][nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside_out)
-#		#file_ud['cosmological_signal'][nu] = hp.remove_dipole(file_ud['cosmological_signal'][nu])
-#		del alm_HI
-#		alm_noise = hp.map2alm(noise[nu], lmax=lmax)
-#		noise[nu] = hp.alm2map(alm_noise, lmax=lmax, nside = nside_out)
-#	
-#		del alm_noise
-#
-#file_sims = {}
-#file_sims['freq'] = nu_ch_new
-#file_sims['maps_sims_tot'] = obs_maps
-#file_sims['maps_sims_fg'] = fg_maps
-#file_sims['maps_sims_HI'] = file_ud['cosmological_signal']
-#file_sims['maps_sims_noise'] = noise
-#
-#filename = f'Sims/nuovo_sims_{fg_comp}_noise_{len(nu_ch_new)}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_thick{dnu}MHz_lmax{lmax}_nside{nside_out}'
-#with open(filename+'.pkl', 'wb') as f:
-#    pickle.dump(file_sims, f)
-#    f.close()
-#print('ho salvato il file senza beam con media')
-
 #########################################################################################
-bl_beam_cos=create_bl_vec(beam='cosine', nside=nside_out,dish_diameter=dish_diam, T_p=T_p, Amp=Amp, smooth=smooth, ch_nu=nu_ch)
+bl_beam_cos, delta_theta=create_bl_vec(beam='cosine', nside=nside_out,dish_diameter=dish_diam, T_p=T_p, Amp=Amp, smooth=smooth, ch_nu=nu_ch)
 lmax_fwmh = np.array([int(np.pi/theta_FWMH[i]) for i in range(num_freq_new)])
-print(f'theta_max : {theta_FWMH_max*180./np.pi} deg')
+bl_beam_cos_worst= bl_beam_cos[0]
+delta_theta_worst= delta_theta[0]
+
+print(f'delta theta max : {delta_theta*180./np.pi} deg')
 for cc in range(num_freq_new):
-	print(f'theta_F at {nu_ch_new[cc]} MHz:{theta_FWMH[cc]*180./np.pi} deg\n')
+	print(f'delta_theta at {nu_ch_new[cc]} MHz:{delta_theta[cc]*180./np.pi} deg\n')
 
 file_sims_beam = {}
 file_sims_beam['freq'] = nu_ch_new
-file_sims_beam['maps_sims_tot'] =  convolution_bl(obs_maps,beam_bl=bl_beam_cos[0], nside=nside_out)
+file_sims_beam['maps_sims_tot'] =  convolution_bl(obs_maps,beam_bl=bl_beam_cos, nside=nside_out)
 print('fatto 1 di 4')
 
-file_sims_beam['maps_sims_fg'] =  convolution_bl(fg_maps,beam_bl=bl_beam_cos[0], nside=nside_out)
+file_sims_beam['maps_sims_fg'] =  convolution_bl(fg_maps,beam_bl=bl_beam_cos, nside=nside_out)
 print('fatto 2 di 4')
 
-file_sims_beam['maps_sims_HI'] =  convolution_bl(file_ud['cosmological_signal'],beam_bl=bl_beam_cos[0], nside=nside_out)
+file_sims_beam['maps_sims_HI'] =  convolution_bl(file_ud['cosmological_signal'],beam_bl=bl_beam_cos, nside=nside_out)
 print('fatto 3 di 4')
 
 file_sims_beam['maps_sims_noise'] = noise
 print('fatto 4 di 4')
+
+
+#file_sims_beam['maps_sims_tot'] =  np.array([single_convolution_bl(obs_maps[n],beam_bl=bl_beam_cos_worst, nside=nside_out) for n in range(num_freq_new)])
+#print('fatto 1 di 4')
+#
+#file_sims_beam['maps_sims_fg'] =  np.array([single_convolution_bl(fg_maps[n],beam_bl=bl_beam_cos_worst, nside=nside_out) for n in range(num_freq_new)])
+#print('fatto 2 di 4')
+#
+#file_sims_beam['maps_sims_HI'] =  np.array([single_convolution_bl(file_ud['cosmological_signal'][n],beam_bl=bl_beam_cos_worst, nside=nside_out) for n in range(num_freq_new)])
+#print('fatto 3 di 4')
+#
+#file_sims_beam['maps_sims_noise'] = noise
 
 for nu in range(num_freq_new):
 		alm_HI = hp.map2alm(file_sims_beam['maps_sims_HI'][nu], lmax=lmax)
@@ -323,7 +304,7 @@ for nu in range(num_freq_new):
 
 print(file_sims_beam['maps_sims_tot'][ich].mean())
 
-filename = f'Sims/nuovo_beam_cosine_Amp{Amp}_smooth_{smooth}_SKA_AA4_sims_{fg_comp}_noise_{len(nu_ch_new)}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_thick{dnu}MHz_lmax{lmax}_nside{nside_out}'
+filename = f'Sims/nuovo_beam_cosine_Amp{Amp}_smooth_{smooth}_SKA_AA4_sims_{fg_comp}_noise_{len(nu_ch_new)}freq_{min(nu_ch_new)}_{max(nu_ch_new)}MHz_thick{dnu}MHz_lmax{lmax}_nside{nside_out}' #{delta_theta_worst*180./np.pi:1.2f}deg_
 with open(filename+'.pkl', 'wb') as ff:
 	pickle.dump(file_sims_beam, ff)
 	ff.close()

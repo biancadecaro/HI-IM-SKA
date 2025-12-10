@@ -13,6 +13,21 @@ import matplotlib as mpl
 mpl.rc('xtick', direction='in', top=True, bottom = True)
 mpl.rc('ytick', direction='in', right=True, left = True)
 
+plt.rcParams['figure.figsize']=(11,7)
+plt.rcParams['axes.titlesize']=20
+plt.rcParams['lines.linewidth']  = 3.
+plt.rcParams['lines.markersize']=6
+plt.rcParams['axes.labelsize']  =20
+plt.rcParams['legend.fontsize']=20
+plt.rcParams['xtick.labelsize']=20
+plt.rcParams['ytick.labelsize']=20
+plt.rcParams['xtick.major.width'] = 1
+plt.rcParams['ytick.major.width'] = 1
+plt.rcParams['xtick.minor.width'] = 1
+plt.rcParams['ytick.minor.width'] = 1
+plt.rcParams['axes.formatter.use_mathtext']=True
+plt.rcParams['savefig.dpi']=300
+
 #print(sns.color_palette("husl", 15).as_hex())
 sns.palettes.color_palette()
 import cython_mylibc as pippo
@@ -24,8 +39,8 @@ beam = beam_s.replace('_', ' ')
 print(beam)
 
 out_dir_plot = 'Plots_GMCA_needlets/'
-dir_GMCA = f'GMCA_maps_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'# noise_mask0.39
-out_dir_maps_recon = f'maps_reconstructed_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+dir_GMCA = f'GMCA_maps_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/'# noise_mask0.39
+out_dir_maps_recon = f'maps_reconstructed_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/'
 if not os.path.exists(out_dir_maps_recon):
 		os.makedirs(out_dir_maps_recon)
 
@@ -40,33 +55,24 @@ lmax= 3*nside-1
 if fg_comp=='synch_ff_ps':
     Nfg=3
 if fg_comp=='synch_ff_ps_pol':
-    Nfg=6#3
+    Nfg=3#6
 B = pippo.mylibpy_jmax_lmax2B(jmax, lmax)
 
 path_GMCA_HI=dir_GMCA+f'res_GMCA_HI_noise_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 path_GMCA_fg=dir_GMCA+f'res_GMCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
-path_cosmo_HI = f'../GMCA_pixels_output/Maps_GMCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/cosmo_HI_noise_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
-#path_cosmo_HI_fullsky = f'../GMCA_pixels_output/Maps_GMCA/No_mean/Beam_{beam_s}_noise/cosmo_HI_noise_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
+path_cosmo_HI = f'../GMCA_pixels_output/Maps_GMCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/cosmo_HI_noise_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
 
-path_fg = f'../GMCA_pixels_output/Maps_GMCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/fg_input_{fg_comp}_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
+path_fg = f'../GMCA_pixels_output/Maps_GMCA_nuovo/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/fg_input_{fg_comp}_{num_ch}_{min_ch:1.1f}_{max_ch:1.1f}MHz_lmax{lmax}_nside{nside}'
 path_leak_Fg = dir_GMCA+f'leak_GMCA_fg_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
 path_leak_HI = dir_GMCA+f'leak_GMCA_HI_{fg_comp}_jmax{jmax}_lmax{lmax}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_nside{nside}'
-path_cosmo_HI_bjk = f'../Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/bjk_maps_HI_noise_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
-path_input_fg_bjk = f'../Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/bjk_maps_fg_{fg_comp}_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
+path_cosmo_HI_bjk = f'../Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/bjk_maps_HI_noise_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
+path_input_fg_bjk = f'../Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/bjk_maps_fg_{fg_comp}_{num_ch}freq_{min_ch:1.1f}_{max_ch:1.1f}MHz_jmax{jmax}_lmax{lmax}_B{B:1.2f}_nside{nside}'
 
 
 print(f'jmax:{jmax}, lmax:{lmax}, num_ch:{num_ch}, min_ch:{min_ch}, max_ch:{max_ch}, Nfg:{Nfg}')
 
 nu_ch = np.linspace(min_ch, max_ch, num_ch)
 
-
-#for nu in range(len(nu_ch)):
-#        alm_HI = hp.map2alm(cosmo_HI[nu], lmax=lmax)
-#        cosmo_HI[nu] = hp.alm2map(alm_HI, lmax=lmax, nside = nside)
-#        del alm_HI
-#        alm_fg = hp.map2alm(fg[nu], lmax=lmax)
-#        fg[nu] = hp.alm2map(alm_fg, lmax=lmax, nside = nside)
-#        del alm_fg
 
 ich=int(num_ch/2)
 ###########################################################################################
@@ -81,18 +87,11 @@ bad_v = np.where(mask_50==0)
 ####################### NEEDLETS2HARMONICS #################################################
 
 b_values = pippo.mylibpy_needlets_std_init_b_values(B,jmax,lmax)
-#with open(path_GMCA_HI+'.pkl', 'rb') as f:
-#	res_GMCA_HI = pickle.load(f)
-#	f.close()
-#del f
-#with open(path_GMCA_fg+'.pkl', 'rb') as f:
-#	res_GMCA_fg = pickle.load(f)
-#	f.close()	
+
 res_GMCA_HI = np.load(path_GMCA_HI+'.npy')
 res_GMCA_fg = np.load(path_GMCA_fg+'.npy')
 
-#res_GMCA_HI[:,:,bad_v] = hp.UNSEEN
-#res_GMCA_fg[:,:,bad_v] = hp.UNSEEN
+
 
 print(res_GMCA_HI.shape)
 map_GMCA_HI_need2pix=np.zeros((len(nu_ch), npix))
@@ -235,23 +234,40 @@ cl_GMCA_HI_need2harm = np.zeros((len(nu_ch), lmax_cl+1))
 for n in range(len(nu_ch)):
 	cl_cosmo_HI_recons[n] = hp.anafast(map_input_HI_need2pix[n], lmax=lmax_cl)
 	cl_cosmo_HI[n]=hp.anafast(cosmo_HI[n], lmax=lmax_cl)
-	#cl_cosmo_HI_fullsky[n]=hp.anafast(cosmo_HI_fullsky[n], lmax=lmax_cl)
 	cl_GMCA_HI_need2harm[n] = hp.anafast(map_GMCA_HI_need2pix[n], lmax=lmax_cl)
-	#cl_diff_cosmo_GMCA_HI_need2harm[n] = hp.anafast(cosmo_HI[n]-map_GMCA_HI_need2pix[n], lmax=lmax_cl)
+	
 
 #### deconvoluzione
-f_0_mask = nm.NmtField(mask_50,[map_GMCA_HI_need2pix[0]] )
+#f_0_mask = nm.NmtField(mask_50,[map_GMCA_HI_need2pix[0]] )
 b = nm.NmtBin.from_nside_linear(nside, 8)
 ell_mask= b.get_effective_ells()
+
+#f_0_cosmo_mask = nm.NmtField(mask_50,[cosmo_HI[0]] )
+b_cosmo = nm.NmtBin.from_nside_linear(nside, 8)
+ell_cosmo_mask= b_cosmo.get_effective_ells()
+
+cl_cosmo_HI_mask_deconv = np.zeros((num_ch, len(ell_mask)))
+cl_cosmo_HI_mask_deconv_interp = np.zeros((num_ch, lmax_cl+1))
+
+cl_cosmo_HI_mask_need2pix_deconv = np.zeros((num_ch, len(ell_mask)))
+cl_cosmo_HI_mask_need2pix_deconv_interp = np.zeros((num_ch, lmax_cl+1))
 
 cl_GMCA_HI_mask_deconv = np.zeros((num_ch, len(ell_mask)))
 cl_GMCA_HI_mask_deconv_interp = np.zeros((num_ch, lmax_cl+1))
 
 
 for n in range(num_ch):
-    f_0_mask = nm.NmtField(mask_50,[map_GMCA_HI_need2pix[n]] )
-    cl_GMCA_HI_mask_deconv[n] = nm.compute_full_master(f_0_mask, f_0_mask, b)[0]
-    cl_GMCA_HI_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_GMCA_HI_mask_deconv[n])
+	f_0_mask = nm.NmtField(mask_50,[map_GMCA_HI_need2pix[n]] )
+	cl_GMCA_HI_mask_deconv[n] = nm.compute_full_master(f_0_mask, f_0_mask, b)[0]
+	cl_GMCA_HI_mask_deconv_interp[n] = np.interp(ell, ell_mask, cl_GMCA_HI_mask_deconv[n])
+
+	f_0_cosmo_mask = nm.NmtField(mask_50,[cosmo_HI[n]] ) #qua
+	cl_cosmo_HI_mask_deconv[n] = nm.compute_full_master(f_0_cosmo_mask, f_0_cosmo_mask, b_cosmo)[0]
+	cl_cosmo_HI_mask_deconv_interp[n] = np.interp(ell, ell_cosmo_mask, cl_cosmo_HI_mask_deconv[n])
+
+	f_0_cosmo_need2pix_mask = nm.NmtField(mask_50,[map_input_HI_need2pix[n]] ) #qua
+	cl_cosmo_HI_mask_need2pix_deconv[n] = nm.compute_full_master(f_0_cosmo_need2pix_mask, f_0_cosmo_need2pix_mask, b_cosmo)[0]
+	cl_cosmo_HI_mask_need2pix_deconv_interp[n] = np.interp(ell, ell_cosmo_mask, cl_cosmo_HI_mask_need2pix_deconv[n])	
     
 
 np.savetxt(out_dir_cl+f'cl_GMCA_HI_noise_{fg_comp}_{num_ch}_{min_ch}_{max_ch}MHz_Nfg{Nfg}_jmax{jmax}_lmax{lmax_cl}_nside{nside}.dat', cl_GMCA_HI_need2harm)
@@ -263,67 +279,66 @@ del map_GMCA_HI_need2pix; del cosmo_HI; del map_input_HI_need2pix;
 
 fig = plt.figure(figsize=(10,7))
 frame1=fig.add_axes((.1,.3,.8,.6))
-plt.title(f'NEEDLETS CLs: channel:{nu_ch[ich]} MHz, BEAM {beam}, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}, fsky:0.39')
-plt.semilogy(ell[2:],factor[2:]*cl_cosmo_HI[ich][2:],label='Cosmo + noise fsky')
-plt.semilogy(ell[2:],factor[2:]*cl_GMCA_HI_need2harm[ich][2:],'+', label='GMCA HI + noise fsky')
-plt.semilogy(ell[2:],factor[2:]*cl_GMCA_HI_mask_deconv_interp[ich][2:],'+', label='GMCA HI + noise fsky deconv')
-#plt.semilogy(ell[2:],factor[2:]*cl_cosmo_HI_fullsky[ich][2:],'k--' ,label='Cosmo + noise full sky')
-plt.semilogy(ell[2:],factor[2:]*cl_cosmo_HI_recons[ich][2:], label='Cosmo reconstructed')
-plt.xlim([0,200])
+plt.title(f'Channel:{nu_ch[ich]} MHz, jmax={jmax}, lmax={lmax}, Nfg={Nfg}, fsky:0.50')
+plt.plot(ell[lmin:],factor[lmin:]*cl_cosmo_HI_mask_deconv_interp[ich][lmin:],'k--',label='Cosmo HI + noise')
+plt.plot(ell[lmin:],factor[lmin:]*cl_GMCA_HI_mask_deconv_interp[ich][lmin:],'+', label='GMCA HI + noise')
+
+plt.xlim([lmin,200])
 plt.legend()
 frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi} \langle C_{\ell} \rangle_{\rm ch}$')
 frame1.set_xlabel([])
-frame1.set_xticks(np.arange(1,200+1, 10))
+frame1.set_xticks(np.arange(lmin,200+1, 10))
 
+diff_cl_recons = cl_cosmo_HI_mask_need2pix_deconv_interp/cl_cosmo_HI_mask_deconv_interp-1
+diff_cl_need2sphe = cl_GMCA_HI_mask_deconv_interp/cl_cosmo_HI_mask_deconv_interp-1
 
-diff_cl_need2sphe = cl_GMCA_HI_need2harm/cl_cosmo_HI-1
-#diff_cl_need2sphe_full = cl_GMCA_HI_mask_deconv_interp/cl_cosmo_HI_fullsky-1
-diff_cl_need2sphe_cosmo_recons = cl_cosmo_HI_recons/cl_cosmo_HI-1
 frame2=fig.add_axes((.1,.1,.8,.2))
-plt.plot(ell[2:], diff_cl_need2sphe[ich][2:]*100, label='fsky')
-#plt.plot(ell[2:], diff_cl_need2sphe_full[ich][2:]*100, label='full sky')
-plt.plot(ell[2:], diff_cl_need2sphe_cosmo_recons[ich][2:]*100, label=f'% recons_HI/input_HI -1')
+plt.plot(ell[lmin:], diff_cl_need2sphe[ich][lmin:]*100,)
+plt.plot(ell[lmin:], diff_cl_recons[ich][lmin:]*100,label='recons')
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
-frame2.set_xlim([0,200])
-frame2.set_ylim([-10,10])
+frame2.set_xlim([lmin,200])
+if fg_comp=='synch_ff_ps_pol':
+	frame2.set_ylim([-50,50])
+else:
+	frame2.set_ylim([-20,20])
 frame2.set_ylabel(r'%$ C_{\ell}^{\rm GMCA}/C_{\ell}^{\rm cosmo} $-1')
 frame2.set_xlabel(r'$\ell$')
-frame1.set_xticks(np.arange(1,200+1, 10))
-#plt.tight_layout()
 plt.legend()
+frame1.set_xticks(np.arange(lmin,200+1, 10))
 #plt.savefig(f'Plots_GMCA_needlets/cl_std_need_ch{nu_ch[ich]}_{fg_comp}_noise_beam40arcmin_jmax{jmax}_lmax{lmax_cl}_Nfg{Nfg}_nside{nside}_mask0.39.png')
 
 #plt.show()
 
 fig = plt.figure(figsize=(10,7))
 frame1=fig.add_axes((.1,.3,.8,.6))
-plt.title(f'NEEDLETS CLs: mean over channels, BEAM {beam}, jmax:{jmax}, lmax:{lmax}, Nfg:{Nfg}')
-plt.plot(ell[2:], factor[2:]*cl_cosmo_HI.mean(axis=0)[2:], label = f'Cosmo + noise')
-plt.plot(ell[2:], factor[2:]*cl_GMCA_HI_need2harm.mean(axis=0)[2:],'+',mfc='none', label = f'GMCA HI + noise')
-plt.plot(ell[2:], factor[2:]*cl_cosmo_HI_recons.mean(axis=0)[2:], label = f'Cosmo reconstructed')
-plt.xlim([0,200])
+plt.title(f'Mean over channels, jmax={jmax}, lmax={lmax}, Nfg={Nfg}, fsky=0.50')
+plt.plot(ell[lmin:], factor[lmin:]*cl_cosmo_HI_mask_deconv_interp.mean(axis=0)[lmin:],'k--',label = f'Cosmo HI + noise')
+plt.plot(ell[lmin:], factor[lmin:]*cl_GMCA_HI_mask_deconv_interp.mean(axis=0)[lmin:],'+',mfc='none', label = f'PCA HI + noise')
+plt.xlim([lmin,200])
 plt.legend()
 frame1.set_ylabel(r'$\frac{\ell(\ell+1)}{2\pi} \langle C_{\ell} \rangle_{\rm ch}$')
 frame1.set_xlabel([])
-frame1.set_xticks(np.arange(1,200+1, 10))
+frame1.set_xticks(np.arange(lmin,200+1, 10))
 
-1
+
 del cl_GMCA_HI_need2harm
 del cl_cosmo_HI_recons; del cl_cosmo_HI
 frame2=fig.add_axes((.1,.1,.8,.2))
-plt.plot(ell[2:], diff_cl_need2sphe.mean(axis=0)[2:]*100, label='% GMCA_HI/input_HI -1')
-#plt.plot(ell[2:], diff_cl_need2sphe_cosmo_recons.mean(axis=0)[2:]*100, label=f'% recons_HI/input_HI -1')
+plt.plot(ell[lmin:], diff_cl_need2sphe.mean(axis=0)[lmin:]*100)
 frame2.axhline(ls='--', c= 'k', alpha=0.3)
-frame2.set_xlim([0,200])
-frame2.set_ylim([-10,10])
-frame2.set_ylabel(r'%$ \langle diff \rangle_{\rm ch}$')
+frame2.set_xlim([lmin,200])
+if fg_comp=='synch_ff_ps_pol':
+	frame2.set_ylim([-50,50])
+else:
+	frame2.set_ylim([-20,20])
+frame2.set_ylabel(r'%$ \langle C_{\ell}^{\rm PCA}/C_{\ell}^{\rm cosmo} -1\rangle_{\rm ch}$')
 frame2.set_xlabel(r'$\ell$')
-frame1.set_xticks(np.arange(1,200+1, 10))
+frame1.set_xticks(np.arange(lmin,200+1, 10))
 #plt.tight_layout()
-plt.legend()
+#plt.savefig(f'Plots_PCA_needlets/cl_std_need_mean_ch_{fg_comp}_noise_beam_{beam_s}_jmax{jmax}_lmax{lmax_cl}_Nfg{Nfg}_nside{nside}_mask0.5.png')
 
 
-#plt.show()
+plt.show()
 
 del diff_cl_need2sphe;# del diff_cl_need2sphe_cosmo_recons
 
@@ -421,7 +436,7 @@ plt.xlabel(r'$\ell$')
 plt.ylabel(r'$ \frac{\ell*(\ell+1)}{2\pi} \langle C_{\ell} \rangle$')
 plt.legend()
 #plt.tight_layout()
-#plt.savefig(f'Plots_PCA_needlets/recons_factorxcl_beam40arcmin_leakage_jmax{jmax}_lmax{lmax_cl}.png')
+#plt.savefig(f'Plots_GMCA_needlets/recons_factorxcl_beam40arcmin_leakage_jmax{jmax}_lmax{lmax_cl}.png')
 plt.show()
 
 

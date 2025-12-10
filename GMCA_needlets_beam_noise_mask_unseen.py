@@ -30,8 +30,8 @@ with open(path_data_sims_tot+'.pkl', 'rb') as f:
         f.close()
 
 out_dir_output = 'GMCA_needlets_output/'
-out_dir_output_GMCA = out_dir_output+f'GMCA_maps_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
-out_dir_plot = out_dir_output+f'Plots_GMCA_needlets/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+out_dir_output_GMCA = out_dir_output+f'GMCA_maps_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/'
+out_dir_plot = out_dir_output+f'Plots_GMCA_needlets/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/'
 if not os.path.exists(out_dir_output):
         os.makedirs(out_dir_output)
 if not os.path.exists(out_dir_output_GMCA):
@@ -40,7 +40,7 @@ if not os.path.exists(out_dir_output_GMCA):
 nu_ch= file['freq']
 del file
 
-need_dir = f'Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen/'
+need_dir = f'Maps_needlets_nuovo_1/No_mean/Beam_{beam_s}_noise_mask0.5_unseen_deconv/'
 need_tot_maps_filename = need_dir+f'bjk_maps_obs_noise_{fg_comp}_105freq_900.5_1004.5MHz_jmax4_lmax383_B4.42_nside128.npy'
 need_tot_maps = np.load(need_tot_maps_filename)
 
@@ -72,7 +72,7 @@ fsky_50 = np.sum(mask_50)/hp.nside2npix(nside)
 if fg_comp=='synch_ff_ps':
     num_sources=3
 if fg_comp=='synch_ff_ps_pol':
-    num_sources=6#3#18
+    num_sources=3#18#6
 print(f'Nfg={num_sources}')  # number of sources to be estimated
 mints = 0.1 # min threshold (what is sparse compared to noise?)
 nmax  = 100 # number of iterations (usually 100 is safe)
